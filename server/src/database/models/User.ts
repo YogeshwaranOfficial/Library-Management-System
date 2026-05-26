@@ -1,16 +1,7 @@
-import {
-  DataTypes,
-  InferAttributes,
-  InferCreationAttributes,
-  Model,
-} from "sequelize";
-
+import { DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import sequelize from "../connection/database.js";
 
-class User extends Model<
-  InferAttributes<User>,
-  InferCreationAttributes<User>
-> {
+class User extends Model<InferAttributes<User>,  InferCreationAttributes<User> > {
   declare uuid: string;
 
   declare name: string;
