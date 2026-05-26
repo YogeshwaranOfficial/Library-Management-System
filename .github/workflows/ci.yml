@@ -1,0 +1,10 @@
+name: Disabled CI
+
+on:
+  workflow_dispatch: # Allows manual triggering only, won't run on push
+
+jobs:
+  nothing:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Not active yet"

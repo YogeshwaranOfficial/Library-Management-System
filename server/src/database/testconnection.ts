@@ -11,3 +11,5 @@ const testConnection = async () => {
 };
 
 testConnection();
+
+//npx tsc src/database/testConnection.ts
