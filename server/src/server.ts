@@ -1,14 +1,13 @@
 import app from "./app.js";
-
+import logger from "./utils/logger.js";
 import env from "./config/env.js";
-
 import { sequelize, syncDatabase } from "./database/index.js";
 
 const startServer = async (): Promise<void> => {
   try {
     await sequelize.authenticate();
 
-    console.log("✅ Database connected successfully");
+    logger.info("✅ Database connected successfully");
 
     await syncDatabase();
 
@@ -18,7 +17,7 @@ const startServer = async (): Promise<void> => {
       );
     });
   } catch (error) {
-    console.error("❌ Server startup failed:", error);
+    logger.error("Server startup failed", error);
 
     process.exit(1);
   }

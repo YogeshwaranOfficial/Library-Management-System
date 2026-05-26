@@ -3,7 +3,7 @@ import type {
   Response,
   NextFunction,
 } from "express";
-
+import logger from "../utils/logger.js";
 import AppError from "../utils/AppError.js";
 
 const globalErrorHandler = (
@@ -24,7 +24,7 @@ const globalErrorHandler = (
     message = err.message;
   }
 
-
+  logger.error(message, err);
 
   res.status(statusCode).json({
     success: false,
