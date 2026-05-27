@@ -3,7 +3,7 @@
  * /issues/borrow:
  * post:
  * summary: Issue/Borrow a book for a member
- * description: Checks active structural constraints, validation history, and validates dynamic limits (Bronze/Silver/Gold) stored in the database.
+ * description: Checks constraints and validates dynamic plan thresholds (Bronze/Silver/Gold).
  * tags: [Issues]
  * security:
  * - bearerAuth: []
@@ -27,20 +27,18 @@
  * example: "f8g9h0i1-j2k3-4l5m-6n7o-8p9q0r1s2t3u"
  * responses:
  * 201:
- * description: Book borrowed successfully and due date generated (+14 days)
+ * description: Book borrowed successfully
  * 400:
- * description: Membership inactive, item out-of-stock, or membership borrow quota ceiling breached
+ * description: Membership inactive, item out-of-stock, or quota ceilings breached
  * 404:
  * description: Member or Book reference target not found
  */
-
 
 /**
  * @swagger
  * /issues/return:
  * post:
  * summary: Return an issued book and reconcile inventory stock balances
- * description: Safely maps timestamps against due dates. Triggers real-time generation of an UNPAID fine record if returned past the due timeline.
  * tags: [Issues]
  * security:
  * - bearerAuth: []
@@ -63,9 +61,8 @@
  * 400:
  * description: Book has already been safely returned
  * 404:
- * description: Issue history tracking record not discovered
+ * description: Tracking record not discovered
  */
-
 
 /**
  * @swagger
@@ -77,19 +74,10 @@
  * - bearerAuth: []
  * responses:
  * 200:
- * description: List of overdue logs mapped against member and book targets returned safely
+ * description: List of overdue logs mapped back returned safely
  * 401:
  * description: Unauthorized token verification failure
  */
-
-
-
-
-
-
-
-
-
 
 
 

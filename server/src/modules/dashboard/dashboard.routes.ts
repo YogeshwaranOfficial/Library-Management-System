@@ -3,7 +3,6 @@
  * /dashboard/overview:
  * get:
  * summary: Fetch high-level tracking counts for dashboard cards
- * description: Returns aggregated calculation statistics for total inventory metrics, active/expired memberships, and outstanding dues.
  * tags: [Dashboard]
  * security:
  * - bearerAuth: []
@@ -38,7 +37,6 @@
  * type: number
  */
 
-
 /**
  * @swagger
  * /dashboard/analytics/popular-books:
@@ -52,23 +50,18 @@
  * description: Array list of high popularity book assets returned successfully
  */
 
-
 /**
  * @swagger
  * /dashboard/reports/monthly-fines:
  * get:
  * summary: Fetch chronological monthly fine income collection records
- * description: Combines sub-queries utilizing dynamic database trunc expressions to sort financial balances.
  * tags: [Dashboard]
  * security:
  * - bearerAuth: []
  * responses:
  * 200:
- * description: Monthly broken-down fine report matrix structured successfully
+ * description: Monthly fine report matrix structured successfully
  */
-
-
-
 
 
 import { Router } from "express";

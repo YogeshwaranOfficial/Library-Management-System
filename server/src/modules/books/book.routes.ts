@@ -35,13 +35,7 @@
  * description: Books successfully fetched
  * 401:
  * description: Unauthorized access token missing or invalid
- */
-
-
-/**
- * @swagger
- * /books:
- * post:
+ * * post:
  * summary: Create a new library book record
  * tags: [Books]
  * security:
@@ -79,7 +73,6 @@
  * 401:
  * description: Unauthorized
  */
-
 
 /**
  * @swagger
@@ -124,13 +117,7 @@
  * description: Book updated successfully
  * 404:
  * description: Book record not found
- */
-
-
-/**
- * @swagger
- * /books/{book_id}:
- * delete:
+ * * delete:
  * summary: Soft-delete/Remove a book from the library catalog
  * tags: [Books]
  * security:
@@ -149,15 +136,6 @@
  * 404:
  * description: Book not found
  */
-
-
-
-
-
-
-
-
-
 
 
 import { Router } from "express";
