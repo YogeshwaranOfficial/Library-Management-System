@@ -4,7 +4,7 @@ import memberRoutes from "../modules/members/member.routes.js";
 import bookRoutes from "../modules/books/book.routes.js"
 import issueRoutes from "../modules/issues/issue.routes.js";
 import fineRoutes from "../modules/fines/fine.routes.js"
-
+import dashboardRoutes from "../modules/dashboard/dashboard.routes.js";
 
 const router = Router();
 
@@ -13,5 +13,6 @@ router.use("/members", memberRoutes);
 router.use("/books", bookRoutes)
 router.use("/issues", issueRoutes)
 router.use("/fines", fineRoutes)
+router.use("/dashboard", dashboardRoutes);
 
 export default router;
