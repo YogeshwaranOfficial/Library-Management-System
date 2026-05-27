@@ -21,7 +21,7 @@ class Book extends Model<
 
   declare total_copies: number;
 
-  declare available_copies: number;
+  declare available_copies:number;
 
   declare lending_count: number;
 

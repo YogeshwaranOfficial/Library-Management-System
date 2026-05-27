@@ -12,22 +12,21 @@ class Member extends Model<
   InferAttributes<Member>,
   InferCreationAttributes<Member>
 > {
-  // Database-generated primary key is optional during creation
+ 
   declare member_id: CreationOptional<string>;
 
   declare user_id: string;
 
   declare membership_plan_id: string;
 
-  // These can be Date objects in Sequelize, mapping perfectly from string inputs
+  
   declare start_date: Date;
 
   declare expiry_date: Date;
 
-  // Has a default value 'ACTIVE', making it optional on creation
+  
   declare membership_status: CreationOptional<"ACTIVE" | "EXPIRED">;
 
-  // Timestamps are managed automatically by Sequelize
   declare readonly created_at: CreationOptional<Date>;
 
   declare readonly updated_at: CreationOptional<Date>;
