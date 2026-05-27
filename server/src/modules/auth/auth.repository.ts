@@ -1,11 +1,11 @@
 import User from "../../database/models/User.js";
-
+import { CreationAttributes } from "sequelize";
 import { RegisterUserInput } from "./auth.types.js";
 
 export const createUser = async (
   payload: RegisterUserInput
 ) => {
-  return await User.create(payload);
+  return await User.create(payload as CreationAttributes<User>);
 };
 
 export const findUserByEmail = async (

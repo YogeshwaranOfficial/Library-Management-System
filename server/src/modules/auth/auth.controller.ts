@@ -18,12 +18,12 @@ export const registerUserController =
       const result =
         await registerUserService(req.body);
 
-      sendResponse(
-        res,
-        201,
-        "User registered successfully",
-        result
-      );
+    sendResponse(res, {
+      success: true, 
+      statusCode: 201,
+      message: "User registered successfully",
+      data: result,
+    });
     }
   );
 
@@ -36,11 +36,11 @@ export const loginUserController =
       const result =
         await loginUserService(req.body);
 
-      sendResponse(
-        res,
-        200,
-        "User logged in successfully",
-        result
-      );
+      sendResponse(res, {
+      success: true, 
+      statusCode: 200,
+      message: "User login failed",
+      data: result,
+    });
     }
   );
