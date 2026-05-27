@@ -3,6 +3,7 @@ import {
   InferAttributes,
   InferCreationAttributes,
   Model,
+  CreationOptional
 } from "sequelize";
 
 import sequelize from "../connection/database.js";
@@ -17,17 +18,14 @@ class Issue extends Model<
 
   declare book_id: string;
 
-  declare borrowed_date: Date;
-
   declare due_date: Date;
 
-  declare returned_date: Date | null;
+  declare borrowed_date: CreationOptional<Date>; // Defaults to CURRENT_TIMESTAMP
+  declare issue_status: CreationOptional<string>; // Defaults to 'ISSUED' or similar
+  declare returned_date: CreationOptional<Date | null>;
 
-  declare issue_status: string;
-
-  declare readonly created_at: Date;
-
-  declare readonly updated_at: Date;
+  declare readonly created_at: CreationOptional<Date>;
+  declare readonly updated_at: CreationOptional<Date>;
 }
 
 Issue.init(

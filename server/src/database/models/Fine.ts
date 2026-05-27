@@ -3,6 +3,7 @@ import {
   InferAttributes,
   InferCreationAttributes,
   Model,
+  CreationOptional
 } from "sequelize";
 
 import sequelize from "../connection/database.js";
@@ -19,13 +20,12 @@ class Fine extends Model<
 
   declare fine_amount: number;
 
-  declare paid_status: boolean;
+  declare paid_status: CreationOptional<"PAID" | "UNPAID">; // Defaults to 'UNPAID'
+  declare paid_date: CreationOptional<Date | null>;
 
-  declare paid_date: Date | null;
+  declare readonly created_at: CreationOptional<Date>;
+  declare readonly updated_at: CreationOptional<Date>;
 
-  declare readonly created_at: Date;
-
-  declare readonly updated_at: Date;
 }
 
 Fine.init(
