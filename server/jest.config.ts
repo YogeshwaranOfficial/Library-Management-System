@@ -1,17 +1,33 @@
-export default {
-  preset: "ts-jest",
+import type { JestConfigWithTsJest } from 'ts-jest';
 
-  testEnvironment: "node",
+const jestConfig: JestConfigWithTsJest = {
+  // 1. ESM Compatibility Settings (The Lifesavers)
+  preset: 'ts-jest/presets/default-esm', 
+  extensionsToTreatAsEsm: ['.ts'],
+  
+  // 2. Environment & Structure Settings
+  testEnvironment: 'node',
+  roots: ['<rootDir>/src/tests'], // Keeps Jest focused on your tests folder
+  moduleFileExtensions: ['ts', 'js', 'json'],
 
-  roots: ["<rootDir>/src/tests"],
-
-  moduleFileExtensions: ["ts", "js"],
-
-  transform: {
-    "^.+\\.ts$": "ts-jest",
+  // 3. The Path Mapper (Fixes the explicit '.js' import extensions)
+  moduleNameMapper: {
+    '^(\\.{1,2}/.*)\\.js$': '$1',
   },
 
-  collectCoverage: true,
+  // 4. TS-Jest Compiler Configuration
+  transform: {
+    '^.+\\.ts$': [
+      'ts-jest',
+      {
+        useESM: true, // Forces ts-jest to compile with ESM compliance
+      },
+    ],
+  },
 
-  coverageDirectory: "coverage",
+  // 5. Code Coverage Settings (From your original config)
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
 };
+
+export default jestConfig;
