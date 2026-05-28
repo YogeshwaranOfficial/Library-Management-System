@@ -1,9 +1,9 @@
-import './App.css'
-
-export default function App() {
+function App() {
   return (
-    <div className="bg-black text-white min-h-screen flex items-center justify-center">
-      Tailwind Working
+    <div>
+      <h1>Library Management System</h1>
     </div>
-  )
+  );
 }
+
+export default App;
