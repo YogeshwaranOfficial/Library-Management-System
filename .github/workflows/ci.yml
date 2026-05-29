@@ -14,21 +14,24 @@ jobs:
   backend-ci:
     runs-on: ubuntu-latest
 
-    # Global dummy variables satisfy validateEnv.ts during compilation & unit testing
     env:
       PORT: 3000
       NODE_ENV: test
       JWT_SECRET: ci_environment_mock_secret_key_string
       DATABASE_URL: postgresql://mock_user:mock_password@localhost:5432/mock_db
+      # 1. Force the runner engine to execute internal JS actions on Node 24 
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
     defaults:
       run:
         working-directory: server
 
     steps:
+      # 2. Checkout repository (v4 is fine with the flag, or keep an eye out for updates)
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # 3. Setup modern Node runner environment
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
