@@ -2,18 +2,27 @@ name: Backend CI Pipeline
 
 on:
   push:
-    branches:
-      - main
-      - develop
-
+    branches: [ main, develop ]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [ main, develop ]
 
 jobs:
   backend-ci:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     defaults:
       run:
@@ -25,15 +34,28 @@ jobs:
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
-
         with:
           node-version: 22
+          cache: 'npm'
 
       - name: Install Dependencies
         run: npm install
 
       - name: Run TypeScript Build
         run: npm run build
-
-      - name: Run Tests
-        run: npm run test
+      - name: Seed Database
+        run: |
+          # Use psql to execute the seed file
+          # We use the service credentials defined earlier
+          PGPASSWORD=test_password psql -h localhost -U test_user -d test_db -f src/database/seeders/seed.sql
+        env:
+          # This ensures psql can find the database if needed, 
+          # though the command line flags cover it.
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+      - name: Run Unit Tests
+        run: npm run test:unit
+      - name: Run Integration Tests
+        run: npm run test:integration
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          NODE_ENV: test
