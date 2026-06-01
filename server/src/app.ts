@@ -19,6 +19,8 @@ import corsConfig from "./config/cors.js";
 import "./config/validateEnv.js";
 import './database/associations/index.js';
 
+
+
 const app: Application = express();
 
 /* -------------------------------------------------------------------------- */
@@ -34,7 +36,10 @@ app.use(corsConfig); // Use your custom centralized config safely
 app.use(rateLimiter);
 
 // 3. Request Logging & Body Parsing
-app.use(morgan("dev"));
+// Log request details automatically if we are running tests or development
+if (process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development") {
+  app.use(morgan("dev")); 
+}
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

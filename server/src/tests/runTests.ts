@@ -7,8 +7,12 @@ import { execSync } from 'child_process';
 import { Op } from 'sequelize';
 
 async function bootstrapSuite() {
-  console.log('\n🚀 [Test Runner]: Initializing testing database connection pool...');
-  
+
+  const dbUrl = process.env.DATABASE_URL || 'your_local_db_config'; 
+
+  async function bootstrapSuite() {
+  console.log(`\n🚀 [Test Runner]: Targeting database at ${process.env.DATABASE_URL ? 'CI Environment' : 'Local Environment'}`);
+
   try {
     // 1. Authenticate & Sync database
     await sequelize.authenticate();
@@ -35,8 +39,9 @@ async function bootstrapSuite() {
     console.log('\n🧹 [Test Runner]: Beginning post-suite database cleanup...');
     try {
       // 4. Clean up any dynamic test accounts
+      // In src/tests/runTests.ts - Make this surgical instead of a global wildcard match
       await User.destroy({
-        where: { gmail: { [Op.like]: 'test_%' } },
+        where: { gmail: 'test_master_librarian@gmail.com' },
         force: true
       });
       console.log('🗑️ [Test Runner]: Test records safely purged.');
@@ -50,4 +55,4 @@ async function bootstrapSuite() {
   }
 }
 
-bootstrapSuite();
+bootstrapSuite();}

@@ -84,11 +84,6 @@ router.post(
   createMemberController
 );
 
-router.get(
-  "/",
-  auth,
-  getAllMembersController
-);
 
 router.get(
   "/:id",

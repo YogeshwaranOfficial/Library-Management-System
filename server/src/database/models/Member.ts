@@ -19,12 +19,10 @@ class Member extends Model<
 
   declare membership_plan_id: string;
 
-  
   declare start_date: Date;
 
   declare expiry_date: Date;
 
-  
   declare membership_status: CreationOptional<"ACTIVE" | "EXPIRED">;
 
   declare readonly created_at: CreationOptional<Date>;

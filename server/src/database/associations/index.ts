@@ -19,12 +19,14 @@ import Fine from "../models/Fine.js";
 /* -------------------------------------------------------------------------- */
 
 User.hasOne(Member, {
-  foreignKey: "user_id",
+  foreignKey: "user_id", 
+  sourceKey: "uuid",
   as: "member",
 });
 
 Member.belongsTo(User, {
   foreignKey: "user_id",
+  targetKey: "uuid",
   as: "user",
 });
 

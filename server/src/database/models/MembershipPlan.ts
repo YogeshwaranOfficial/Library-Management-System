@@ -19,6 +19,8 @@ class MembershipPlan extends Model<
 
   declare duration_days: number;
 
+  declare max_books_allowed: number;
+
   declare readonly created_at: Date;
 
   declare readonly updated_at: Date;
@@ -46,6 +48,11 @@ MembershipPlan.init(
     duration_days: {
       type: DataTypes.INTEGER,
       allowNull: false,
+    },
+
+    max_books_allowed: {
+      type: DataTypes.INTEGER,
+      allowNull:false,
     },
 
     created_at: {

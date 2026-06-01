@@ -20,8 +20,8 @@ class Issue extends Model<
 
   declare due_date: Date;
 
-  declare borrowed_date: CreationOptional<Date>; // Defaults to CURRENT_TIMESTAMP
-  declare issue_status: CreationOptional<string>; // Defaults to 'ISSUED' or similar
+  declare borrowed_date: CreationOptional<Date>; 
+  declare issue_status: CreationOptional<string>; 
   declare returned_date: CreationOptional<Date | null>;
 
   declare readonly created_at: CreationOptional<Date>;
@@ -49,6 +49,7 @@ Issue.init(
     borrowed_date: {
       type: DataTypes.DATEONLY,
       allowNull: false,
+      defaultValue: DataTypes.NOW
     },
 
     due_date: {

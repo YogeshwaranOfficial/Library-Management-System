@@ -30,6 +30,7 @@ const validate =
       next();
     } catch (error) {
       if (error instanceof ZodError) {
+        console.log("🎯 RAW ZOD ISSUES:", JSON.stringify(error.issues, null, 2));
         sendResponse(res, {
           success: false,
           statusCode: 400,

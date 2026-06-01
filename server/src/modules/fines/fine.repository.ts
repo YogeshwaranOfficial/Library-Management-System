@@ -1,6 +1,5 @@
 import Fine from "../../database/models/Fine.js";
-import { CreationOptional } from "sequelize";
-
+import Issue from "../../database/models/Issue.js";
 
 class FineRepository {
   async getAllFines() {
@@ -13,28 +12,29 @@ class FineRepository {
     return Fine.findByPk(fine_id);
   }
 
-  async getMemberFines(issue_ids: string[]) {
+  /**
+   * OPTIMIZED JOIN: Fetches all fines linked to a specific member in a single database round-trip
+   */
+  async getMemberFines(member_id: string) {
     return Fine.findAll({
-      where: {
-        issue_id: issue_ids,
-      },
+      include: [
+        {
+          model: Issue,
+          as: "issue",
+          where: { member_id },
+          attributes: ["issue_id", "book_id", "borrowed_date"], // Keep payload light
+        },
+      ],
+      order: [["created_at", "DESC"]],
     });
   }
 
-  async payFine(fine_id: string) {
-    await Fine.update(
-      {
-        paid_status: true,
-        paid_date: new Date(),
-      },
-      {
-        where: {
-          fine_id,
-        },
-      }
-    ) ;
+  async payFine(fine_id: string, paymentData: { paid_status: boolean; paid_date: Date }) {
+    await Fine.update(paymentData, {
+      where: { fine_id },
+    });
 
-    return this.getFineById(fine_id) ;
+    return this.getFineById(fine_id);
   }
 
   async getPendingFines() {
@@ -42,7 +42,6 @@ class FineRepository {
       where: {
         paid_status: false,
       },
-
       order: [["created_at", "DESC"]],
     });
   }

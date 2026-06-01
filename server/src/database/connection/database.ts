@@ -1,20 +1,25 @@
 import { Sequelize } from "sequelize";
 import cls from 'cls-hooked';
 import dotenv from "dotenv";
+import databaseConfig from '../config/database.js'; 
 
 dotenv.config();
 
 const namespace = cls.createNamespace('sequelize-test-namespace');
 (Sequelize as any).useCLS(namespace);
 
+// Pick the config based on NODE_ENV (defaults to 'development')
+const env = process.env.NODE_ENV || 'development';
+const config = (databaseConfig as any)[env];
+
 const sequelize = new Sequelize(
-  process.env.DB_NAME!,
-  process.env.DB_USER!,
-  process.env.DB_PASSWORD!,
+  config.database,
+  config.username,
+  config.password,
   {
-    host: process.env.DB_HOST!,
+    host: config.host,
     dialect: "postgres",
-    port: Number(process.env.DB_PORT!),
+    port: config.port,
     logging: false,
   }
 );
