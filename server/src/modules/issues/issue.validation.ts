@@ -3,7 +3,6 @@ import { z } from "zod";
 export const createIssueSchema = z.object({
   body: z.object({
     member_id: z.uuid(),
-
     book_id: z.uuid(),
   }),
 });
@@ -11,5 +10,12 @@ export const createIssueSchema = z.object({
 export const returnBookSchema = z.object({
   body: z.object({
     issue_id: z.uuid(),
+  }),
+});
+
+// ✨ ADDED: Validates route path parameters safely
+export const getMemberIssuesSchema = z.object({
+  params: z.object({
+    memberId: z.uuid(),
   }),
 });

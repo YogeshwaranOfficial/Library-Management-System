@@ -90,22 +90,21 @@
  *       401:
  *         description: Unauthorized token verification failure
  */
-
 import { Router } from "express";
-
 import auth from "../../middlewares/auth.js";
-
 import validate from "../../middlewares/validate.js";
 
 import {
   borrowBookController,
   getMemberIssuesController,
   returnBookController,
+  // overdueIssuesController // 👈 Import this once you build its logic!
 } from "./issue.controller.js";
 
 import {
   createIssueSchema,
   returnBookSchema,
+  getMemberIssuesSchema, // ✨ Added parameter validation
 } from "./issue.validation.js";
 
 const router = Router();
@@ -127,7 +126,15 @@ router.post(
 router.get(
   "/member/:memberId",
   auth,
+  validate(getMemberIssuesSchema), // ✨ Added validation middleware check here
   getMemberIssuesController
+);
+
+// ✨ FIXED: Added missing route discovered during Swagger audit
+router.get(
+  "/overdue",
+  auth,
+  // overdueIssuesController
 );
 
 export default router;

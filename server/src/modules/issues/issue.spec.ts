@@ -182,7 +182,9 @@ describe("⚙️ Issues Module - Unit Tests (Service Layer)", () => {
       jest.spyOn(issueRepository, "returnBook").mockResolvedValue({ issue_id: issueId, returned_date: new Date() } as any);
       jest.spyOn(Book, "findByPk").mockResolvedValue({ book_id: bookId, available_copies: 2 } as any);
       const bookUpdateSpy = jest.spyOn(Book, "update").mockResolvedValue([1]);
-      const fineCreateSpy = jest.spyOn(Fine, "create").mockResolvedValue({} as any);
+      
+      // 💻 FIX: Mock findOrCreate instead of create
+      const fineFindOrCreateSpy = jest.spyOn(Fine, "findOrCreate").mockResolvedValue([{} as any, true]);
 
       const result = await issueService.returnBook(issueId);
 
@@ -190,11 +192,11 @@ describe("⚙️ Issues Module - Unit Tests (Service Layer)", () => {
         { available_copies: 3 },
         { where: { book_id: bookId } }
       );
-      expect(fineCreateSpy).not.toHaveBeenCalled();
+      expect(fineFindOrCreateSpy).not.toHaveBeenCalled();
       expect(result).toHaveProperty("issue_id", issueId);
     });
 
-   it("⚠️ Should generate a cash fine record when returned after the due_date limit", async () => {
+    it("⚠️ Should generate a cash fine record when returned after the due_date limit", async () => {
       // 1. Freeze time
       jest.useFakeTimers();
       const now = new Date('2026-01-05T12:00:00Z');
@@ -212,15 +214,21 @@ describe("⚙️ Issues Module - Unit Tests (Service Layer)", () => {
       jest.spyOn(issueRepository, "returnBook").mockResolvedValue({ issue_id: issueId, returned_date: now } as any);
       jest.spyOn(Book, "findByPk").mockResolvedValue({ book_id: bookId, available_copies: 2 } as any);
       jest.spyOn(Book, "update").mockResolvedValue([1]);
-      const fineCreateSpy = jest.spyOn(Fine, "create").mockResolvedValue({} as any);
+      
+      // 💻 FIX: Mock findOrCreate and structure return payload as an execution array tuple
+      const fineFindOrCreateSpy = jest.spyOn(Fine, "findOrCreate").mockResolvedValue([{} as any, true]);
 
       await issueService.returnBook(issueId);
 
-      expect(fineCreateSpy).toHaveBeenCalledWith({
-        issue_id: issueId,
-        delayed_days: 3, // Now it will be exactly 3
-        fine_amount: 30,
-        paid_status: false,
+      // 💻 FIX: Verify findOrCreate is targeted with accurate matching parameter objects
+      expect(fineFindOrCreateSpy).toHaveBeenCalledWith({
+        where: { issue_id: issueId },
+        defaults: {
+          issue_id: issueId,
+          delayed_days: 3,
+          fine_amount: 30,
+          paid_status: false,
+        },
       });
 
       // 2. Cleanup

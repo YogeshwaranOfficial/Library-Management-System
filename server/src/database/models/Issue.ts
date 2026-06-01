@@ -49,6 +49,7 @@ Issue.init(
     borrowed_date: {
       type: DataTypes.DATEONLY,
       allowNull: false,
+      defaultValue: DataTypes.NOW
     },
 
     due_date: {

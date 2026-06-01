@@ -67,12 +67,15 @@ class IssueService {
       throw new AppError("Book already borrowed and not returned yet", httpStatus.BAD_REQUEST);
     }
 
+    const borrowed_date = new Date(); // 💻 FIX: Define transaction date
     const due_date = new Date();
     due_date.setDate(due_date.getDate() + 14);
 
+    // 💻 FIX: Pass the borrowed_date down to repository layer
     const issue = await issueRepository.createIssue({
       member_id,
       book_id,
+      borrowed_date,
       due_date,
     });
 
@@ -124,12 +127,17 @@ class IssueService {
       const delayed_days = Math.ceil(difference / (1000 * 60 * 60 * 24));
       const fine_amount = delayed_days * 10;
 
-      await Fine.create({
-        issue_id: issue.issue_id,
-        delayed_days,
-        fine_amount,
-        paid_status: false, 
-      } as CreationAttributes<Fine>);
+      // 💻 FIX: Uses findOrCreate to prevent SequelizeUniqueConstraintError 
+      // if seed data already maps an initial fine entry against this issue_id
+      await Fine.findOrCreate({
+        where: { issue_id: issue.issue_id },
+        defaults: {
+          issue_id: issue.issue_id,
+          delayed_days,
+          fine_amount,
+          paid_status: false, 
+        } as CreationAttributes<Fine>
+      });
     }
 
     return updatedIssue;

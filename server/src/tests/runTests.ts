@@ -35,8 +35,9 @@ async function bootstrapSuite() {
     console.log('\n🧹 [Test Runner]: Beginning post-suite database cleanup...');
     try {
       // 4. Clean up any dynamic test accounts
+      // In src/tests/runTests.ts - Make this surgical instead of a global wildcard match
       await User.destroy({
-        where: { gmail: { [Op.like]: 'test_%' } },
+        where: { gmail: 'test_master_librarian@gmail.com' },
         force: true
       });
       console.log('🗑️ [Test Runner]: Test records safely purged.');
