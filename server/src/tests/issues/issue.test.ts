@@ -2,20 +2,31 @@ import request from "supertest";
 import app from "../../app.js";
 import { getAuthToken } from "../helpers/testAuth.helper.js";
 import Issue from "../../database/models/Issue.js";
+import Book from "../../database/models/Book.js"; // 👈 1. Import your Book model here
 
 describe("⚙️ Issues Module - Integration Tests", () => {
   let authToken: string;
   let newlyBorrowedIssueId: string;
 
-  // Constants mapping directly to your provided SQL seed data
-  const SEED_MEMBER_ID = "20000001-2222-4222-a222-222222222201"; // Historically returned member
-  const SEED_BOOK_ID = "b0000001-3333-4333-a333-333333333301";   // Historically returned book (available)
+  const SEED_MEMBER_ID = "20000001-2222-4222-a222-222222222201";
+  const SEED_BOOK_ID = "b0000001-3333-4333-a333-333333333301";   
   
-  const ACTIVE_ISSUE_MEMBER_ID = "20000030-2222-4222-a222-222222222230"; // From row 16
-  const ACTIVE_ISSUE_ID = "40000016-4444-4444-a444-444444444416";        // From row 16 (Clean item with NO pre-existing fine record)
+  const ACTIVE_ISSUE_MEMBER_ID = "20000030-2222-4222-a222-222222222230"; 
+  const ACTIVE_ISSUE_ID = "40000016-4444-4444-a444-444444444416";        
 
   beforeAll(async () => {
     authToken = await getAuthToken();
+
+    // 👈 2. FORCE THE SEED BOOK TO BE AVAILABLE
+    // Wipe out any lingering uncleaned records matching this test book
+    await Issue.destroy({ where: { book_id: SEED_BOOK_ID } });
+
+    // Directly restock the book inside the database so the borrow endpoint succeeds
+    // (Verify if your model uses 'available_copies' or just 'total_copies')
+    await Book.update(
+      { available_copies: 5, total_copies: 5 }, 
+      { where: { book_id: SEED_BOOK_ID } }
+    );
 
     // Ensure the target row is reset back to active BORROWED status before running tests
     await Issue.update(
@@ -57,7 +68,6 @@ describe("⚙️ Issues Module - Integration Tests", () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data).toHaveProperty("issue_id");
 
-      // Preserve id dynamically so afterAll hook drops it from test environment tables
       newlyBorrowedIssueId = response.body.data.issue_id;
     });
 

@@ -3,39 +3,43 @@ import app from "../../app.js";
 import { getAuthToken } from "../helpers/testAuth.helper.js";
 import sequelize from '../../database/connection/database.js';
 import Category from '../../database/models/Category.js'; 
-import Book from '../../database/models/Book.js';         
 
-describe("📚 Books Module Integration Tests (All Scenarios)", () => {
+describe("📚 Books Module Integration Tests (Isolated & Self-Cleaning)", () => {
   let librarianToken: string;
   let scienceCategoryId: string;  
-  let seededBookId: string;       
   let createdBookId: string;
+  let searchBookId: string; // Captured to prevent DB accumulation leaks
   
   const testBookName = `Clean Architecture v${Math.floor(Math.random() * 1000)}`;
   const searchKeyword = `SearchableBook-${Math.floor(Math.random() * 1000)}`;
-  const nonExistentUuid = "a0000000-0000-0000-0000-000000000000";
+  const nonExistentUuid = "00000000-0000-0000-0000-000000000000";
 
   beforeAll(async () => {
-    // 1. Grab authorization token
+    // 1. Grab authorization token for Librarian
     const token = await getAuthToken();
     librarianToken = `Bearer ${token}`;
 
     try {
-      // 2. Safely capture a real category ID from DB
+      // 2. Safely capture a real category ID from DB to link books to
       const realCategory = await Category.findOne(); 
       scienceCategoryId = realCategory ? (realCategory.get('category_id') as string) : nonExistentUuid;
-
-      // 3. Safely capture a real pre-seeded Book ID from DB
-      const realBook = await Book.findOne();
-      seededBookId = realBook ? (realBook.get('book_id') as string) : nonExistentUuid;
     } catch (err) {
-      // Safeguard fallbacks in case models have alternate column definitions
       scienceCategoryId = "075705f3-c7be-4585-85d1-b57616870f68";
-      seededBookId = "b0000001-3333-3333-3333-333333333333";
     }
   });
 
   afterAll(async () => {
+    // Safety Net Cleanup: If tests fail early, ensure dummy items are still scrubbed
+    if (searchBookId) {
+      await request(app)
+        .delete(`/api/v1/books/${searchBookId}`)
+        .set("Authorization", librarianToken);
+    }
+    if (createdBookId) {
+      await request(app)
+        .delete(`/api/v1/books/${createdBookId}`)
+        .set("Authorization", librarianToken);
+    }
     await sequelize.close();
   });
 
@@ -59,7 +63,7 @@ describe("📚 Books Module Integration Tests (All Scenarios)", () => {
       expect(res.body.data).toHaveProperty("book_id");
       expect(res.body.data.book_name).toBe(testBookName);
       
-      // Save this value securely for the GET details suite below
+      // Save this isolated ID for subsequent Read, Update, and Delete steps
       createdBookId = res.body.data.book_id;
     });
 
@@ -78,7 +82,7 @@ describe("📚 Books Module Integration Tests (All Scenarios)", () => {
       expect(res.body.success).toBe(false);
     });
 
-    it("❌ Sad Path: Should throw 400/404 error if category UUID does not exist in DB", async () => {
+    it("❌ Sad Path: Should throw 404 error if category UUID does not exist in DB", async () => {
       const res = await request(app)
         .post("/api/v1/books")
         .set("Authorization", librarianToken)
@@ -89,7 +93,7 @@ describe("📚 Books Module Integration Tests (All Scenarios)", () => {
           total_copies: 5,
         });
 
-      expect([400, 404]).toContain(res.status);
+      expect(res.status).toBe(404); // Matches BookService AppError definition
     });
 
     it("❌ Sad Path: Should reject execution if authorization token is absent", async () => {
@@ -111,7 +115,7 @@ describe("📚 Books Module Integration Tests (All Scenarios)", () => {
   // ==========================================
   describe("GET /api/v1/books", () => {
     beforeAll(async () => {
-      await request(app)
+      const res = await request(app)
         .post("/api/v1/books")
         .set("Authorization", librarianToken)
         .send({
@@ -120,6 +124,19 @@ describe("📚 Books Module Integration Tests (All Scenarios)", () => {
           category_id: scienceCategoryId, 
           total_copies: 2,
         });
+      
+      // CAPTURING THIS ID: Prevents database bloat on repeated test runs
+      searchBookId = res.body.data?.book_id;
+    });
+
+    afterAll(async () => {
+      // Instantly delete the search test book right after this suite finishes
+      if (searchBookId) {
+        await request(app)
+          .delete(`/api/v1/books/${searchBookId}`)
+          .set("Authorization", librarianToken);
+        searchBookId = ""; // Clear reference
+      }
     });
 
     it("✅ Happy Path: Should fetch all books complete with default pagination maps", async () => {
@@ -157,22 +174,12 @@ describe("📚 Books Module Integration Tests (All Scenarios)", () => {
   // ==========================================
   describe("GET /api/v1/books/:bookId", () => {
     it("✅ Happy Path: Should return details of a single book by ID", async () => {
-      const validTargetId = createdBookId || seededBookId;
-
       const res = await request(app)
-        .get(`/api/v1/books/${validTargetId}`)
+        .get(`/api/v1/books/${createdBookId}`)
         .set("Authorization", librarianToken);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.book_id).toBe(validTargetId);
-    });
-
-    it("✅ Happy Path: Should successfully fetch a pre-seeded book dynamically", async () => {
-      const res = await request(app)
-        .get(`/api/v1/books/${seededBookId}`)
-        .set("Authorization", librarianToken);
-
-      expect(res.status).toBe(200);
+      expect(res.body.data.book_id).toBe(createdBookId);
     });
 
     it("❌ Sad Path: Should throw 404 error if book ID cannot be found", async () => {
@@ -184,16 +191,15 @@ describe("📚 Books Module Integration Tests (All Scenarios)", () => {
     });
   });
 
- // ==========================================
+  // ==========================================
   // 🟢 4. PATCH /api/v1/books/:bookId (UPDATE)
   // ==========================================
   describe("PATCH /api/v1/books/:bookId", () => {
     it("✅ Happy Path: Should let an authorized Librarian update a book's details via PATCH", async () => {
-      const targetBookId = createdBookId || seededBookId;
       const updatedTitle = `Clean Architecture - Edited v${Math.floor(Math.random() * 1000)}`;
 
       const res = await request(app)
-        .patch(`/api/v1/books/${targetBookId}`)
+        .patch(`/api/v1/books/${createdBookId}`)
         .set("Authorization", librarianToken)
         .send({
           book_name: updatedTitle,
@@ -209,16 +215,14 @@ describe("📚 Books Module Integration Tests (All Scenarios)", () => {
     });
 
     it("❌ Sad Path: Should fail validation when partial update criteria are invalid (Zod)", async () => {
-      const targetBookId = createdBookId || seededBookId;
-
       const res = await request(app)
-        .patch(`/api/v1/books/${targetBookId}`)
+        .patch(`/api/v1/books/${createdBookId}`)
         .set("Authorization", librarianToken)
         .send({
-          book_name: "Y", // Too short
-          book_author: "", // Invalid empty string
+          book_name: "Y", 
+          book_author: "", 
           category_id: "not-a-valid-uuid",
-          total_copies: -5, // Negative values fail check
+          total_copies: -5, 
         });
 
       expect(res.status).toBe(400);
@@ -253,21 +257,22 @@ describe("📚 Books Module Integration Tests (All Scenarios)", () => {
     });
 
     it("✅ Happy Path: Should successfully delete an existing book by its ID", async () => {
-      const targetBookId = createdBookId || seededBookId;
-
       const res = await request(app)
-        .delete(`/api/v1/books/${targetBookId}`)
+        .delete(`/api/v1/books/${createdBookId}`)
         .set("Authorization", librarianToken);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
 
-      // Verify removal
+      // Verify removal directly matches your Service's getBookById 404 check
       const doubleCheckRes = await request(app)
-        .get(`/api/v1/books/${targetBookId}`)
+        .get(`/api/v1/books/${createdBookId}`)
         .set("Authorization", librarianToken);
 
       expect(doubleCheckRes.status).toBe(404);
+      
+      // Nullify value so global safety net inside afterAll avoids duplicate calls
+      createdBookId = ""; 
     });
   });
-}); 
+});
