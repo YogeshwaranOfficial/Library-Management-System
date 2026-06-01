@@ -7,8 +7,12 @@ import { execSync } from 'child_process';
 import { Op } from 'sequelize';
 
 async function bootstrapSuite() {
-  console.log('\n🚀 [Test Runner]: Initializing testing database connection pool...');
-  
+
+  const dbUrl = process.env.DATABASE_URL || 'your_local_db_config'; 
+
+  async function bootstrapSuite() {
+  console.log(`\n🚀 [Test Runner]: Targeting database at ${process.env.DATABASE_URL ? 'CI Environment' : 'Local Environment'}`);
+
   try {
     // 1. Authenticate & Sync database
     await sequelize.authenticate();
@@ -51,4 +55,4 @@ async function bootstrapSuite() {
   }
 }
 
-bootstrapSuite();
+bootstrapSuite();}

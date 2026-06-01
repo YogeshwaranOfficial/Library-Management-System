@@ -1,14 +1,12 @@
 import type { JestConfigWithTsJest } from 'ts-jest';
 
-const jestConfig: JestConfigWithTsJest = {
+const integrationConfig: JestConfigWithTsJest = {
   preset: 'ts-jest/presets/default-esm', 
   extensionsToTreatAsEsm: ['.ts'],
   testEnvironment: 'node',
-  // Scan across your entire testing root
-  roots: ['<rootDir>/src/tests'], 
+  roots: ['<rootDir>/src'], // Widened to src
   testMatch: [
-    '**/*.spec.ts', // Unit files
-    '**/*.test.ts'  // Integration files
+    '<rootDir>/src/**/*.test.ts' // Matches integration files anywhere in src
   ],
   moduleFileExtensions: ['ts', 'js', 'json'],
   moduleNameMapper: {
@@ -25,8 +23,7 @@ const jestConfig: JestConfigWithTsJest = {
       },
     ],
   },
-  collectCoverage: true,
-  coverageDirectory: 'coverage',
+  collectCoverage: false,
 };
 
-export default jestConfig;
+export default integrationConfig;

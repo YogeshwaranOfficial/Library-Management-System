@@ -2,7 +2,7 @@ import request from "supertest";
 import app from "../../app.js";
 import { getAuthToken } from "../helpers/testAuth.helper.js";
 import Issue from "../../database/models/Issue.js";
-import Book from "../../database/models/Book.js"; // 👈 1. Import your Book model here
+import Book from "../../database/models/Book.js";
 
 describe("⚙️ Issues Module - Integration Tests", () => {
   let authToken: string;
@@ -17,18 +17,13 @@ describe("⚙️ Issues Module - Integration Tests", () => {
   beforeAll(async () => {
     authToken = await getAuthToken();
 
-    // 👈 2. FORCE THE SEED BOOK TO BE AVAILABLE
-    // Wipe out any lingering uncleaned records matching this test book
     await Issue.destroy({ where: { book_id: SEED_BOOK_ID } });
 
-    // Directly restock the book inside the database so the borrow endpoint succeeds
-    // (Verify if your model uses 'available_copies' or just 'total_copies')
     await Book.update(
       { available_copies: 5, total_copies: 5 }, 
       { where: { book_id: SEED_BOOK_ID } }
     );
 
-    // Ensure the target row is reset back to active BORROWED status before running tests
     await Issue.update(
       { 
         returned_date: null,
@@ -39,12 +34,10 @@ describe("⚙️ Issues Module - Integration Tests", () => {
   });
 
   afterAll(async () => {
-    // Clean up only the entry generated dynamically by our borrow route test execution
     if (newlyBorrowedIssueId) {
       await Issue.destroy({ where: { issue_id: newlyBorrowedIssueId } });
     }
     
-    // Reset our seed test row back to its default state for subsequent runs
     await Issue.update(
       { 
         returned_date: null,
@@ -79,6 +72,32 @@ describe("⚙️ Issues Module - Integration Tests", () => {
 
       expect(response.status).toBe(400);
     });
+
+    // ✨ NEW INTEGRATION NEGATIVE CASE: Member not found error routing
+    it("❌ Should return 404 if member does not exist in database", async () => {
+      const response = await request(app)
+        .post("/api/v1/issues/borrow")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({
+          member_id: "00000000-0000-0000-0000-000000000000",
+          book_id: SEED_BOOK_ID
+        });
+
+      expect(response.status).toBe(404);
+    });
+
+    // ✨ NEW INTEGRATION NEGATIVE CASE: Book not found error routing
+    it("❌ Should return 404 if targeted book does not exist in database", async () => {
+      const response = await request(app)
+        .post("/api/v1/issues/borrow")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({
+          member_id: SEED_MEMBER_ID,
+          book_id: "00000000-0000-0000-0000-000000000000"
+        });
+
+      expect(response.status).toBe(404);
+    });
   });
 
   describe("POST /api/v1/issues/return", () => {
@@ -90,6 +109,26 @@ describe("⚙️ Issues Module - Integration Tests", () => {
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
+    });
+
+    // ✨ NEW INTEGRATION NEGATIVE CASE: Double return error path
+    it("❌ Should return 400 if trying to return an already returned book record", async () => {
+      const response = await request(app)
+        .post("/api/v1/issues/return")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ issue_id: ACTIVE_ISSUE_ID }); // Second execution on same ID
+
+      expect(response.status).toBe(400);
+    });
+
+    // ✨ NEW INTEGRATION NEGATIVE CASE: Record not found path
+    it("❌ Should return 404 if issue_id does not exist", async () => {
+      const response = await request(app)
+        .post("/api/v1/issues/return")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ issue_id: "00000000-0000-0000-0000-000000000000" });
+
+      expect(response.status).toBe(404);
     });
   });
 

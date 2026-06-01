@@ -69,6 +69,19 @@ describe("⚙️ Issues Module - Unit Tests (Service Layer)", () => {
       );
     });
 
+    it("❌ Should use 'Current' as a fallback plan name when the plan has no explicit name assigned", async () => {
+      jest.spyOn(Member, "findByPk").mockResolvedValue({
+        member_id: memberId,
+        membership_status: "ACTIVE",
+        membership_plan: { max_books: 2, plan_name: "" }, 
+      } as any);
+      jest.spyOn(Issue, "count").mockResolvedValue(2);
+
+      await expect(issueService.borrowBook(memberId, bookId)).rejects.toThrow(
+        /Your Current plan only allows up to 2 books/
+      );
+    });
+
     it("❌ Should throw 404 error if targeted book cannot be found", async () => {
       jest.spyOn(Member, "findByPk").mockResolvedValue({
         member_id: memberId,
@@ -183,7 +196,6 @@ describe("⚙️ Issues Module - Unit Tests (Service Layer)", () => {
       jest.spyOn(Book, "findByPk").mockResolvedValue({ book_id: bookId, available_copies: 2 } as any);
       const bookUpdateSpy = jest.spyOn(Book, "update").mockResolvedValue([1]);
       
-      // 💻 FIX: Mock findOrCreate instead of create
       const fineFindOrCreateSpy = jest.spyOn(Fine, "findOrCreate").mockResolvedValue([{} as any, true]);
 
       const result = await issueService.returnBook(issueId);
@@ -196,13 +208,33 @@ describe("⚙️ Issues Module - Unit Tests (Service Layer)", () => {
       expect(result).toHaveProperty("issue_id", issueId);
     });
 
+    it("✅ Should safely record return info even if the book record was removed from the system completely", async () => {
+      const futureDueDate = new Date();
+      futureDueDate.setDate(futureDueDate.getDate() + 5);
+
+      jest.spyOn(issueRepository, "findIssueById").mockResolvedValue({
+        issue_id: issueId,
+        book_id: bookId,
+        due_date: futureDueDate,
+        returned_date: null,
+      } as any);
+      jest.spyOn(issueRepository, "returnBook").mockResolvedValue({ issue_id: issueId, returned_date: new Date() } as any);
+      
+      jest.spyOn(Book, "findByPk").mockResolvedValue(null);
+      const bookUpdateSpy = jest.spyOn(Book, "update").mockResolvedValue([0]);
+
+      const result = await issueService.returnBook(issueId);
+
+      expect(bookUpdateSpy).not.toHaveBeenCalled();
+      expect(result).toHaveProperty("issue_id", issueId);
+    });
+
     it("⚠️ Should generate a cash fine record when returned after the due_date limit", async () => {
-      // 1. Freeze time
       jest.useFakeTimers();
       const now = new Date('2026-01-05T12:00:00Z');
       jest.setSystemTime(now);
 
-      const pastDueDate = new Date('2026-01-02T12:00:00Z'); // Exactly 3 days prior
+      const pastDueDate = new Date('2026-01-02T12:00:00Z'); 
 
       jest.spyOn(issueRepository, "findIssueById").mockResolvedValue({
         issue_id: issueId,
@@ -215,12 +247,10 @@ describe("⚙️ Issues Module - Unit Tests (Service Layer)", () => {
       jest.spyOn(Book, "findByPk").mockResolvedValue({ book_id: bookId, available_copies: 2 } as any);
       jest.spyOn(Book, "update").mockResolvedValue([1]);
       
-      // 💻 FIX: Mock findOrCreate and structure return payload as an execution array tuple
       const fineFindOrCreateSpy = jest.spyOn(Fine, "findOrCreate").mockResolvedValue([{} as any, true]);
 
       await issueService.returnBook(issueId);
 
-      // 💻 FIX: Verify findOrCreate is targeted with accurate matching parameter objects
       expect(fineFindOrCreateSpy).toHaveBeenCalledWith({
         where: { issue_id: issueId },
         defaults: {
@@ -231,7 +261,37 @@ describe("⚙️ Issues Module - Unit Tests (Service Layer)", () => {
         },
       });
 
-      // 2. Cleanup
+      jest.useRealTimers();
+    });
+
+    // ✨ NEW TEST CASE FOR LINES 126-132: Handles pre-existing fine updates
+    it("⚠️ Should update or handle an existing fine record if fine is already initialized", async () => {
+      jest.useFakeTimers();
+      const now = new Date('2026-01-05T12:00:00Z');
+      jest.setSystemTime(now);
+
+      const pastDueDate = new Date('2026-01-02T12:00:00Z'); 
+
+      jest.spyOn(issueRepository, "findIssueById").mockResolvedValue({
+        issue_id: issueId,
+        book_id: bookId,
+        due_date: pastDueDate,
+        returned_date: null,
+      } as any);
+      
+      jest.spyOn(issueRepository, "returnBook").mockResolvedValue({ issue_id: issueId, returned_date: now } as any);
+      jest.spyOn(Book, "findByPk").mockResolvedValue({ book_id: bookId, available_copies: 2 } as any);
+      jest.spyOn(Book, "update").mockResolvedValue([1]);
+      
+      // Mock fine to return created = false (Fine already exists in database)
+     const mockExistingFine = { 
+  update: jest.fn<() => Promise<any>>().mockResolvedValue({}) 
+};
+      jest.spyOn(Fine, "findOrCreate").mockResolvedValue([mockExistingFine as any, false]);
+
+      await issueService.returnBook(issueId);
+
+      expect(Fine.findOrCreate).toHaveBeenCalled();
       jest.useRealTimers();
     });
   });
