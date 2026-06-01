@@ -1,9 +1,9 @@
 import "@jest/globals";
 import request from "supertest";
 import httpStatus from "http-status-codes";
+import sequelize from "../../database/connection/database.js";
 
 const { default: app } = await import("../../app.js"); 
-const { generateToken } = await import("../../utils/jwt.js");
 const { default: Member } = await import("../../database/models/Member.js");
 const { default: User } = await import("../../database/models/User.js");
 const { default: MembershipPlan } = await import("../../database/models/MembershipPlan.js");
@@ -11,43 +11,43 @@ const { getAuthToken } = await import("../helpers/testAuth.helper.js");
 
 describe("Member Module (End-to-End Integration Tests)", () => {
   let mockLibrarianToken: string = "";
-  let validUserUuid: string = "";
+  let testUserUuid: string = "";
   let validPlanUuid: string = "";
-  
-beforeAll(async () => {
+  let sharedMemberId: string = ""; // 🔑 Passes the created member ID down the pipeline
+
+  beforeAll(async () => {
+    // 1. Get the Librarian token for authorization
     mockLibrarianToken = await getAuthToken();
     
-    const user = await User.findOne();
-    if (!user) {
-      throw new Error("❌ Test Setup Failure: Zero records found in the Users table.");
-    }
-    
-    console.log("💎 SEEDED USER DATABASE DATA CORES:", user.toJSON());
-
-    // 🔑 ROOT CAUSE FIX: Dynamically read the real UUID property from the seeded database record
-    validUserUuid = (user.get("uuid") || user.get("user_id") || user.get("id") || (user as any).uuid) as string;
-
+    // 2. Safely grab an existing, real seeded plan
     const plan = await MembershipPlan.findOne();
     if (!plan) {
       throw new Error("❌ Test Setup Failure: Zero records found in the MembershipPlans table.");
     }
-    
-    console.log("💎 SEEDED PLAN DATABASE DATA CORES:", plan.toJSON());
-    
-    // 🔑 ROOT CAUSE FIX: Dynamically read the real Plan UUID property from the seeded database record
     validPlanUuid = (plan.get("membership_plan_id") || plan.get("id") || (plan as any).membership_plan_id) as string;
 
-    // Safety fallback only triggered if both database properties are totally missing
-    if (!validUserUuid || !validPlanUuid) {
-      console.log("🚨 VARIABLE ASSIGNMENT WARNING - Fallback triggered due to undefined fields");
-      validUserUuid = "10000001-1111-4111-a111-111111111111"; 
-      validPlanUuid = "173233e3-d14a-4008-a269-98eab1699eef"; 
+    // 3. Create EXACTLY ONE clean test User (Reader) for this suite run
+    const temporaryUser = await User.create({
+      name: "Integration Test Reader",
+      gmail: `test.reader.${Date.now()}@gmail.com`,
+      password: "$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG", // dummy hash
+      role: "READER"
+    } as any);
+
+    testUserUuid = (temporaryUser.get("uuid") || temporaryUser.get("id") || (temporaryUser as any).uuid) as string;
+    console.log("🚀 Created isolated test user for lifecycle pipeline:", testUserUuid);
+  });
+
+  afterAll(async () => {
+    // Clean up in reverse order of foreign key dependency
+    if (sharedMemberId) {
+      await Member.destroy({ where: { member_id: sharedMemberId } }).catch(() => {});
     }
-});
-  beforeEach(async () => {
-    // Clear old test rows to maintain a completely isolated test state
-    // await Member.destroy({ where: {}, truncate: true, cascade: true });
-    await Member.destroy({ where: {} });
+    if (testUserUuid) {
+      await User.destroy({ where: { uuid: testUserUuid } }).catch(() => {});
+      console.log("🧹 Cleanly purged test user and associated rows from database.");
+    }
+    await sequelize.close(); 
   });
 
   // ==========================================
@@ -59,15 +59,14 @@ beforeAll(async () => {
       expect(response.status).toBe(httpStatus.UNAUTHORIZED);
     });
   });  
-  // ==========================================
-  // POST
-  // ==========================================
 
+  // ==========================================
+  // 📥 POST (Step 1: Create)
+  // ==========================================
   describe("📥 POST /api/v1/members", () => {
     it("🟢 Happy Path: Should cleanly register a member with valid tracking payloads", async () => {
-      
       const validPayload = {
-        user_id: validUserUuid,            
+        user_id: testUserUuid,            
         membership_plan_id: validPlanUuid, 
         start_date: "2026-05-29",
         expiry_date: "2026-06-28"
@@ -76,31 +75,22 @@ beforeAll(async () => {
       const response = await request(app)
         .post("/api/v1/members")
         .set("Authorization", `Bearer ${mockLibrarianToken}`)
-        .set("Content-Type", "application/json") // 👈 FORCE JSON HEADER
-        .set("Accept", "application/json")       // 👈 FORCE ACCEPT HEADER
-        .send(JSON.stringify(validPayload));     // 👈 EXPLICIT STRINGIFY
-
-      if (response.status !== 201) {
-        console.log("🔴 DESTINATION LAYER ERROR DETAILS:", JSON.stringify(response.body, null, 2));
-      }
+        .set("Content-Type", "application/json")
+        .send(JSON.stringify(validPayload));    
 
       expect(response.status).toBe(httpStatus.CREATED);
+
+      // Save this ID to use across all remaining test cases
+      sharedMemberId = response.body.data?.member_id || response.body.data?.id;
+      expect(sharedMemberId).toBeDefined();
     });
   });
 
   // ==========================================
-  // 📤 GET / (Fetch & Auto-Expire Evaluator)
+  // 📤 GET (Step 2: Fetch list & Evaluate Auto-Expire)
   // ==========================================
   describe("📤 GET /api/v1/members", () => {
     it("🟢 Happy Path: Should fetch paginated records and accurately serialize meta payloads", async () => {
-      await Member.create({
-        user_id: validUserUuid,
-        membership_plan_id: validPlanUuid,
-        start_date: new Date(),
-        expiry_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), 
-        membership_status: "ACTIVE",
-      } as any);
-
       const response = await request(app)
         .get("/api/v1/members")
         .set("Authorization", `Bearer ${mockLibrarianToken}`)
@@ -108,31 +98,22 @@ beforeAll(async () => {
 
       expect(response.status).toBe(httpStatus.OK);
 
-      // SAFE EVALUATION: Handles response patterns with root meta objects or inside nested fields
-      if (response.body.meta) {
-        expect(response.body.meta.total).toBe(1);
-      } else if (response.body.data && response.body.data.meta) {
-        expect(response.body.data.meta.total).toBe(1);
-      }
-
-      // const targetData = Array.isArray(response.body.data) ? response.body.data : response.body;
-      // expect(Array.isArray(targetData)).toBe(true);
-
       const targetData = response.body.data?.data || response.body.data || response.body;
       expect(Array.isArray(targetData)).toBe(true);
     });
 
     it("⚡ Business Rule Validation: Should convert status to EXPIRED via Repository layer optimization", async () => {
-      const expiredRecord = await Member.create({
-        user_id: validUserUuid,
-        membership_plan_id: validPlanUuid,
-        start_date: new Date("2025-01-01"),
-        expiry_date: new Date("2025-12-31"), 
-        membership_status: "ACTIVE", 
-      } as any);
+      // Artificially age our shared test member in the DB to push them into the past
+      await Member.update(
+        {
+          start_date: new Date("2025-01-01"),
+          expiry_date: new Date("2025-12-31"),
+          membership_status: "ACTIVE"
+        },
+        { where: { member_id: sharedMemberId } }
+      );
 
-      const targetId = (expiredRecord as any).member_id || (expiredRecord as any).id;
-
+      // Call GET endpoint to trigger the system's dynamic expiration evaluation hooks
       const response = await request(app)
         .get("/api/v1/members")
         .set("Authorization", `Bearer ${mockLibrarianToken}`)
@@ -140,13 +121,14 @@ beforeAll(async () => {
 
       expect(response.status).toBe(httpStatus.OK);
       
-      const updatedRecord = await Member.findByPk(targetId);
+      // Verify that the record flipped to EXPIRED automatically
+      const updatedRecord = await Member.findByPk(sharedMemberId);
       expect(updatedRecord?.membership_status).toBe("EXPIRED");
     });
   });
 
   // ==========================================
-  // 🔍 GET /:id (Retrieve Single Record)
+  // 🔍 GET /:id (Step 3: Single Read Check)
   // ==========================================
   describe("🔍 GET /api/v1/members/:id", () => {
     it("🔴 Sad Path: Should throw 404 AppError exception if member identifier does not exist", async () => {
@@ -160,26 +142,14 @@ beforeAll(async () => {
   });
 
   // ==========================================
-  // 🔧 PATCH /:id (Update Member)
+  // 🔧 PATCH /:id (Step 4: Update)
   // ==========================================
   describe("🔧 PATCH /api/v1/members/:id", () => {
     it("🟢 Happy Path: Should modify properties smoothly if targeting existing profiles", async () => {
-      const existing = await Member.create({
-        user_id: validUserUuid,
-        membership_plan_id: validPlanUuid,
-        start_date: new Date(),
-        expiry_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 10),
-        membership_status: "ACTIVE",
-      } as any);
-
-      const targetId = (existing as any).member_id || (existing as any).id;
-
       const response = await request(app)
-        .patch(`/api/v1/members/${targetId}`)
+        .patch(`/api/v1/members/${sharedMemberId}`)
         .set("Authorization", `Bearer ${mockLibrarianToken}`)
-        .send({ membership_status: "ACTIVE" }); 
-
-      
+        .send({ membership_status: "ACTIVE" }); // Restore status back to active
 
       expect(response.status).toBe(httpStatus.OK);
       
@@ -189,29 +159,23 @@ beforeAll(async () => {
   });
 
   // ==========================================
-  // 🗑️ DELETE /:id (Remove Registry Element)
+  // 🗑️ DELETE /:id (Step 5: Clean Registry Element)
   // ==========================================
   describe("🗑️ DELETE /api/v1/members/:id", () => {
     it("🟢 Happy Path: Should drop record cleanly from database", async () => {
-      const deleteTarget = await Member.create({
-        user_id: validUserUuid,
-        membership_plan_id: validPlanUuid,
-        start_date: new Date(),
-        expiry_date: new Date(Date.now() + 1000 * 60 * 60 * 24 * 10),
-        membership_status: "ACTIVE",
-      } as any);
-
-      const targetId = (deleteTarget as any).member_id || (deleteTarget as any).id;
-
       const response = await request(app)
-        .delete(`/api/v1/members/${targetId}`)
+        .delete(`/api/v1/members/${sharedMemberId}`)
         .set("Authorization", `Bearer ${mockLibrarianToken}`)
         .send();
 
       expect(response.status).toBe(httpStatus.OK);
 
-      const doubleCheck = await Member.findByPk(targetId);
+      // Verify it is gone completely from the table
+      const doubleCheck = await Member.findByPk(sharedMemberId);
       expect(doubleCheck).toBeNull();
+      
+      // Clear out the tracking ID string since it's already deleted
+      sharedMemberId = "";
     });
   });
 });
