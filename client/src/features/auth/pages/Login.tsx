@@ -21,59 +21,57 @@ export const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
-  const handleFormSubmission = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setFieldErrors({});
+const handleFormSubmission = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setFieldErrors({});
 
-    // 1. Client-Side Parsing via Zod Engine Engine
-    const parsingResults = LoginSchema.safeParse({
-      email,
-      password,
-      role: selectedRole,
+  // 1. Client-Side Parsing via your frontend schema
+  const parsingResults = LoginSchema.safeParse({
+    email,
+    password,
+    role: selectedRole,
+  });
+
+  if (!parsingResults.success) {
+    const structuredErrors: { email?: string; password?: string } = {};
+    parsingResults.error.issues.forEach((err) => {
+      if (err.path[0] === "email") structuredErrors.email = err.message;
+      if (err.path[0] === "password") structuredErrors.password = err.message;
+    });
+    setFieldErrors(structuredErrors);
+    setIsLoading(false);
+    toast.error("Validation failed. Please address layout errors.");
+    return;
+  }
+
+  // 2. Transmit Handshake request to the backend REST API
+  try {
+    // Standard JSON payload structure sent directly to the server's req.body
+    const networkResponse = await axiosClient.post("/auth/login", {
+      gmail: email,       // Maps your local state 'email' to backend's 'gmail'
+      password: password, // Maps your local state 'password' to backend's 'password'
+      role: selectedRole, // Passes role at the same root level
     });
 
-    if (!parsingResults.success) {
-      const structuredErrors: { email?: string; password?: string } = {};
-      parsingResults.error.issues.forEach((err) => {
-        if (err.path[0] === "email") structuredErrors.email = err.message;
-        if (err.path[0] === "password") structuredErrors.password = err.message;
-      });
-      setFieldErrors(structuredErrors);
-      setIsLoading(false);
-      toast.error("Validation validation failed. Please address layout errors.");
-      return;
+    const { user, token } = networkResponse.data;
+
+    setAuth(user, token);
+    toast.success("Login Successfully");
+    navigate("/dashboard");
+  } catch (error: unknown) {
+    console.error("Login Failed:", error);
+    
+    if (axios.isAxiosError(error)) {
+      console.log("Validation details from server:", error.response?.data);
+      toast.error(error.response?.data?.message || "Invalid account credentials.");
+    } else {
+      toast.error("An unexpected infrastructure error occurred.");
     }
-
-    // 2. Transmit Handshake request to the backend REST API
-    try {
-      const networkResponse = await axiosClient.post("/auth/login", {
-        email,
-        password,
-        role: selectedRole,
-      });
-
-      const { user, token } = networkResponse.data;
-
-      // Commit the session credentials to global memory storage
-      setAuth(user, token);
-      toast.success("Security authorization handshake complete!");
-      
-      // Dynamic operational routing redirection path choice
-      navigate("/dashboard");
-    } catch (error: unknown) { // FIX (ESLint): Changed from 'any' to 'unknown'
-      console.error("Login authorization collapse anomaly:", error);
-      
-      // FIX (ESLint): Safe Type-Guarded extraction parsing
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Invalid account credentials.");
-      } else {
-        toast.error("An unexpected infrastructure error occurred.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <div className="min-screen h-screen w-screen flex items-center justify-center bg-ocean-blue px-4 relative overflow-hidden">
@@ -92,14 +90,15 @@ export const Login = () => {
           <div className="w-12 h-12 bg-teal-brand rounded-xl flex items-center justify-center mx-auto text-2xl mb-3 shadow-md">
             📚
           </div>
-          <h2 className="text-2xl font-bold tracking-tight">System Core Authentication</h2>
-          <p className="text-gray-400 text-xs mt-1">Enterprise Library Management Core Shell Portal</p>
+          <h2 className="text-2xl font-bold tracking-tight">Welcome to</h2>
+          <h2 className="text-2xl font-bold tracking-tight">Library Management System</h2>
+          <p className="text-gray-400 text-xs mt-1"></p>
         </div>
 
         <form onSubmit={handleFormSubmission} className="p-8 space-y-6">
           {/* RBAC Role Selector Tabs System */}
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Access Profile Authorization Clearances</label>
+            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Choose Your Role</label>
             <div className="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-xl border border-gray-200">
               <button
                 type="button"
@@ -128,7 +127,7 @@ export const Login = () => {
 
           {/* Email Destination Input Structure */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-gray-700 tracking-wide block">System Identity Domain Address (Email)</label>
+            <label className="text-xs font-semibold text-gray-700 tracking-wide block">Email</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400 pointer-events-none text-sm">✉️</span>
               <input
@@ -149,13 +148,13 @@ export const Login = () => {
           {/* Password Security Input Structure with Visibility Toggle */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-semibold text-gray-700 tracking-wide block">Network Signature Credentials (Password)</label>
+              <label className="text-xs font-semibold text-gray-700 tracking-wide block">Password</label>
               <button 
                 type="button" 
                 onClick={() => toast.info("Please notify an administrative systems officer to handle key updates.")}
                 className="text-xs font-semibold text-teal-brand hover:text-teal-hover transition-colors outline-none"
               >
-                Key Recovery?
+                Forget Password
               </button>
             </div>
             <div className="relative">
@@ -194,10 +193,10 @@ export const Login = () => {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                <span>Validating Signature...</span>
+                <span>validate user...</span>
               </>
             ) : (
-              <span>Authorize Account Portal</span>
+              <span>Login</span>
             )}
           </button>
         </form>

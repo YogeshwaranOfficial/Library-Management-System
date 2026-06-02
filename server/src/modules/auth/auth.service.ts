@@ -49,7 +49,7 @@ export const loginUserService = async (
 
   if (!user) {
     throw new AppError(
-      "Invalid email or password",401
+      "Invalid gmail id",401
     );
   }
 
@@ -61,7 +61,7 @@ export const loginUserService = async (
 
   if (!isPasswordMatched) {
     throw new AppError(
-      "Invalid email or password",401
+      "Invalid password",401
     );
   }
 

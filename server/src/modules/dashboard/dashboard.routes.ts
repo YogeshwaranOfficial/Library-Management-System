@@ -186,11 +186,7 @@ import {
 const router = Router();
 
 
-router.get(
-  "/overview",
-  auth,
-  getDashboardOverviewController
-);
+router.get("/metrics",auth, getDashboardOverviewController);
 
 
 router.get(

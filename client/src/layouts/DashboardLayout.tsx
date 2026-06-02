@@ -26,7 +26,7 @@ export const DashboardLayout = () => {
         <div className="p-4">
           <div className="flex items-center gap-2 px-2 py-3 border-b border-gray-100 mb-4">
             <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white font-bold">L</div>
-            <span className="font-semibold text-lg text-gray-800 tracking-tight">LMS Admin</span>
+            <span className="font-semibold text-lg text-gray-800 tracking-tight">LMS</span>
           </div>
           <nav className="space-y-1">
             {navItems.map((item) => (
@@ -62,8 +62,8 @@ export const DashboardLayout = () => {
         {/* Top Navigation Frame */}
         <header className="h-16 bg-brand-primary text-white flex items-center justify-between px-6 shadow-sm">
           <div>
-            <h1 className="text-lg font-bold tracking-wide">Library Management System - Dashboard</h1>
-            <p className="text-xs text-blue-100">Internship Capstone Project - Day 7: Reports & Metrics</p>
+            <h1 className="text-lg font-bold tracking-wide">Dashboard</h1>
+            <p className="text-xs text-blue-100">Library Management System</p>
           </div>
           <div className="flex items-center gap-4 text-sm">
            <div className="text-right">

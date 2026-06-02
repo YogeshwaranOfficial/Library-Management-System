@@ -15,7 +15,7 @@ class DashboardRepository {
       expiredMembers,
       issuedBooks,
       returnedBooks,
-      overdueBooks,
+      overdueCount,
       fineAggregationResult,
     ] = await Promise.all([
       Book.count(),
@@ -53,7 +53,6 @@ class DashboardRepository {
         },
       }),
 
-      
       Fine.findOne({
         attributes: [
           [
@@ -62,17 +61,17 @@ class DashboardRepository {
           ]
         ],
         where: {
-          paid_status: false, // Matches your boolean false column perfectly
+          paid_status: false,
         },
         raw: true,
       }),
     ]);
 
-   
     const unpaidFines = fineAggregationResult 
       ? Number((fineAggregationResult as any).total_unpaid) 
       : 0;
 
+    // Professional Pattern: Return clean raw data parameters flat
     return {
       totalBooks,
       totalMembers,
@@ -80,7 +79,7 @@ class DashboardRepository {
       expiredMembers,
       issuedBooks,
       returnedBooks,
-      overdueBooks,
+      overdueCount,
       unpaidFines,
     };
   }

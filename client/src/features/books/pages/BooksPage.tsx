@@ -25,7 +25,7 @@ export const BooksPage = () => {
 
   const { data: categories = [] } = useQuery<BookCategory[]>({
     queryKey: ["bookCategoriesDropdownFeed"],
-    queryFn: async () => (await axiosClient.get("/categories")).data
+    queryFn: async () => (await axiosClient.get("/books")).data
   });
 
   // 2. Data Mutation Operations Pipelines

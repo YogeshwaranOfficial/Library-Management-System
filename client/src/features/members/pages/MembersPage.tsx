@@ -6,6 +6,7 @@ import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
 import type { LibraryMember, SystemUser, MembershipPlan } from "../../../types/members";
 import type { MemberFormValues } from "../schemas/memberSchema";
 import { toast } from "sonner";
+import { useAuthStore } from "../../../store/authStore";
 
 export const MembersPage = () => {
   const queryClient = useQueryClient();
@@ -17,20 +18,35 @@ export const MembersPage = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<LibraryMember | null>(null);
 
-  // 1. Fetch data feeds from backend routes
+// 💡 1. Grab the token from your Zustand store to prevent "NONE" request races
+  const token = useAuthStore((state) => state.token);
+
+  // 💡 2. Fetch data feeds with 'enabled' guards active
   const { data: members, isLoading } = useQuery<LibraryMember[]>({
-    queryKey: ["membersListFeed"],
-    queryFn: async () => (await axiosClient.get("/members")).data
+    queryKey: ["membersListFeed", token], // Added token to cache key tracking
+    queryFn: async () => {
+      const res = await axiosClient.get("/members");
+      return res.data?.data || res.data || []; // Extract JSend envelope accurately
+    },
+    enabled: !!token, // 🚨 STOP THE RACE: Query will NOT fire if token is NONE or null!
   });
 
   const { data: users = [] } = useQuery<SystemUser[]>({
-    queryKey: ["systemUsersDropdownFeed"],
-    queryFn: async () => (await axiosClient.get("/users/available-for-membership")).data
+    queryKey: ["systemUsersDropdownFeed", token],
+    queryFn: async () => {
+      const res = await axiosClient.get("/members/available-for-membership");
+      return res.data?.data || res.data || [];
+    },
+    enabled: !!token, // 🚨 STOP THE RACE: Query will NOT fire if token is NONE or null!
   });
 
   const { data: plans = [] } = useQuery<MembershipPlan[]>({
-    queryKey: ["membershipPlansFeed"],
-    queryFn: async () => (await axiosClient.get("/membership-plans")).data
+    queryKey: ["membershipPlansFeed", token],
+    queryFn: async () => {
+      const res = await axiosClient.get("/members/plans");
+      return res.data?.data || res.data || [];
+    },
+    enabled: !!token, // 🚨 STOP THE RACE: Query will NOT fire if token is NONE or null!
   });
 
   // 2. Data Mutation Handlers

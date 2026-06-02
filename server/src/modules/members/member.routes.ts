@@ -60,6 +60,9 @@ import { Router } from "express";
 
 import auth from "../../middlewares/auth.js";
 import validate from "../../middlewares/validate.js";
+import MembershipPlan from "../../database/models/MembershipPlan.js";
+import asyncHandler from "../../utils/asyncHandler.js";
+import { Request, Response } from "express";
 
 import {
   createMemberController,
@@ -67,6 +70,7 @@ import {
   getAllMembersController,
   getMemberByIdController,
   updateMemberController,
+  getAvailableUsersController
 } from "./member.controller.js";
 
 import {
@@ -110,5 +114,19 @@ router.get(
   validate(getMembersQueryValidation),
   getAllMembersController
 );
+
+router.get(
+  "/available-users",
+  auth,
+  getAvailableUsersController
+);
+
+router.get("/plans", auth, asyncHandler(async (req: Request, res: Response) => {
+  const plans = await MembershipPlan.findAll();
+  res.status(200).json({
+    success: true,
+    data: plans
+  });
+}));
 
 export default router;

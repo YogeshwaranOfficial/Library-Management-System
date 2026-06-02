@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
-
+import User from "../../database/models/User.js";
+import Member from "../../database/models/Member.js";
+import { Op } from "sequelize";
 import asyncHandler from "../../utils/asyncHandler.js";
 import sendResponse from "../../utils/SendResponse.js";
 
@@ -10,6 +12,32 @@ import {
   getMemberByIdService,
   updateMemberService,
 } from "./member.service.js";
+
+export const getAvailableUsersController = asyncHandler(async (req: Request, res: Response) => {
+  // 1. Get all user IDs that are already registered in the Member table
+  const activeMembers = await Member.findAll({
+    attributes: ["user_id"],
+    raw: true
+  });
+  const existingMemberUserIds = activeMembers.map(m => m.user_id);
+
+  // 2. Find all Users whose ID is NOT in that list
+  const availableUsers = await User.findAll({
+    where: {
+      uuid: {
+        [Op.notIn]: existingMemberUserIds.length > 0 ? existingMemberUserIds : ["dummy-id"]
+      }
+    },
+    attributes: ["id", "name", "gmail"] 
+  });
+
+  res.status(200).json({
+    success: true,
+    message: "Available users for membership fetched successfully",
+    data: availableUsers
+  });
+});
+
 
 export const createMemberController =
   asyncHandler(async (req: Request, res: Response) => {

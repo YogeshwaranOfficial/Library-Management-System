@@ -2,58 +2,59 @@
 -- 1. SEEDING USERS & MEMBERS
 -- =============================================================================
 
--- All users below use the real Bcrypt hash for the password: password123
--- Gold Plan ID:   173233e3-d14a-4008-a269-98eab1699eef
+-- Plan Identifiers Reference Checklist:
+-- Gold Plan ID:    173233e3-d14a-4008-a269-98eab1699eef
 -- Bronze Plan ID: 96479a54-3591-465c-9ed4-4dba4e0da49a
 -- Silver Plan ID: c2673506-3c78-4e25-9d54-f0d017fd0d82
 
 INSERT INTO users (uuid, name, gmail, password, phone_number, role) VALUES
-('10000001-1111-4111-a111-111111111111', 'Aarav Sharma', 'aarav.sharma@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543201', 'READER'),
-('10000002-1111-4111-a111-111111111112', 'Aditi Rao', 'aditi.rao@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543202', 'READER'),
-('10000003-1111-4111-a111-111111111113', 'Arjun Verma', 'arjun.verma@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543203', 'READER'),
-('10000004-1111-4111-a111-111111111114', 'Ananya Patel', 'ananya.patel@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543204', 'READER'),
-('10000005-1111-4111-a111-111111111115', 'Dev Singh', 'dev.singh@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543205', 'READER'),
-('10000006-1111-4111-a111-111111111116', 'Diya Joshi', 'diya.joshi@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543206', 'READER'),
-('10000007-1111-4111-a111-111111111117', 'Ishaan Malhotra', 'ishaan.malhotra@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543207', 'READER'),
-('10000008-1111-4111-a111-111111111118', 'Kavya Nair', 'kavya.nair@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543208', 'READER'),
-('10000009-1111-4111-a111-111111111119', 'Kabir Gupta', 'kabir.gupta@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543209', 'READER'),
-('10000010-1111-4111-a111-111111111110', 'Meera Reddy', 'meera.reddy@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543210', 'READER'),
-('10000011-1111-4111-a111-111111111121', 'Rohan Das', 'rohan.das@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543211', 'READER'),
-('10000012-1111-4111-a111-111111111122', 'Riya Sen', 'riya.sen@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543212', 'READER'),
-('10000013-1111-4111-a111-111111111123', 'Sai Kumar', 'sai.kumar@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543213', 'READER'),
-('10000014-1111-4111-a111-111111111124', 'Sanya Kapoor', 'sanya.kapoor@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543214', 'READER'),
-('10000015-1111-4111-a111-111111111125', 'Tejas Mehta', 'tejas.mehta@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543215', 'READER'),
-('10000016-1111-4111-a111-111111111126', 'Tara Choudhury', 'tara.choudhury@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543216', 'READER'),
-('10000017-1111-4111-a111-111111111127', 'Vivaan Saxena', 'vivaan.saxena@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543217', 'READER'),
-('10000018-1111-4111-a111-111111111128', 'Anika Mishra', 'anika.mishra@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543218', 'READER'),
-('10000019-1111-4111-a111-111111111129', 'Vihaan Goel', 'vihaan.goel@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543219', 'READER'),
-('10000020-1111-4111-a111-111111111120', 'Prisha Jain', 'prisha.jain@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543220', 'READER'),
-('10000021-1111-4111-a111-111111111131', 'Yash Wardhan', 'yash.w@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543221', 'READER'),
-('10000022-1111-4111-a111-111111111132', 'Navya Bhat', 'navya.bhat@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543222', 'READER'),
-('10000023-1111-4111-a111-111111111133', 'Reyansh Paul', 'reyansh.p@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543223', 'READER'),
-('10000024-1111-4111-a111-111111111134', 'Isha Abraham', 'isha.a@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543224', 'READER'),
-('10000025-1111-4111-a111-111111111135', 'Dhruv Bose', 'dhruv.bose@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543225', 'READER'),
-('10000026-1111-4111-a111-111111111136', 'Siddharth Roy', 'sid.roy@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543226', 'READER'),
-('10000027-1111-4111-a111-111111111137', 'Kriti Sharma', 'kriti.s@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543227', 'READER'),
-('10000028-1111-4111-a111-111111111138', 'Madhavan K', 'madhavan.k@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543228', 'READER'),
-('10000029-1111-4111-a111-111111111139', 'Shruti Iyer', 'shruti.iyer@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543229', 'READER'),
-('10000030-1111-4111-a111-111111111130', 'Rishabh Pant', 'rishabh.p@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543230', 'READER'),
-('10000031-1111-4111-a111-111111111141', 'Avani Dixit', 'avani.d@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543231', 'READER'),
-('10000032-1111-4111-a111-111111111142', 'Aditya Birla', 'aditya.b@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543232', 'READER'),
-('10000033-1111-4111-a111-111111111143', 'Sneha Gadde', 'sneha.g@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543233', 'READER'),
-('10000034-1111-4111-a111-111111111144', 'Hrithik R', 'hrithik.r@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543234', 'READER'),
-('10000035-1111-4111-a111-111111111145', 'Khushi Shah', 'khushi.s@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543235', 'READER'),
-('10000036-1111-4111-a111-111111111146', 'Ranveer Rao', 'ranveer.r@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543236', 'READER'),
-('10000037-1111-4111-a111-111111111147', 'Alia Bhatt', 'alia.b@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543237', 'READER'),
-('10000038-1111-4111-a111-111111111148', 'Varun Dhawan', 'varun.d@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543238', 'READER'),
-('10000039-1111-4111-a111-111111111149', 'Deepika P', 'deepika.p@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543239', 'READER'),
-('10000040-1111-4111-a111-111111111140', 'Ranbir K', 'ranbir.k@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9876543240', 'READER'),
+-- Readers (Password string: #User@2026)
+('10000001-1111-4111-a111-111111111111', 'Aarav Sharma', 'aarav.sharma@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543201', 'READER'),
+('10000002-1111-4111-a111-111111111112', 'Aditi Rao', 'aditi.rao@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543202', 'READER'),
+('10000003-1111-4111-a111-111111111113', 'Arjun Verma', 'arjun.verma@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543203', 'READER'),
+('10000004-1111-4111-a111-111111111114', 'Ananya Patel', 'ananya.patel@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543204', 'READER'),
+('10000005-1111-4111-a111-111111111115', 'Dev Singh', 'dev.singh@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543205', 'READER'),
+('10000006-1111-4111-a111-111111111116', 'Diya Joshi', 'diya.joshi@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543206', 'READER'),
+('10000007-1111-4111-a111-111111111117', 'Ishaan Malhotra', 'ishaan.malhotra@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543207', 'READER'),
+('10000008-1111-4111-a111-111111111118', 'Kavya Nair', 'kavya.nair@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543208', 'READER'),
+('10000009-1111-4111-a111-111111111119', 'Kabir Gupta', 'kabir.gupta@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543209', 'READER'),
+('10000010-1111-4111-a111-111111111110', 'Meera Reddy', 'meera.reddy@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543210', 'READER'),
+('10000011-1111-4111-a111-111111111121', 'Rohan Das', 'rohan.das@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543211', 'READER'),
+('10000012-1111-4111-a111-111111111122', 'Riya Sen', 'riya.sen@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543212', 'READER'),
+('10000013-1111-4111-a111-111111111123', 'Sai Kumar', 'sai.kumar@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543213', 'READER'),
+('10000014-1111-4111-a111-111111111124', 'Sanya Kapoor', 'sanya.kapoor@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543214', 'READER'),
+('10000015-1111-4111-a111-111111111125', 'Tejas Mehta', 'tejas.mehta@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543215', 'READER'),
+('10000016-1111-4111-a111-111111111126', 'Tara Choudhury', 'tara.choudhury@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543216', 'READER'),
+('10000017-1111-4111-a111-111111111127', 'Vivaan Saxena', 'vivaan.saxena@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543217', 'READER'),
+('10000018-1111-4111-a111-111111111128', 'Anika Mishra', 'anika.mishra@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543218', 'READER'),
+('10000019-1111-4111-a111-111111111129', 'Vihaan Goel', 'vihaan.goel@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543219', 'READER'),
+('10000020-1111-4111-a111-111111111120', 'Prisha Jain', 'prisha.jain@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543220', 'READER'),
+('10000021-1111-4111-a111-111111111131', 'Yash Wardhan', 'yash.w@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543221', 'READER'),
+('10000022-1111-4111-a111-111111111132', 'Navya Bhat', 'navya.bhat@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543222', 'READER'),
+('10000023-1111-4111-a111-111111111133', 'Reyansh Paul', 'reyansh.p@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543223', 'READER'),
+('10000024-1111-4111-a111-111111111134', 'Isha Abraham', 'isha.a@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543224', 'READER'),
+('10000025-1111-4111-a111-111111111135', 'Dhruv Bose', 'dhruv.bose@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543225', 'READER'),
+('10000026-1111-4111-a111-111111111136', 'Siddharth Roy', 'sid.roy@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543226', 'READER'),
+('10000027-1111-4111-a111-111111111137', 'Kriti Sharma', 'kriti.s@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543227', 'READER'),
+('10000028-1111-4111-a111-111111111138', 'Madhavan K', 'madhavan.k@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543228', 'READER'),
+('10000029-1111-4111-a111-111111111139', 'Shruti Iyer', 'shruti.iyer@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543229', 'READER'),
+('10000030-1111-4111-a111-111111111130', 'Rishabh Pant', 'rishabh.p@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543230', 'READER'),
+('10000031-1111-4111-a111-111111111141', 'Avani Dixit', 'avani.d@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543231', 'READER'),
+('10000032-1111-4111-a111-111111111142', 'Aditya Birla', 'aditya.b@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543232', 'READER'),
+('10000033-1111-4111-a111-111111111143', 'Sneha Gadde', 'sneha.g@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543233', 'READER'),
+('10000034-1111-4111-a111-111111111144', 'Hrithik R', 'hrithik.r@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543234', 'READER'),
+('10000035-1111-4111-a111-111111111145', 'Khushi Shah', 'khushi.s@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543235', 'READER'),
+('10000036-1111-4111-a111-111111111146', 'Ranveer Rao', 'ranveer.r@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543236', 'READER'),
+('10000037-1111-4111-a111-111111111147', 'Alia Bhatt', 'alia.b@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543237', 'READER'),
+('10000038-1111-4111-a111-111111111148', 'Varun Dhawan', 'varun.d@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543238', 'READER'),
+('10000039-1111-4111-a111-111111111149', 'Deepika P', 'deepika.p@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543239', 'READER'),
+('10000040-1111-4111-a111-111111111140', 'Ranbir K', 'ranbir.k@gmail.com', '$2b$10$wNcl56L6T66lGf0uM48WDe1U7bQY6qV8mGvG.07hO3rQ8aOnz0Lfa', '9876543240', 'READER'),
 
--- 👤 EXPLICIT LIBRARIAN ACCOUNT (No associated row in members table)
-('50000001-deee-4eee-aeee-deeeeee00001', 'Yogesh (Librarian)', 'yogesh@gmail.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9999999991', 'LIBRARIAN'),
+-- 👤 EXPLICIT LIBRARIAN ACCOUNT (Password string: #Librarian@2026)
+('50000001-deee-4eee-aeee-deeeeee00001', 'Yogesh (Librarian)', 'yogesh@gmail.com', '$2b$10$VjI6.9SHeE14qL6L79nQ8eJbO4LID7K9W7fI/hYx2p2B8e1I6/jT2', '9999999991', 'LIBRARIAN'),
 
--- 👑 EXPLICIT ADMIN ACCOUNT (No associated row in members table)
-('50000002-deee-4eee-aeee-deeeeee00002', 'System Administrator', 'admin@library.com', '$2b$10$EixVaKV3ws1vEPb9JIJ40uN40Z9J0.W8Sshm68661vV3a6.83qbyG', '9999999992', 'ADMIN');
+-- 👑 EXPLICIT ADMIN ACCOUNT (Password string: #Admin@2026)
+('50000002-deee-4eee-aeee-deeeeee00002', 'System Administrator', 'admin@library.com', '$2b$10$E9I0.7LhN24mX4P28nT6uOaKdB3LIh2W9vH/eXx1p0B2e4I6/kT1.', '9999999992', 'ADMIN');
 
 
 INSERT INTO members (member_id, user_id, membership_plan_id, start_date, expiry_date, membership_status) VALUES

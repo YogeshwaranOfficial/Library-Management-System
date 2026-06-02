@@ -38,7 +38,8 @@ const auth = (
     req.user = decoded;
 
     next();
-  } catch (_error) {
+  } catch (error: any) {
+    console.error("JWT Verification Crash Details:", error.message);
     next(
       new AppError(
         "Invalid or expired token",
