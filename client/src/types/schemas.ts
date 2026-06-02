@@ -17,6 +17,9 @@ export const LoginSchema = z.object({
     .regex(passwordRegex, {
       message: "Password must include at least one uppercase letter, one lowercase letter, one number, and one special character.",
     }),
+    role: z.enum(["ADMIN", "LIBRARIAN"], {
+    error: "Please select an operational access profile",
+  }),
 });
 
 export type LoginCredentials = z.infer<typeof LoginSchema>;
