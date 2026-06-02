@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #0056b3;
+  --color-brand-secondary: #f8f9fa;
+  --color-text-dark: #212529;
+  --color-border-light: #e9ecef;
+  
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+/* Custom global layout settings */
+body {
+  background-color: #f3f4f6;
+  color: var(--color-text-dark);
+  font-family: var(--font-sans);
+  margin: 0;
+}
