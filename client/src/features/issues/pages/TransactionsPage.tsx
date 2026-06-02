@@ -5,6 +5,7 @@ import { TransactionModal } from "../components/TransactionModal";
 import { DeleteTransactionModal } from "../components/DeleteTransactionModal";
 import type { BookIssueRecord, MemberLookup, BookLookup } from "../../../types/transactions";
 import type { TransactionFormValues } from "../schemas/transactionSchema";
+import type { FineRecord } from "../../../types/fines"; // Injected Fine Type references
 import { toast } from "sonner";
 
 export const TransactionsPage = () => {
@@ -26,6 +27,12 @@ export const TransactionsPage = () => {
     queryFn: async () => (await axiosClient.get("/issues")).data
   });
 
+  // FRONTEND VERIFICATION INTERCEPT: Load fine records to catch un-submitted penalty accounts
+  const { data: globalFines = [] } = useQuery<FineRecord[]>({
+    queryKey: ["finesMasterLedgerFeed"],
+    queryFn: async () => (await axiosClient.get("/fines")).data
+  });
+
   const { data: members = [] } = useQuery<MemberLookup[]>({
     queryKey: ["membersLookupDropdownFeed"],
     queryFn: async () => (await axiosClient.get("/members/lookup-summary")).data
@@ -36,9 +43,19 @@ export const TransactionsPage = () => {
     queryFn: async () => (await axiosClient.get("/books/lookup-summary")).data
   });
 
-  // 2. Data Modification Operations Pipelines
+  // 2. Data Modification Operations Pipelines (With Frontend Business Rule Guards)
   const saveMutation = useMutation({
     mutationFn: async (payload: TransactionFormValues) => {
+      // FRONTEND SECURITY CHECK: Intercept updates to the RETURNED status
+      if (selectedRecord && payload.status === "RETURNED") {
+        const correspondingFine = globalFines.find(fine => fine.issueId === selectedRecord.id);
+        
+        // Block action if a fine exists and its paid status is false (or paidDate is missing)
+        if (correspondingFine && (!correspondingFine.paidStatus || !correspondingFine.paidDate)) {
+          throw new Error("FINE_PENDING_PAYMENT");
+        }
+      }
+
       if (selectedRecord) return await axiosClient.put(`/issues/${selectedRecord.id}`, payload);
       return await axiosClient.post("/issues", payload);
     },
@@ -46,6 +63,16 @@ export const TransactionsPage = () => {
       queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
       toast.success("Circulation parameters synced successfully.");
       setIsFormOpen(false);
+    },
+    onError: (error: unknown) => {
+      if (error instanceof Error && error.message === "FINE_PENDING_PAYMENT") {
+        toast.error("🚨 Transaction Blocked: Member needs to pay the outstanding fine first!", {
+          description: "Clear penalties on the Fines Audit page before checking in this asset.",
+          duration: 5000,
+        });
+      } else {
+        toast.error("Failed to sync circulation file parameters.");
+      }
     }
   });
 
@@ -69,7 +96,6 @@ export const TransactionsPage = () => {
 
   // 3. Evaluation filtration logic paths & Smart Dynamic Sorting Engine
   const processedRecords = rawIssues?.map(record => {
-    // Dynamic client-side evaluation fallback to calculate overdue flags automatically
     const dynamicallyOverdue = record.status === "BORROWED" && todayIso > record.dueDate;
     return { ...record, status: dynamicallyOverdue ? "OVERDUE" as const : record.status };
   })
@@ -79,7 +105,6 @@ export const TransactionsPage = () => {
     const matchesStatus = statusFilter === "" || rec.status === statusFilter;
     return matchesSearch && matchesStatus;
   })
-  // CRITICAL ARCHITECTURAL REQUIREMENT: Grouping logic array pushes RETURNED parameters to the bottom line
   .sort((x, y) => {
     if (x.status === "RETURNED" && y.status !== "RETURNED") return 1;
     if (x.status !== "RETURNED" && y.status === "RETURNED") return -1;
@@ -153,7 +178,6 @@ export const TransactionsPage = () => {
                   return (
                     <tr 
                       key={record.id} 
-                      // Dynamic application logic styling: strikeout and dull completed file assets 
                       className={`transition-colors duration-150 ${
                         isReturned 
                           ? "bg-gray-50/70 text-gray-400 line-through opacity-60" 
@@ -174,7 +198,7 @@ export const TransactionsPage = () => {
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-right space-x-3 no-underline">
-                        <button onClick={() => { setSelectedRecord(record); setIsFormOpen(true); }} className="text-xs font-bold text-teal-brand hover:text-teal-hover transition-colors cursor-pointer disabled:opacity-30">Edit</button>
+                        <button onClick={() => { setSelectedRecord(record); setIsFormOpen(true); }} className="text-xs font-bold text-teal-brand hover:text-teal-hover transition-colors cursor-pointer">Edit</button>
                         <button onClick={() => { setSelectedRecord(record); setDeleteModalConfig({ open: true, mode: "SINGLE" }); }} className="text-xs font-bold text-rose-600 hover:text-rose-800 transition-colors cursor-pointer">Delete</button>
                       </td>
                     </tr>

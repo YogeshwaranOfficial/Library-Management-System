@@ -7,6 +7,7 @@ import { Login } from "../features/auth/pages/Login";
 import { MembersPage } from "../features/members/pages/MembersPage";
 import { BooksPage } from "../features/books/pages/BooksPage";
 import { TransactionsPage } from "../features/issues/pages/TransactionsPage";
+import { FinesPage } from "../features/fines/pages/FinesPage";
 
 export const AppRoutes = () => {
   return (
@@ -24,7 +25,7 @@ export const AppRoutes = () => {
             <Route path="/members" element={<MembersPage/>} />
             <Route path="/books" element={<BooksPage/>} />
             <Route path="/transactions" element={<TransactionsPage/>} />
-            <Route path="/fines" element={<div className="p-6 bg-white rounded-xl border border-gray-200">Automated Fines & Billing Panel Audit Container</div>} />
+            <Route path="/fines" element={<FinesPage/>} />
           </Route>
         </Route>
 
