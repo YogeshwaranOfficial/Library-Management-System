@@ -20,14 +20,12 @@ export const createBookController = asyncHandler(
 
 export const getBooksController = asyncHandler(
   async (req: Request, res: Response) => {
+    // Safely extract parameters coming from frontend URL params
     const page = Number(req.query.page) || 1;
-
     const limit = Number(req.query.limit) || 10;
-
-    const search = req.query.search as string;
-
-    const category_id = req.query.category_id as string;
-
+    const search = req.query.search ? String(req.query.search).trim() : undefined;
+    const category_id = req.query.category_id ? String(req.query.category_id).trim() : undefined;
+   
     const result = await bookService.getBooks(
       page,
       limit,
@@ -39,7 +37,8 @@ export const getBooksController = asyncHandler(
       success: true,
       statusCode: 200,
       message: "Books fetched successfully",
-      data: result,
+      // Contains { count, rows }
+      data: result, 
     });
   }
 );
@@ -83,6 +82,22 @@ export const deleteBookController = asyncHandler(
       success: true,
       statusCode: 200,
       message: "Book deleted successfully",
+    });
+  }
+);
+
+// =========================================================================
+// 🚀 NEW SYSTEM CHANNEL CONTROLLER: FETCH ALL CATEGORIES
+// =========================================================================
+export const getCategoriesController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const result = await bookService.getCategories();
+
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Categories fetched successfully",
+      data: result,
     });
   }
 );

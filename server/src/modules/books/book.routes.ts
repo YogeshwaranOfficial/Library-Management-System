@@ -171,11 +171,9 @@
  *       404:
  *         description: Book not found
  */
-
 import { Router } from "express";
 
 import validate from "../../middlewares/validate.js";
-
 import auth from "../../middlewares/auth.js";
 
 import {
@@ -184,6 +182,7 @@ import {
   getBookByIdController,
   getBooksController,
   updateBookController,
+  getCategoriesController, // 🚀 NEW: Import the category retrieval handler
 } from "./book.controller.js";
 
 import {
@@ -193,6 +192,20 @@ import {
 
 const router = Router();
 
+// =========================================================================
+// 🚀 SYSTEM CATEGORY DROPDOWN CHANNELS
+// =========================================================================
+// Note: Put this ABOVE the dynamic "/:bookId" route so Express doesn't 
+// accidentally mistake the word "categories" for a book UUID string!
+router.get(
+  "/categories",
+  auth,
+  getCategoriesController
+);
+
+// =========================================================================
+// CORE BOOK CRUD ENDPOINTS
+// =========================================================================
 router.post(
   "/",
   auth,
@@ -212,7 +225,8 @@ router.get(
   getBookByIdController
 );
 
-router.patch(
+// Changed to PUT or PATCH depending on your network protocol specification
+router.put(
   "/:bookId",
   auth,
   validate(updateBookSchema),

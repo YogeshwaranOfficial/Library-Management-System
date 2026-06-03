@@ -1,7 +1,6 @@
 export interface BookCategory {
   id: string;
   name: string;
-  code: string;
 }
 
 export interface BookInventoryItem {
@@ -13,4 +12,5 @@ export interface BookInventoryItem {
   lendingCount: number;
   categoryId: string;
   categoryName: string;
+  createdAt: string; // 💡 Tracks when the asset entered the shelf index
 }

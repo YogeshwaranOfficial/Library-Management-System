@@ -177,6 +177,7 @@ import { Router } from "express";
 import auth from "../../middlewares/auth.js";
 
 import {
+  getDashboardSummaryController,
   getDashboardOverviewController,
   getMonthlyFineCollectionController,
   getPopularBooksController,
@@ -187,7 +188,7 @@ const router = Router();
 
 
 router.get("/metrics",auth, getDashboardOverviewController);
-
+router.get("/summary", auth, getDashboardSummaryController);
 
 router.get(
   "/analytics/popular-books",

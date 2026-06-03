@@ -1,13 +1,16 @@
 import dashboardRepository from "./dashboard.repository.js";
 import { RecentIssue } from "./dashboard.types.js";
-
 class DashboardService {
   async getOverview() {
-    return dashboardRepository.getOverview();
+    return await dashboardRepository.getOverview();
   }
 
+    async getDashboardSummaryService() {
+    return await dashboardRepository.getDashboardSummaryData();
+    };
+
   async getPopularBooks() {
-    return dashboardRepository.getPopularBooks();
+    return await dashboardRepository.getPopularBooks();
   }
 
   async getRecentIssues(): Promise<RecentIssue[]> {
@@ -24,7 +27,7 @@ class DashboardService {
   }
 
   async getMonthlyFineCollection() {
-    return dashboardRepository.getMonthlyFineCollection();
+    return await dashboardRepository.getMonthlyFineCollection();
   }
 }
 

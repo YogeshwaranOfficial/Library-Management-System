@@ -20,7 +20,7 @@ export const createMemberValidation = z.object({
   body: memberBodySchema
 });
 
-// 2. Update Member Validation Schema
+// 3. Update Member Validation Schema
 export const updateMemberValidation = z.object({
   body: z.object({
     membership_plan_id: z
@@ -38,7 +38,7 @@ export const updateMemberValidation = z.object({
   }).strict(),
 });
 
-// 3. Get All Members Query Parameters Validation Schema (Fixed with preprocessing!)
+// 4. Get All Members Query Parameters Validation Schema (Updated with missing frontend fields!)
 export const getMembersQueryValidation = z.object({
   query: z.object({
     // Converts numeric query inputs from tests (like page: 1) into strings smoothly
@@ -47,6 +47,10 @@ export const getMembersQueryValidation = z.object({
     limit: z.preprocess((val) => String(val), z.string()).optional(),
 
     search: z.string().optional(),
+    
+    // 💡 ADDED: Validates the custom plan and status selectors sent by the frontend
+    plan: z.string().optional(),
+    status: z.string().optional(),
 
     membership_status: z
       .enum(["ACTIVE", "EXPIRED", "CLOSED"])

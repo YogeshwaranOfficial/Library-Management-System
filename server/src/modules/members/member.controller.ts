@@ -1,7 +1,4 @@
 import { Request, Response } from "express";
-import User from "../../database/models/User.js";
-import Member from "../../database/models/Member.js";
-import { Op } from "sequelize";
 import asyncHandler from "../../utils/asyncHandler.js";
 import sendResponse from "../../utils/SendResponse.js";
 
@@ -11,33 +8,20 @@ import {
   getAllMembersService,
   getMemberByIdService,
   updateMemberService,
+  getEligibleUsersForMemberService, // 💡 Imported the missing service engine link
 } from "./member.service.js";
 
+// 💡 FEATURE UPDATED: Refactored to leverage clean service-to-repo patterns with explicit READER filter constraints
 export const getAvailableUsersController = asyncHandler(async (req: Request, res: Response) => {
-  // 1. Get all user IDs that are already registered in the Member table
-  const activeMembers = await Member.findAll({
-    attributes: ["user_id"],
-    raw: true
-  });
-  const existingMemberUserIds = activeMembers.map(m => m.user_id);
+  const availableUsers = await getEligibleUsersForMemberService();
 
-  // 2. Find all Users whose ID is NOT in that list
-  const availableUsers = await User.findAll({
-    where: {
-      uuid: {
-        [Op.notIn]: existingMemberUserIds.length > 0 ? existingMemberUserIds : ["dummy-id"]
-      }
-    },
-    attributes: ["id", "name", "gmail"] 
-  });
-
-  res.status(200).json({
+  sendResponse(res, {
     success: true,
-    message: "Available users for membership fetched successfully",
-    data: availableUsers
+    statusCode: 200,
+    message: "Available reader users for membership fetched successfully",
+    data: availableUsers,
   });
 });
-
 
 export const createMemberController =
   asyncHandler(async (req: Request, res: Response) => {
@@ -56,11 +40,10 @@ export const getAllMembersController =
   asyncHandler(async (req: Request, res: Response) => {
     const query = {
       page: Number(req.query.page) || 1,
-
       limit: Number(req.query.limit) || 10,
-
       search: req.query.search as string,
-
+      plan: req.query.plan,      
+      status: req.query.status,   
       membership_status:
         req.query.membership_status as
           | "ACTIVE"

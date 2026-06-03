@@ -1,4 +1,4 @@
-import { Op,CreationAttributes } from "sequelize";
+import { Op, CreationAttributes } from "sequelize";
 
 import Book from "../../database/models/Book.js";
 import Category from "../../database/models/Category.js";
@@ -16,16 +16,22 @@ class BookRepository {
     } as CreationAttributes<Book>);
   }
 
+  /**
+   * 💡 Handles clean pagination limits, offsets, mixed title/author searches, 
+   * and isolated category ID relational filtering.
+   */
   async getBooks(
     page: number,
     limit: number,
     search?: string,
     category_id?: string
   ) {
+    // Math block to ensure correct pagination skips across pages
     const offset = (page - 1) * limit;
 
     return Book.findAndCountAll({
       where: {
+        // Handle search query criteria if present
         ...(search && {
           [Op.or]: [
             {
@@ -33,7 +39,6 @@ class BookRepository {
                 [Op.iLike]: `%${search}%`,
               },
             },
-
             {
               book_author: {
                 [Op.iLike]: `%${search}%`,
@@ -42,6 +47,7 @@ class BookRepository {
           ],
         }),
 
+        // Handle structural category ID filter matching if selected
         ...(category_id && { category_id }),
       },
 
@@ -49,6 +55,10 @@ class BookRepository {
         {
           model: Category,
           as: "category",
+          attributes: [
+            ["category_id","id"],
+            ["category_name","name"]
+          ], // Explicitly pluck the required parameters
         },
       ],
 
@@ -84,6 +94,16 @@ class BookRepository {
   async deleteBook(book_id: string) {
     return Book.destroy({
       where: { book_id },
+    });
+  }
+
+  async getCategories() {
+    return Category.findAll({
+      attributes: [
+        ["category_id","id"],
+        ["category_name","name"]
+      ],
+      order: [["category_name", "ASC"]], // Organized alphabetically
     });
   }
 }

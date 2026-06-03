@@ -46,19 +46,28 @@ const handleFormSubmission = async (e: React.FormEvent) => {
   }
 
   // 2. Transmit Handshake request to the backend REST API
+  // 2. Transmit Handshake request to the backend REST API
   try {
-    // Standard JSON payload structure sent directly to the server's req.body
     const networkResponse = await axiosClient.post("/auth/login", {
-      gmail: email,       // Maps your local state 'email' to backend's 'gmail'
-      password: password, // Maps your local state 'password' to backend's 'password'
-      role: selectedRole, // Passes role at the same root level
+      gmail: email,      
+      password: password, 
+      role: selectedRole, 
     });
 
-    const { user, token } = networkResponse.data;
+    // 💡 FIXED: Safely account for the backend JSend envelope hierarchy structure!
+    const targetPayload = networkResponse.data?.data || networkResponse.data;
+    const { user, token } = targetPayload;
 
+    if (!token || !user) {
+      toast.error("Invalid token package structural layout returned from server.");
+      return;
+    }
+
+    // 🚨 Now we are saving real validated dataset models into our Zustand store!
     setAuth(user, token);
     toast.success("Login Successfully");
     navigate("/dashboard");
+
   } catch (error: unknown) {
     console.error("Login Failed:", error);
     

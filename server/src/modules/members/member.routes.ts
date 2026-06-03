@@ -81,6 +81,28 @@ import {
 
 const router = Router();
 
+router.get(
+  "/available-users",
+  auth,
+  getAvailableUsersController
+);
+
+router.get("/plans", auth, asyncHandler(async (req: Request, res: Response) => {
+  const plans = await MembershipPlan.findAll();
+  res.status(200).json({
+    success: true,
+    data: plans
+  });
+}));
+
+router.get(
+  "/",
+  auth,
+  validate(getMembersQueryValidation),
+  getAllMembersController
+);
+
+
 router.post(
   "/",
   auth,
@@ -108,25 +130,8 @@ router.delete(
   deleteMemberController
 );
 
-router.get(
-  "/",
-  auth,
-  validate(getMembersQueryValidation),
-  getAllMembersController
-);
 
-router.get(
-  "/available-users",
-  auth,
-  getAvailableUsersController
-);
 
-router.get("/plans", auth, asyncHandler(async (req: Request, res: Response) => {
-  const plans = await MembershipPlan.findAll();
-  res.status(200).json({
-    success: true,
-    data: plans
-  });
-}));
+
 
 export default router;

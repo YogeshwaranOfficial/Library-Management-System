@@ -19,7 +19,7 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
     defaultValues: { userId: "", email: "", phoneNumber: "", membershipPlanId: "", isActive: true }
   });
 
- const selectedUserId = useWatch({
+  const selectedUserId = useWatch({
     control,
     name: "userId"
   });
@@ -53,22 +53,22 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-ocean-blue/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-100 animate-zoom-in">
-        <div className="bg-linear-to-r from-ocean-light to-ocean-blue p-5 text-white flex justify-between items-center">
-          <h3 className="font-bold text-lg">{editingMember ? "Renew / Modify Membership Tier" : "Onboard New Library Member"}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors cursor-pointer text-lg">✕</button>
+        <div className="bg-teal-600 p-5 text-white flex justify-between items-center">
+          <h3 className="font-bold text-lg">{editingMember ? "Renew Membership Plan" : "Add new member"}</h3>
+          <button onClick={onClose} className="text-teal-200 hover:text-white transition-colors cursor-pointer text-lg">✕</button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div>
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">System Profile Target User</label>
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">All User</label>
             <select
               {...register("userId")}
               disabled={!!editingMember}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand disabled:opacity-60"
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-600 disabled:opacity-60"
             >
-              <option value="">-- Choose System Registry Target User --</option>
+              <option value="">Choose User</option>
               {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
             {errors.userId && <p className="text-xs text-red-500 mt-1 font-medium">{errors.userId.message}</p>}
@@ -76,22 +76,22 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">System Identity Domain Address</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Email id</label>
               <input type="text" {...register("email")} readOnly className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 outline-hidden focus:ring-0" />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Contact Reference Line</label>
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Phone Number</label>
               <input type="text" {...register("phoneNumber")} readOnly className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 outline-hidden focus:ring-0" />
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">Operational Membership Plan Allocation</label>
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">Choose Membership Plan</label>
             <select
               {...register("membershipPlanId")}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand"
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-600"
             >
-              <option value="">-- Allocate Membership Plan Duration Tier --</option>
+              <option value="">All Membership Plan</option>
               {plans.map(p => <option key={p.id} value={p.id}>{p.name} ({p.durationMonths} Months)</option>)}
             </select>
             {errors.membershipPlanId && <p className="text-xs text-red-500 mt-1 font-medium">{errors.membershipPlanId.message}</p>}
@@ -103,14 +103,14 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
                 <span className="text-xs font-bold text-teal-900 block">Re-activate / Membership Continuity Toggle</span>
                 <span className="text-xs text-teal-700">Updating values shifts account validation cycles to today's parameters.</span>
               </div>
-              <input type="checkbox" {...register("isActive")} className="w-4 h-4 text-teal-brand border-gray-300 rounded-sm focus:ring-teal-500" />
+              <input type="checkbox" {...register("isActive")} className="w-4 h-4 text-teal-600 border-gray-300 rounded-sm focus:ring-teal-500" />
             </div>
           )}
 
           <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">Cancel Action</button>
-            <button type="submit" className="px-4 py-2 text-sm font-semibold text-white bg-teal-brand hover:bg-teal-hover shadow-sm rounded-xl transition-all cursor-pointer">
-              {editingMember ? "Apply Changes" : "Create Profile Profile"}
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">Cancel</button>
+            <button type="submit" className="px-4 py-2 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 shadow-sm rounded-xl transition-all cursor-pointer">
+              {editingMember ? "Update Changes" : "Create Member"}
             </button>
           </div>
         </form>

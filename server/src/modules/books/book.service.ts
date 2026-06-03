@@ -45,7 +45,6 @@ class BookService {
 
     if (!book) {
       throw new AppError(
-        
         "Book not found",httpStatus.NOT_FOUND,
       );
     }
@@ -80,6 +79,13 @@ class BookService {
     }
 
     return bookRepository.deleteBook(book_id);
+  }
+
+  // =========================================================================
+  // 🚀 NEW CHANNEL METHOD: GET CATEGORIES FOR FILTERS
+  // =========================================================================
+  async getCategories() {
+    return bookRepository.getCategories();
   }
 }
 

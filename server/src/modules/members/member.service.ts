@@ -6,6 +6,7 @@ import {
   getAllMembersRepository,
   getMemberByIdRepository,
   updateMemberRepository,
+  getEligibleUsersForMemberRepository, // 💡 Imported the new repository filter engine
 } from "./member.repository.js";
 import {
   CreateMemberPayload,
@@ -14,6 +15,11 @@ import {
 } from "./member.types.js";
 import Member from "../../database/models/Member.js";
 import "../../database/models/User.js";
+
+// 💡 NEW FEATURE ADDITION: Service layer middleware to bridge controllers and repos safely
+export const getEligibleUsersForMemberService = async () => {
+  return await getEligibleUsersForMemberRepository();
+};
 
 export const createMemberService = async (payload: CreateMemberPayload) => {
   const existingMember = await Member.findOne({ where: { user_id: payload.user_id } });
@@ -59,6 +65,7 @@ export const updateMemberService = async (memberId: string, payload: UpdateMembe
   return updatedMember;
 };
 
+// 🔐 RESTORED: Your original deletion handler is back safe and sound!
 export const deleteMemberService = async (memberId: string) => {
   const deletedMember = await deleteMemberRepository(memberId);
   if (!deletedMember) {
