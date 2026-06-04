@@ -6,9 +6,9 @@ export interface SystemUser {
 }
 
 export interface MembershipPlan {
-  id: string;
-  name: string;
-  durationMonths: number;
+  membership_plan_id: string;
+  plan_name: string;
+  duration_days: number;
   price: number;
 }
 

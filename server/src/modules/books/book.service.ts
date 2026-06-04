@@ -81,6 +81,16 @@ class BookService {
     return bookRepository.deleteBook(book_id);
   }
 
+  async searchBooks(searchToken: string) {
+    // 1. Guard check: return an empty list immediately if input text is empty or pure spaces
+    if (!searchToken || !searchToken.trim()) {
+      return [];
+    }
+
+    // 2. Fetch compliance calculations straight from your database repository layer
+    return bookRepository.searchBooks(searchToken.trim());
+  }
+
   // =========================================================================
   // 🚀 NEW CHANNEL METHOD: GET CATEGORIES FOR FILTERS
   // =========================================================================

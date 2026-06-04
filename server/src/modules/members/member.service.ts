@@ -6,6 +6,7 @@ import {
   getAllMembersRepository,
   getMemberByIdRepository,
   updateMemberRepository,
+  searchMembersByNameRepository,
   getEligibleUsersForMemberRepository, // 💡 Imported the new repository filter engine
 } from "./member.repository.js";
 import {
@@ -18,7 +19,12 @@ import "../../database/models/User.js";
 
 // 💡 NEW FEATURE ADDITION: Service layer middleware to bridge controllers and repos safely
 export const getEligibleUsersForMemberService = async () => {
-  return await getEligibleUsersForMemberRepository();
+  console.log("=== SERVICE LAYER START ===");
+  
+  const eligibleUsers = await getEligibleUsersForMemberRepository();
+  
+  console.log("=== SERVICE LAYER RESULT SEEN ===", eligibleUsers);
+  return eligibleUsers;
 };
 
 export const createMemberService = async (payload: CreateMemberPayload) => {
@@ -65,11 +71,22 @@ export const updateMemberService = async (memberId: string, payload: UpdateMembe
   return updatedMember;
 };
 
-// 🔐 RESTORED: Your original deletion handler is back safe and sound!
 export const deleteMemberService = async (memberId: string) => {
   const deletedMember = await deleteMemberRepository(memberId);
   if (!deletedMember) {
     throw new AppError("Member not found", httpStatus.NOT_FOUND);
   }
   return deletedMember;
+};
+
+export const searchMembersByNameService = async (searchToken: string) => {
+  // 1. Guard check: If the query token is empty or completely whitespace, bail early with empty payload
+  if (!searchToken || !searchToken.trim()) {
+    return [];
+  }
+
+  // 2. Pass string cleanly to the repository to calculate status thresholds
+  const structuredResults = await searchMembersByNameRepository(searchToken.trim());
+  
+  return structuredResults;
 };

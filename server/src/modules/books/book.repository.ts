@@ -97,6 +97,41 @@ class BookRepository {
     });
   }
 
+  async searchBooks(searchToken: string) {
+    // 1. Search catalog items matching book names or author strings
+    const matches = await Book.findAll({
+      where: {
+        [Op.or]: [
+          { book_name: { [Op.iLike]: `%${searchToken}%` } },
+          { book_author: { [Op.iLike]: `%${searchToken}%` } }
+        ]
+      },
+      attributes: ["book_id", "book_name", "book_author", "available_copies"],
+      order: [["book_name", "ASC"]],
+      limit: 15 // Capped to avoid blowing up the UI dropdown layout
+    });
+
+    // 2. Loop over inventory items to map business rules and compliance flags
+    return matches.map((book: any) => {
+      const stockCount = book.available_copies ?? 0;
+      const outOfStock = stockCount <= 0;
+
+      return {
+        book_id: book.book_id,
+        title: book.book_name,          // Mapped parameter to match 'bookSearch' tracking variables
+        author: book.book_author || "Unknown Author",
+        available_copies: stockCount,
+        compliance: {
+          status: outOfStock ? "OUT_OF_STOCK" : "AVAILABLE",
+          message: outOfStock 
+            ? "❌ Out of stock! All physical asset copies currently checked out." 
+            : `✓ Available: ${stockCount} copies remaining inside the stack index.`,
+          isBlocked: outOfStock        // Mapped straight to frontend dropdown 'disabled' attributes
+        }
+      };
+    });
+  }
+
   async getCategories() {
     return Category.findAll({
       attributes: [

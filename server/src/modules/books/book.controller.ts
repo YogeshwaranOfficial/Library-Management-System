@@ -101,3 +101,19 @@ export const getCategoriesController = asyncHandler(
     });
   }
 );
+
+export const searchBooksController = asyncHandler(async (req: Request, res: Response) => {
+  // 1. Capture the type-ahead search text token from 'q' safely
+  const searchString = req.query.q as string;
+
+  // 2. Fetch inventory records along with copy availability compliance metrics
+  const structuredMatches = await bookService.searchBooks(searchString);
+
+  // 3. Dispatch structured payload back to the TanStack frontend client hooks
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Library inventory search indices queried successfully matching criteria.",
+    data: structuredMatches,
+  });
+});

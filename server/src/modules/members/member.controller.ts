@@ -8,6 +8,7 @@ import {
   getAllMembersService,
   getMemberByIdService,
   updateMemberService,
+  searchMembersByNameService,
   getEligibleUsersForMemberService, // 💡 Imported the missing service engine link
 } from "./member.service.js";
 
@@ -106,3 +107,23 @@ export const deleteMemberController =
       data: result,
     });
   });
+
+/**
+ * ✨ NEW: Intercepts lookups sent by the TransactionModal dropdown suggestions query
+ * Handles endpoint: GET /api/v1/members/search?q=...
+ */
+export const searchMembersByNameController = asyncHandler(async (req: Request, res: Response) => {
+  // 1. Capture search input string from 'q' query parameters token safely
+  const searchString = req.query.q as string;
+
+  // 2. Fetch the flat, business-logic processed matching results array
+  const detailedMatches = await searchMembersByNameService(searchString);
+
+  // 3. Dispatch the response structure back to your React TanStack hooks
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Library member directory queried successfully matching criteria.",
+    data: detailedMatches,
+  });
+});

@@ -178,21 +178,24 @@ export const MembersPage = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:flex gap-3">
+          {/* 💡 UPDATED FILTER: Rendering real database options dynamically instead of static placeholders */}
           <select
             value={tierFilter}
             onChange={(e) => { setTierFilter(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand outline-hidden"
+            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand outline-hidden cursor-pointer"
           >
-            <option value="">Membership Plan</option>
-            <option value="Gold">Gold</option>
-            <option value="Silver">Silver</option>
-            <option value="Bronze">Bronze</option>
+            <option value="">All Membership Plans</option>
+            {plans.map((p) => (
+              <option key={p.membership_plan_id} value={p.plan_name}>
+                {p.plan_name}
+              </option>
+            ))}
           </select>
 
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand outline-hidden"
+            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand outline-hidden cursor-pointer"
           >
             <option value="">Status</option>
             <option value="ACTIVE">Active Plan</option>
@@ -203,7 +206,7 @@ export const MembersPage = () => {
             onClick={handleClearFilters}
             className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-all cursor-pointer col-span-2 sm:col-auto whitespace-nowrap"
           >
-            Clear All Filters
+            Clear Filters
           </button>
         </div>
       </div>
@@ -272,7 +275,7 @@ export const MembersPage = () => {
           {/* SERVER PAGINATION NAVIGATION FOOTER */}
           <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
             <span className="text-xs text-gray-500 font-medium">
-              Showing Page <b>{currentPage}</b> of <b>{totalPages}</b> ({totalItems} rows found)
+              Showing Page <b>{currentPage}</b> of <b>{totalPages}</b> ({totalItems} Members Found)
             </span>
             <div className="flex gap-2">
               <button
@@ -304,7 +307,6 @@ export const MembersPage = () => {
         editingMember={selectedMember}
       />
 
-      {/* 💡 MODIFIED: Cleaned up unrecognized props from the Details component to fix build errors */}
       <MemberDetailsModal 
         isOpen={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}

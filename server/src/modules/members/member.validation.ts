@@ -57,3 +57,13 @@ export const getMembersQueryValidation = z.object({
       .optional(),
   }),
 });
+
+// ✨ NEW: Schema to validate the search string param passed down by type-ahead fields
+// Handles validation rules for: GET /api/v1/members/search?q=...
+export const searchMembersQueryValidation = z.object({
+  query: z.object({
+    q: z
+      .string({ error: "Search lookup token 'q' is a required query parameter." })
+      .min(1, { message: "Search criteria must contain at least 1 character." }),
+  }),
+});

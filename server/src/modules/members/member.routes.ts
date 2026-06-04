@@ -55,7 +55,6 @@
  *       201:
  *         description: Member created successfully
  */
-
 import { Router } from "express";
 
 import auth from "../../middlewares/auth.js";
@@ -70,23 +69,27 @@ import {
   getAllMembersController,
   getMemberByIdController,
   updateMemberController,
-  getAvailableUsersController
+  getAvailableUsersController,
+  searchMembersByNameController // ✨ NEW: Import the search controller
 } from "./member.controller.js";
 
 import {
   createMemberValidation,
   updateMemberValidation,
-  getMembersQueryValidation
+  getMembersQueryValidation,
+  searchMembersQueryValidation
 } from "./member.validation.js";
 
 const router = Router();
 
+// 1. Fetch readers eligible for a new profile
 router.get(
   "/available-users",
   auth,
   getAvailableUsersController
 );
 
+// 2. Lookup active membership plan structures
 router.get("/plans", auth, asyncHandler(async (req: Request, res: Response) => {
   const plans = await MembershipPlan.findAll();
   res.status(200).json({
@@ -95,6 +98,16 @@ router.get("/plans", auth, asyncHandler(async (req: Request, res: Response) => {
   });
 }));
 
+// ⭐ NEW: Search directory matching frontend type-ahead bars
+// 🛡️ CRITICAL PLACEMENT: Located ABOVE /:id to prevent UUID type-casting crashes!
+router.get(
+  "/search",
+  auth,
+  validate(searchMembersQueryValidation),
+  searchMembersByNameController
+);
+
+// 3. Main directory management feed grid data
 router.get(
   "/",
   auth,
@@ -102,7 +115,7 @@ router.get(
   getAllMembersController
 );
 
-
+// 4. Create a brand new record profile mapping
 router.post(
   "/",
   auth,
@@ -110,13 +123,14 @@ router.post(
   createMemberController
 );
 
-
+// 5. Get deep record attributes by primary key
 router.get(
   "/:id",
   auth,
   getMemberByIdController
 );
 
+// 6. Update parameters on an existing profile
 router.patch(
   "/:id",
   auth,
@@ -124,14 +138,11 @@ router.patch(
   updateMemberController
 );
 
+// 7. Remove profile references completely
 router.delete(
   "/:id",
   auth,
   deleteMemberController
 );
-
-
-
-
 
 export default router;

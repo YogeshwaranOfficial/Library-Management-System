@@ -52,6 +52,9 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
 
   if (!isOpen) return null;
 
+  // 💡 Check if there are no available users left to turn into subscriber members
+  const hasNoAvailableUsers = users.length === 0;
+
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-100 animate-zoom-in">
@@ -62,14 +65,34 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div>
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">All User</label>
+            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">
+              Select Library Reader Account
+            </label>
+            
+            {/* 💡 Dynamic Fallback Dropdown state manipulation */}
             <select
               {...register("userId")}
-              disabled={!!editingMember}
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-600 disabled:opacity-60"
+              disabled={!!editingMember || hasNoAvailableUsers}
+              className={`w-full px-3 py-2 border rounded-xl text-sm outline-hidden transition-all focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-600 disabled:opacity-60 ${
+                hasNoAvailableUsers && !editingMember
+                  ? "bg-amber-50/60 border-amber-200 text-amber-800 font-medium" 
+                  : "bg-gray-50 border-gray-200 text-gray-900"
+              }`}
             >
-              <option value="">Choose User</option>
-              {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+              {editingMember ? (
+                <option value="">Current Member Locked</option>
+              ) : hasNoAvailableUsers ? (
+                <option value="">⚠️ No new users available to register</option>
+              ) : (
+                <>
+                  <option value="">Choose User Profile...</option>
+                  {users.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
             {errors.userId && <p className="text-xs text-red-500 mt-1 font-medium">{errors.userId.message}</p>}
           </div>
@@ -92,7 +115,7 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
               className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-600"
             >
               <option value="">All Membership Plan</option>
-              {plans.map(p => <option key={p.id} value={p.id}>{p.name} ({p.durationMonths} Months)</option>)}
+              {plans.map(p => <option key={p.membership_plan_id} value={p.membership_plan_id}>{p.plan_name} ({p.duration_days} Days)</option>)}
             </select>
             {errors.membershipPlanId && <p className="text-xs text-red-500 mt-1 font-medium">{errors.membershipPlanId.message}</p>}
           </div>
@@ -109,7 +132,11 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
 
           <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">Cancel</button>
-            <button type="submit" className="px-4 py-2 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 shadow-sm rounded-xl transition-all cursor-pointer">
+            <button 
+              type="submit" 
+              disabled={hasNoAvailableUsers && !editingMember}
+              className="px-4 py-2 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed shadow-sm rounded-xl transition-all cursor-pointer"
+            >
               {editingMember ? "Update Changes" : "Create Member"}
             </button>
           </div>

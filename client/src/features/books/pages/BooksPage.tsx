@@ -250,7 +250,7 @@ export const BooksPage = () => {
             <div className="flex items-center justify-between bg-white px-5 py-4 rounded-xl border border-gray-200 shadow-xs">
               <div className="text-xs text-gray-500 font-medium">
                 Showing Page {currentPage} of{" "}
-                {totalPages} ({totalDatabaseRecords} entries total)
+                {totalPages} ({totalDatabaseRecords} Books Found)
               </div>
               <div className="flex gap-2">
                 <button

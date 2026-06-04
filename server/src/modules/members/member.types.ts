@@ -28,3 +28,20 @@ export interface AvailableMemberUser {
   email: string;     // Formatted/mapped from database 'gmail'
   phoneNumber: string; // Formatted/mapped from database 'phone_number'
 }
+
+// ✨ NEW: Defines the payload contract returned by the lookup search engine
+export interface SearchMemberResult {
+  member_id: string;
+  name: string;
+  phone_number: string;
+  membership_status: string;
+  expiry_date: string;
+  plan_name: string;
+  maxAllowed: number;
+  currentBorrows: number;
+  compliance: {
+    status: "GOOD" | "EXPIRED" | "LIMIT_EXCEEDED" | "WARNING_LAST_SLOT";
+    message: string;
+    isBlocked: boolean;
+  };
+}

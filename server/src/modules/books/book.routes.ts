@@ -171,6 +171,7 @@
  *       404:
  *         description: Book not found
  */
+
 import { Router } from "express";
 
 import validate from "../../middlewares/validate.js";
@@ -181,6 +182,7 @@ import {
   deleteBookController,
   getBookByIdController,
   getBooksController,
+  searchBooksController,
   updateBookController,
   getCategoriesController, // 🚀 NEW: Import the category retrieval handler
 } from "./book.controller.js";
@@ -188,6 +190,7 @@ import {
 import {
   createBookSchema,
   updateBookSchema,
+  searchBooksQueryValidation
 } from "./book.validation.js";
 
 const router = Router();
@@ -203,6 +206,13 @@ router.get(
   getCategoriesController
 );
 
+
+router.get(
+  "/search",
+  auth,
+  validate(searchBooksQueryValidation),
+  searchBooksController
+);
 // =========================================================================
 // CORE BOOK CRUD ENDPOINTS
 // =========================================================================

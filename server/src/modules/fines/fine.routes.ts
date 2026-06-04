@@ -16,4 +16,4 @@ router.get("/pending", auth, getPendingFinesController);
 router.get("/member/:memberId", auth, getMemberFinesController);
 router.patch("/pay", auth, validate(payFineSchema), payFineController);
 
-export default router;
+export default router; 

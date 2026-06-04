@@ -3,11 +3,10 @@ import express, {
   type Request,
   type Response,
 } from "express";
-import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
-import env from "./config/env.js";
+import './database/associations/index.js';
 import notFoundHandler from "./middlewares/notFoundHandler.js";
 import globalErrorHandler from "./middlewares/globalErrorHandler.js";
 import routes from "./routes/index.js";
@@ -17,7 +16,6 @@ import rateLimiter from "./config/ratelimiter.js";
 import helmetConfig from "./config/helmet.js";
 import corsConfig from "./config/cors.js";
 import "./config/validateEnv.js";
-import './database/associations/index.js';
 
 
 

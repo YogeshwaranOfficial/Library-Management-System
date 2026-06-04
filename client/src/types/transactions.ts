@@ -10,8 +10,27 @@ export interface BookIssueRecord {
   dueDate: string;
   returnedDate: string | null;
   status: IssueStatus;
+  // Extra detailed profile contexts populated for the inspection popup card
+  memberEmail?: string;
+  memberPhone?: string;
+  bookAuthor?: string;
 }
 
-// Minimal lookups required for populate selections
-export interface MemberLookup { id: string; name: string; }
-export interface BookLookup { id: string; title: string; }
+export interface MemberLookup {
+  member_id: string;
+  name: string;
+  phone_number: string;
+  membership_status: "ACTIVE" | "EXPIRED";
+  expiry_date: string;
+}
+
+export interface BookLookup {
+  book_id: string;
+  title: string;
+  author: string;
+}
+
+export interface MemberAllowanceMetrics {
+  currentBorrows: number;
+  maxAllowed: number;
+}

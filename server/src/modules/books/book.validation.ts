@@ -31,3 +31,13 @@ export const updateBookSchema = z.object({
     available_copies: z.number().optional(),
   }),
 });
+
+// ✨ NEW: Schema to validate the search query string sent by frontend dropdown hook
+// Handles rules for: GET /api/v1/books/search?q=...
+export const searchBooksQueryValidation = z.object({
+  query: z.object({
+    q: z
+      .string({ error: "Search parameter 'q' is required for looking up items." })
+      .min(1, { message: "Search string must contain at least 1 character." }),
+  }),
+});

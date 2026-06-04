@@ -3,6 +3,7 @@ import User from "../../database/models/User.js";
 import MembershipPlan from "../../database/models/MembershipPlan.js";
 import { CreateMemberPayload, UpdateMemberPayload } from "./member.types.js";
 import { Op, WhereOptions, Sequelize } from "sequelize";
+import Issue from "../../database/models/Issue.js"; 
 
 export const createMemberRepository = async (payload: CreateMemberPayload) => {
   return await Member.create(payload as any);
@@ -110,6 +111,7 @@ export const getEligibleUsersForMemberRepository = async () => {
     attributes: ["user_id"],
     raw: true
   });
+
   
   const existingUserIds = activeMembers.map((m: any) => m.user_id).filter(Boolean);
 
@@ -129,4 +131,81 @@ export const getEligibleUsersForMemberRepository = async () => {
     ],
     order: [["name", "ASC"]]
   });
+};
+
+export const searchMembersByNameRepository = async (searchToken: string) => {
+  // 1. Fetch matching members based on nested user names
+  const matches = await Member.findAll({
+    include: [
+      {
+        model: User,
+        as: "user",
+        required: true, // Forces an INNER JOIN so we only get members with user records
+        where: {
+          name: { [Op.iLike]: `%${searchToken}%` } // Case-insensitive matching
+        },
+        attributes: ["name", "phone_number", "gmail"]
+      },
+      {
+        model: MembershipPlan,
+        as: "membership_plan",
+        attributes: ["plan_name", "max_books_allowed"]
+      }
+    ]
+  });
+
+  // 2. Loop over matches to compute real-time borrow load statistics
+  const detailedResults = await Promise.all(
+    matches.map(async (member: any) => {
+      // Count how many books this member currently has out of the building
+      const activeBorrowsCount = await Issue.count({
+        where: {
+          member_id: member.member_id,
+          returned_date: null // Not returned yet
+        }
+      });
+
+      const maxAllowed = member.membership_plan?.max_books_allowed || 0;
+      const planName = member.membership_plan?.plan_name || "No Plan";
+      const isExpired = member.membership_status === "EXPIRED" || new Date(member.expiry_date) < new Date();
+
+      // 🚦 Implement Business Logic Rule Matrix
+      let dynamicStatus = "GOOD";
+      let statusMessage = `✓ Safe: Holds ${activeBorrowsCount}/${maxAllowed} books under ${planName} tier.`;
+      let isBlocked = false;
+
+      if (isExpired) {
+        dynamicStatus = "EXPIRED";
+        statusMessage = "❌ Blocked: Membership plan has expired.";
+        isBlocked = true;
+      } else if (activeBorrowsCount >= maxAllowed) {
+        dynamicStatus = "LIMIT_EXCEEDED";
+        statusMessage = `⚠️ Blocked: Quota limit hit! (${activeBorrowsCount}/${maxAllowed} assets held).`;
+        isBlocked = true;
+      } else if (activeBorrowsCount + 1 === maxAllowed) {
+        dynamicStatus = "WARNING_LAST_SLOT";
+        statusMessage = `⚠️ Warning: Last open slot! (${activeBorrowsCount}/${maxAllowed} held).`;
+        isBlocked = false; // Librarian can still select it, but gets a clear warning indicator!
+      }
+
+      // Return a flat structure tailored for dropdown presentation
+      return {
+        member_id: member.member_id,
+        name: member.user?.name || "Unknown",
+        phone_number: member.user?.phone_number || "No Contact",
+        membership_status: isExpired ? "EXPIRED" : member.membership_status,
+        expiry_date: member.expiry_date,
+        plan_name: planName,
+        maxAllowed,
+        currentBorrows: activeBorrowsCount,
+        compliance: {
+          status: dynamicStatus,       // "GOOD" | "EXPIRED" | "LIMIT_EXCEEDED" | "WARNING_LAST_SLOT"
+          message: statusMessage,      // Human-readable message
+          isBlocked                    // true means dropdown blocks click selection
+        }
+      };
+    })
+  );
+
+  return detailedResults;
 };

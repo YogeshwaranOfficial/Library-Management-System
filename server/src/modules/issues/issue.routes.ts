@@ -98,43 +98,53 @@ import {
   borrowBookController,
   getMemberIssuesController,
   returnBookController,
-  // overdueIssuesController // 👈 Import this once you build its logic!
+  getAllIssuesFeedController,
+  getMemberAllowanceMetricsController, // Processes load metric counts
+  updateIssueParametersController
 } from "./issue.controller.js";
 
 import {
   createIssueSchema,
+  updateIssueSchema,
+  getMemberAllowanceSchema,
   returnBookSchema,
-  getMemberIssuesSchema, // ✨ Added parameter validation
+  getMemberIssuesSchema, 
 } from "./issue.validation.js";
 
 const router = Router();
 
-router.post(
-  "/borrow",
-  auth,
-  validate(createIssueSchema),
-  borrowBookController
-);
+// 1. Master Ledger Feed Logs
+router.get("/", auth, getAllIssuesFeedController);
 
-router.post(
-  "/return",
-  auth,
-  validate(returnBookSchema),
-  returnBookController
-);
-
+// 2. Used by TransactionModal.tsx (Allocation Limits check)
 router.get(
-  "/member/:memberId",
+  "/member-allowance/:memberId",
   auth,
-  validate(getMemberIssuesSchema), // ✨ Added validation middleware check here
-  getMemberIssuesController
+  validate(getMemberAllowanceSchema),
+  getMemberAllowanceMetricsController
 );
 
-// ✨ FIXED: Added missing route discovered during Swagger audit
+// 3. ✨ ADDED: Used by IssueDetailsModal.tsx (Stats counter summary popups)
+// Maps directly to the same controller to pass back active limits & safe history references!
 router.get(
-  "/overdue",
+  "/member-stats/:memberId",
   auth,
-  // overdueIssuesController
+  validate(getMemberAllowanceSchema),
+  getMemberAllowanceMetricsController
 );
+
+// 4. Issue a Book Voucher
+router.post("/borrow", auth, validate(createIssueSchema), borrowBookController);
+
+// 5. Modify Active Parameters
+router.put("/:id", auth, validate(updateIssueSchema), updateIssueParametersController);
+
+// 6. Close/Process Active Asset Return
+router.post("/return", auth, validate(returnBookSchema), returnBookController);
+
+// 7. Historical Ledger logs for individual Member
+router.get("/member/:memberId", auth, validate(getMemberIssuesSchema), getMemberIssuesController);
+
+router.get("/overdue", auth);
 
 export default router;

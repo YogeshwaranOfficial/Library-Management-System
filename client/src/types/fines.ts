@@ -1,10 +1,28 @@
+export interface FineComplianceBreakdown {
+  withinPlanDays: number;
+  withinPlanFine: number;
+  outsidePlanDays: number;
+  outsidePlanFine: number;
+  isPlanExpiredNow: boolean;
+  expiryDate: string | null;
+}
+
 export interface FineRecord {
-  id: string; 
-  issueId: string; 
-  memberName: string; 
+  fine_id: string;
+  issue_id: string;
+  member_id: string;
+  memberName: string;
+  memberEmail: string;
+  memberPhone: string;
+  book_id: string;
   bookTitle: string;
-  delayedDays: number;
-  fineAmount: number;
-  paidStatus: boolean; 
-  paidDate: string | null;
+  bookAuthor: string;
+  borrowedDate: string;
+  actualReturnDate: string | null;
+  delayed_days: number;
+  fine_amount: number;
+  paid_status: boolean;
+  paid_date: string | null;
+  membershipActive: boolean;
+  breakdown?: FineComplianceBreakdown;
 }

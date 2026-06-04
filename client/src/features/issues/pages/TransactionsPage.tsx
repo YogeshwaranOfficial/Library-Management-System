@@ -2,224 +2,247 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
 import { TransactionModal } from "../components/TransactionModal";
-import { DeleteTransactionModal } from "../components/DeleteTransactionModal";
-import type { BookIssueRecord, MemberLookup, BookLookup } from "../../../types/transactions";
-import type { TransactionFormValues } from "../schemas/transactionSchema";
-import type { FineRecord } from "../../../types/fines"; // Injected Fine Type references
+import { IssueDetailsModal } from "../components/IssueDetailsModal";
+import type { BookIssueRecord } from "../../../types/transactions";
 import { toast } from "sonner";
+import { useAuthStore } from "../../../store/authStore";
 
 export const TransactionsPage = () => {
   const queryClient = useQueryClient();
+  const token = useAuthStore((state) => state.token);
   const todayIso = new Date().toISOString().split("T")[0];
-  
-  // Filtering and searching control matrices
+
+  // 🔎 Search, Filtering, and Pagination States
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 10;
 
-  // Modal display variables tracking states
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [deleteModalConfig, setDeleteModalConfig] = useState<{ open: boolean; mode: "SINGLE" | "BULK_CLEAN" }>({ open: false, mode: "SINGLE" });
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BookIssueRecord | null>(null);
 
-  // 1. Relational Data Query Operations
-  const { data: rawIssues, isLoading } = useQuery<BookIssueRecord[]>({
-    queryKey: ["circulationMasterRecordsFeed"],
-    queryFn: async () => (await axiosClient.get("/issues")).data
+  // Fetch Master Feed Data Ledger
+  const { data: rawIssues = [], isLoading } = useQuery<BookIssueRecord[]>({
+    queryKey: ["circulationMasterRecordsFeed", token],
+    queryFn: async () => {
+      const res = await axiosClient.get("/issues");
+      return res.data?.data || res.data || [];
+    },
+    enabled: !!token,
   });
 
-  // FRONTEND VERIFICATION INTERCEPT: Load fine records to catch un-submitted penalty accounts
-  const { data: globalFines = [] } = useQuery<FineRecord[]>({
-    queryKey: ["finesMasterLedgerFeed"],
-    queryFn: async () => (await axiosClient.get("/fines")).data
+  // Mutate: Return Closed Checkouts
+  const returnBookMutation = useMutation({
+    mutationFn: async (issueId: string) => {
+      return await axiosClient.post("/issues/return", {
+        issueId,
+        returnedDate: todayIso,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
+      toast.success("Book returned safely! Moved to history records logs.");
+      setIsDetailsOpen(false);
+      setSelectedRecord(null);
+    },
+    onError: () => toast.error("Failed to execute return checkout protocol."),
   });
 
-  const { data: members = [] } = useQuery<MemberLookup[]>({
-    queryKey: ["membersLookupDropdownFeed"],
-    queryFn: async () => (await axiosClient.get("/members/lookup-summary")).data
-  });
-
-  const { data: books = [] } = useQuery<BookLookup[]>({
-    queryKey: ["booksLookupDropdownFeed"],
-    queryFn: async () => (await axiosClient.get("/books/lookup-summary")).data
-  });
-
-  // 2. Data Modification Operations Pipelines (With Frontend Business Rule Guards)
+  // Mutate: Save (Create/Update Parameter Mappings)
   const saveMutation = useMutation({
-    mutationFn: async (payload: TransactionFormValues) => {
-      // FRONTEND SECURITY CHECK: Intercept updates to the RETURNED status
-      if (selectedRecord && payload.status === "RETURNED") {
-        const correspondingFine = globalFines.find(fine => fine.issueId === selectedRecord.id);
-        
-        // Block action if a fine exists and its paid status is false (or paidDate is missing)
-        if (correspondingFine && (!correspondingFine.paidStatus || !correspondingFine.paidDate)) {
-          throw new Error("FINE_PENDING_PAYMENT");
-        }
+    mutationFn: async (payload: { memberId: string; bookId: string; borrowDate: string; dueDate: string }) => {
+      if (selectedRecord) {
+        return await axiosClient.put(`/issues/${selectedRecord.id}`, payload);
       }
-
-      if (selectedRecord) return await axiosClient.put(`/issues/${selectedRecord.id}`, payload);
-      return await axiosClient.post("/issues", payload);
+      return await axiosClient.post("/issues/borrow", payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
-      toast.success("Circulation parameters synced successfully.");
+      toast.success("Circulation parameters synchronized successfully.");
       setIsFormOpen(false);
+      setSelectedRecord(null);
     },
-    onError: (error: unknown) => {
-      if (error instanceof Error && error.message === "FINE_PENDING_PAYMENT") {
-        toast.error("🚨 Transaction Blocked: Member needs to pay the outstanding fine first!", {
-          description: "Clear penalties on the Fines Audit page before checking in this asset.",
-          duration: 5000,
-        });
-      } else {
-        toast.error("Failed to sync circulation file parameters.");
-      }
-    }
+    onError: () => toast.error("Database validation rules failed on saving."),
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => await axiosClient.delete(`/issues/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
-      toast.success("Circulation file cleared.");
-      setDeleteModalConfig({ open: false, mode: "SINGLE" });
-    }
-  });
+  // ✨ Reset Filters Handler
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("");
+    setCurrentPage(1); // Reset back to initial index page 1
+  };
 
-  const purgeBulkReturnedMutation = useMutation({
-    mutationFn: async () => await axiosClient.post("/issues/purge-returned-history"),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
-      toast.success("All historical returned entries purged cleanly.");
-      setDeleteModalConfig({ open: false, mode: "SINGLE" });
-    }
-  });
+  // ⚙️ Process and Filter Records (Matches active unreturned states + active criteria)
+  const allFilteredRecords = rawIssues
+    .map((record) => {
+      const isOverdue = record.status === "BORROWED" && todayIso > record.dueDate;
+      return {
+        ...record,
+        computedStatus: isOverdue ? ("OVERDUE" as const) : record.status,
+      };
+    })
+    .filter((rec) => rec.computedStatus !== "RETURNED")
+    .filter((rec) => {
+      const term = searchQuery.toLowerCase();
+      const nameMatch = rec.memberName?.toLowerCase().includes(term) || false;
+      const titleMatch = rec.bookTitle?.toLowerCase().includes(term) || false;
+      const matchesSearch = nameMatch || titleMatch;
+      const matchesStatus = statusFilter === "" || rec.computedStatus === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
 
-  // 3. Evaluation filtration logic paths & Smart Dynamic Sorting Engine
-  const processedRecords = rawIssues?.map(record => {
-    const dynamicallyOverdue = record.status === "BORROWED" && todayIso > record.dueDate;
-    return { ...record, status: dynamicallyOverdue ? "OVERDUE" as const : record.status };
-  })
-  .filter(rec => {
-    const term = searchQuery.toLowerCase();
-    const matchesSearch = rec.memberName.toLowerCase().includes(term) || rec.bookTitle.toLowerCase().includes(term);
-    const matchesStatus = statusFilter === "" || rec.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  })
-  .sort((x, y) => {
-    if (x.status === "RETURNED" && y.status !== "RETURNED") return 1;
-    if (x.status !== "RETURNED" && y.status === "RETURNED") return -1;
-    return new Date(x.dueDate).getTime() - new Date(y.dueDate).getTime();
-  });
+  // 🔢 Client-Side Pagination Chunking Strategy
+  const totalRecordsCount = allFilteredRecords.length;
+  const totalPages = Math.max(1, Math.ceil(totalRecordsCount / rowsPerPage));
+  
+  // Slice array down to 10 rows maximum for the matching viewport index
+  const paginatedRecords = allFilteredRecords.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Upper Control Bar Layout */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Circulation Desk Ledger</h2>
-          <p className="text-xs text-gray-500">Authorize book loans, process item returns, and monitor real-time overdue files.</p>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Borrow & Return Desk</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Manage real-time out-of-building media assets, process drop-offs, and track compliance.</p>
         </div>
-        <div className="flex gap-2.5 w-full sm:w-auto">
-          <button
-            onClick={() => setDeleteModalConfig({ open: true, mode: "BULK_CLEAN" })}
-            className="px-3.5 py-2.5 border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-all cursor-pointer"
-          >
-            🧹 Clean Returned Files
-          </button>
-          <button
-            onClick={() => { setSelectedRecord(null); setIsFormOpen(true); }}
-            className="px-4 py-2.5 bg-teal-brand hover:bg-teal-hover text-white text-sm font-semibold rounded-xl shadow-xs transition-all cursor-pointer flex-1 sm:flex-initial"
-          >
-            ➕ Issue New Book Voucher
-          </button>
-        </div>
+        <button
+          onClick={() => { setSelectedRecord(null); setIsFormOpen(true); }}
+          className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
+        >
+          ➕ Issue New Book
+        </button>
       </div>
 
-      {/* Query Filter Navigation Controls Line */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-white p-4 rounded-xl border border-gray-200">
+      {/* Filter & Search Bar Controls Section */}
+      <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
         <input
           type="text"
-          placeholder="🔎 Query by active member profile name or book title index strings..."
+          placeholder="🔎 Query active loans by member name or book title..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="sm:col-span-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand"
+          onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+          className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-600"
         />
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand"
-        >
-          <option value="">-- Filter By Loan State Status --</option>
-          <option value="BORROWED">Active Loans (BORROWED)</option>
-          <option value="OVERDUE">Deadlines Violated (OVERDUE)</option>
-          <option value="RETURNED">Completed Runs (RETURNED)</option>
-        </select>
+        <div className="flex gap-2 min-w-xs">
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
+            className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-600 cursor-pointer"
+          >
+            <option value="">All Active Loans</option>
+            <option value="BORROWED">Standard Borrows (BORROWED)</option>
+            <option value="OVERDUE">Deadlines Violated (OVERDUE)</option>
+          </select>
+
+          <button
+              onClick={handleClearFilters}
+             className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-all cursor-pointer col-span-2 sm:col-auto whitespace-nowrap"
+            >
+              Clear Filters
+            </button>
+        </div>
       </div>
 
-      {/* Primary Data Grid Display Layer */}
       {isLoading ? (
-        <div className="text-center py-20 text-xs text-gray-400 font-semibold animate-pulse">Syncing Active Circulation Master Files...</div>
+        <div className="text-center py-20 text-xs text-gray-400 font-semibold animate-pulse">
+          Syncing active book circulation ledgers...
+        </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-gray-200 text-xs font-bold text-gray-500 uppercase bg-gray-50/70">
-                  <th className="py-3.5 px-4">Account Holder Context</th>
-                  <th className="py-3.5 px-4">Issued Media Volume Asset</th>
-                  <th className="py-3.5 px-4">Checkout Date</th>
-                  <th className="py-3.5 px-4">Target Due Deadline</th>
-                  <th className="py-3.5 px-4 text-center">Status Flag</th>
-                  <th className="py-3.5 px-4 text-right">Action Blocks</th>
-                </tr>
-              </thead>
-              <tbody className="text-sm divide-y divide-gray-100">
-                {processedRecords?.map(record => {
-                  const isReturned = record.status === "RETURNED";
-                  return (
-                    <tr 
-                      key={record.id} 
-                      className={`transition-colors duration-150 ${
-                        isReturned 
-                          ? "bg-gray-50/70 text-gray-400 line-through opacity-60" 
-                          : "hover:bg-gray-50/40 text-gray-700"
-                      }`}
-                    >
-                      <td className="py-3.5 px-4 font-semibold">{record.memberName}</td>
-                      <td className="py-3.5 px-4 font-medium">{record.bookTitle}</td>
-                      <td className="py-3.5 px-4 font-mono text-xs">{record.borrowedDate}</td>
-                      <td className="py-3.5 px-4 font-mono text-xs font-semibold">{record.dueDate}</td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold no-underline ${
-                          record.status === "OVERDUE" ? "bg-rose-50 text-rose-700 ring-1 ring-rose-600/10" :
-                          record.status === "BORROWED" ? "bg-blue-50 text-blue-700 ring-1 ring-blue-600/10" :
-                          "bg-gray-100 text-gray-500"
-                        }`}>
-                          {record.status}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-right space-x-3 no-underline">
-                        <button onClick={() => { setSelectedRecord(record); setIsFormOpen(true); }} className="text-xs font-bold text-teal-brand hover:text-teal-hover transition-colors cursor-pointer">Edit</button>
-                        <button onClick={() => { setSelectedRecord(record); setDeleteModalConfig({ open: true, mode: "SINGLE" }); }} className="text-xs font-bold text-rose-600 hover:text-rose-800 transition-colors cursor-pointer">Delete</button>
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-gray-200 text-xs font-bold text-gray-400 uppercase bg-gray-50/60 tracking-wider">
+                    <th className="py-4 px-5">Member Name</th>
+                    <th className="py-4 px-5">Issued Book Title</th>
+                    <th className="py-4 px-5">Checkout Date</th>
+                    <th className="py-4 px-5">Target Due Deadline</th>
+                    <th className="py-4 px-5 text-center">Status Flag</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm divide-y divide-gray-100 text-gray-700">
+                  {paginatedRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-sm text-gray-400 font-medium">
+                        No active out-of-building book logs registered on current indexing criteria.
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ) : (
+                    paginatedRecords.map((record) => (
+                      <tr
+                        key={record.id}
+                        onClick={() => { setSelectedRecord(record); setIsDetailsOpen(true); }}
+                        className="hover:bg-teal-50/40 transition-colors cursor-pointer group select-none"
+                      >
+                        <td className="py-4 px-5 font-bold text-gray-900 group-hover:text-teal-900 transition-colors">
+                          {record.memberName}
+                        </td>
+                        <td className="py-4 px-5 font-medium text-gray-700">{record.bookTitle}</td>
+                        <td className="py-4 px-5 text-xs font-mono text-gray-500">{record.borrowedDate}</td>
+                        <td className="py-4 px-5 text-xs font-mono font-semibold text-gray-600">{record.dueDate}</td>
+                        <td className="py-4 px-5 text-center">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-extrabold tracking-wide uppercase ${
+                            record.computedStatus === "OVERDUE"
+                              ? "bg-rose-50 text-rose-700 border border-rose-100 animate-pulse"
+                              : "bg-blue-50 text-blue-700 border border-blue-100"
+                          }`}>
+                            {record.computedStatus}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* ✨ NEW: Pagination Controls Footer */}
+          <div className="flex justify-between items-center bg-white px-5 py-4 rounded-xl border border-gray-200 shadow-2xs">
+            <span className="text-xs font-medium text-gray-500">
+              Showing page <b>{currentPage}</b>of <b>{totalPages}</b> ({totalRecordsCount} Records )
+            </span>
+            <div className="flex gap-2">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+                className="px-3 py-1.5 text-xs font-semibold bg-white border border-gray-200 rounded-lg shadow-3xs text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-all disabled:cursor-not-allowed cursor-pointer"
+              >
+                ◀ Previous
+              </button>
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+                className="px-3 py-1.5 text-xs font-semibold bg-white border border-gray-200 rounded-lg shadow-3xs text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-all disabled:cursor-not-allowed cursor-pointer"
+              >
+                Next ▶
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      <TransactionModal isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} onSubmit={(vals) => saveMutation.mutate(vals)} members={members} books={books} editingRecord={selectedRecord} />
-      <DeleteTransactionModal 
-        isOpen={deleteModalConfig.open} 
-        onClose={() => setDeleteModalConfig({ open: false, mode: "SINGLE" })} 
-        onConfirm={() => {
-          if (deleteModalConfig.mode === "SINGLE" && selectedRecord) deleteMutation.mutate(selectedRecord.id);
-          else purgeBulkReturnedMutation.mutate();
-        }} 
-        mode={deleteModalConfig.mode} 
-        titleDetails={selectedRecord?.bookTitle} 
+      {/* Modals Layers */}
+      <TransactionModal
+        key={selectedRecord ? `edit-${selectedRecord.id}` : "new-issue-form"}
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSubmit={(vals) => saveMutation.mutate(vals)}
+        editingRecord={selectedRecord}
+      />
+
+      <IssueDetailsModal
+        isOpen={isDetailsOpen}
+        onClose={() => setIsDetailsOpen(false)}
+        record={selectedRecord}
+        onMarkAsReturned={(id) => returnBookMutation.mutate(id)}
+        onTriggerEdit={() => { setIsDetailsOpen(false); setIsFormOpen(true); }}
       />
     </div>
   );

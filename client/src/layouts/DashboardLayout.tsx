@@ -15,8 +15,11 @@ export const DashboardLayout = () => {
     { name: "Dashboard", path: "/dashboard", icon: "📊" },
     { name: "Manage Members", path: "/members", icon: "👥" },
     { name: "Manage Books", path: "/books", icon: "📚" },
-    { name: "Transactions (Borrow/Return)", path: "/transactions", icon: "🔄" },
+    { name: "Manage Categories", path: "/categories", icon: "💳" },
+    { name: "Borrow & Return Desk", path: "/transactions", icon: "🔄" },
+    { name: "Returned Books", path: "/returnedbooks", icon: "💳" },
     { name: "Fines & Payments", path: "/fines", icon: "💳" },
+    { name: "Collected Fines", path: "/collectedfines", icon: "💳" },
   ];
 
   return (
