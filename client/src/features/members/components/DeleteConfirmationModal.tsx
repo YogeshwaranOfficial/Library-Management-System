@@ -13,12 +13,12 @@ export const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, memberName
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 border border-gray-100 animate-zoom-in">
         <div className="text-center">
           <span className="text-3xl text-rose-500 block mb-2">⚠️</span>
-          <h3 className="text-lg font-bold text-gray-900">Confirm Account Disconnection</h3>
+          <h3 className="text-lg font-bold text-gray-900">Confirm Member Deletion</h3>
           <p className="text-xs text-gray-500 mt-2 leading-relaxed">
             Are you sure you want to delete the library member record for <strong className="text-gray-800">{memberName}</strong>?
           </p>
           <p className="text-[11px] text-amber-600 font-semibold mt-2 bg-amber-50 p-2 rounded-lg">
-            Notice: This action removes library operational profiles only. The master system user account will not be changed.
+            Notice: This action removes library member profile only. The Admin system user account will not be deleted.
           </p>
         </div>
         <div className="mt-5 flex justify-end gap-3 pt-4 border-t border-gray-100">

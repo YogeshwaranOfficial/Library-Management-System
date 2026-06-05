@@ -3,55 +3,67 @@ import Member from "../../database/models/Member.js";
 import User from "../../database/models/User.js";
 import Book from "../../database/models/Book.js";
 import MembershipPlan from "../../database/models/MembershipPlan.js";
-import { CreationAttributes } from "sequelize";
+import { CreationAttributes, Transaction } from "sequelize";
 
 class IssueRepository {
   
-  // 1. Create a brand new loan voucher
-  async createIssue(data: {
-    member_id: string;
-    book_id: string;
-    borrowed_date: Date;
-    due_date: Date;
-  }) {
-    return Issue.create({
-      ...data,
-      issue_status: "BORROWED"
-    } as CreationAttributes<Issue>);
+  // Create a brand new record entry row
+  async createIssue(
+    data: {
+      member_id: string;
+      book_id: string;
+      borrowed_date: Date;
+      due_date: Date;
+    },
+    options?: { transaction?: Transaction }
+  ) {
+    return Issue.create(
+      {
+        ...data,
+        issue_status: "BORROWED"
+      } as CreationAttributes<Issue>,
+      options
+    );
   }
 
-  // 2. Modify parameters of an existing active loan (For PUT /issues/:id)
-  // 🛡️ FIX: Removed UpdateAttributes import, typed data object natively
+  // ✨ FIXED: Merged into a SINGLE update function accepting optional status & returned_date flags
   async updateIssue(
     issue_id: string, 
-    data: { member_id: string; book_id: string; due_date: Date }
+    data: { 
+      member_id: string; 
+      book_id: string; 
+      borrowed_date?: Date; 
+      due_date: Date; 
+      issue_status?: string;       // Can accept status updates (like BORROWED / OVERDUE on undo return)
+      returned_date?: Date | null;  // Can accept date removals (wiping to null on undo return)
+    },
+    options?: { transaction?: Transaction }
   ) {
     await Issue.update(data, { 
-      where: { issue_id } 
+      where: { issue_id },
+      ...options
     });
-    return this.findIssueById(issue_id);
+    return this.findIssueById(issue_id, options);
   }
 
-  // 3. Find a single issue record by primary key
-  async findIssueById(issue_id: string) {
-    return Issue.findByPk(issue_id);
+  // Allowed tracking down transaction isolations
+  async findIssueById(issue_id: string, options?: { transaction?: Transaction }) {
+    return Issue.findByPk(issue_id, options);
   }
 
-  // 4. Check for an active duplicate loan
-  async getActiveIssue(member_id: string, book_id: string) {
+  async getActiveIssue(member_id: string, book_id: string, options?: { transaction?: Transaction }) {
     return Issue.findOne({
       where: {
         member_id,
         book_id,
         returned_date: null,
       },
+      ...options
     });
   }
 
-  // 5. Check-in/Return a book
-  // 🛡️ FIX: Force cast the update body to any or force date object transformation 
-  // to satisfy the strict model definition 'CreationOptional<Date | null>'
-  async returnBook(issue_id: string, returned_date: Date | string) {
+  // Added optional transaction block passing parameters down to actual updater
+  async returnBook(issue_id: string, returned_date: Date | string, options?: { transaction?: Transaction }) {
     const finalDate = typeof returned_date === "string" ? new Date(returned_date) : returned_date;
 
     await Issue.update(
@@ -61,30 +73,30 @@ class IssueRepository {
       },
       {
         where: { issue_id },
+        ...options
       }
     );
-    return this.findIssueById(issue_id);
+    return this.findIssueById(issue_id, options);
   }
 
- // 6. Main Feed Endpoint Query
   async getAllIssuesDetailed() {
     return Issue.findAll({
       include: [
         {
           model: Member,
-          as: "member", // ✅ Verified matching associations file
+          as: "member",
           attributes: ["member_id"],
           include: [
             {
               model: User,
-              as: "user", // ✅ Verified matching associations file
+              as: "user", // ✨ FIXED: Removed the duplicate "as" property here
               attributes: ["name", "gmail", "phone_number"],
             }
           ]
         },
         {
           model: Book,
-          as: "book", // ✅ Verified matching associations file
+          as: "book",
           attributes: ["book_id", "book_name", "book_author"],
         }
       ],
@@ -92,7 +104,6 @@ class IssueRepository {
     });
   }
 
-  // 7. Allowance Metrics Query
   async getMemberAllowanceData(member_id: string) {
     const activeBorrowsCount = await Issue.count({
       where: {
@@ -106,7 +117,7 @@ class IssueRepository {
       include: [
         {
           model: MembershipPlan,
-          as: "membership_plan" // ✅ Verified matching associations file
+          as: "membership_plan"
         }
       ]
     });
@@ -118,11 +129,27 @@ class IssueRepository {
   }
 
   async getMemberIssues(member_id: string) {
-  return Issue.findAll({
-    where: { member_id },
-    order: [["created_at", "DESC"]],
-  });
-}
+    return Issue.findAll({
+      where: { member_id },
+      order: [["created_at", "DESC"]],
+    });
+  }
+
+  // ✨ NEW: Delete a single record row permanently
+  async deleteIssueById(issue_id: string, options?: { transaction?: Transaction }) {
+    return await Issue.destroy({
+      where: { issue_id },
+      ...options
+    });
+  }
+
+  // ✨ NEW: Delete multiple records at once (Batch cleanup operation)
+  async deleteManyIssues(issue_ids: string[], options?: { transaction?: Transaction }) {
+    return await Issue.destroy({
+      where: { issue_id: issue_ids },
+      ...options
+    });
+  }
 }
 
 export default new IssueRepository();

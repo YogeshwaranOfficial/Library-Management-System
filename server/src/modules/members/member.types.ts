@@ -6,10 +6,10 @@ export interface CreateMemberPayload {
 }
 
 export interface UpdateMemberPayload {
-  membership_plan_id?: string;
-  start_date?: string;
-  expiry_date?: string;
-  membership_status?: "ACTIVE" | "EXPIRED";
+  membership_plan_id?: string | undefined;
+  start_date?: string | undefined;
+  expiry_date?: string | undefined;
+  membership_status?: "ACTIVE" | "EXPIRED" | undefined;
 }
 
 export interface MemberQuery {

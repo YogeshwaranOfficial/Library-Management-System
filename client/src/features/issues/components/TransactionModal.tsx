@@ -55,16 +55,18 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
     return tomorrow.toISOString().split("T")[0];
   };
 
+  // ✨ Safe Initial State: Derive initial values directly during state configuration 
+  // rather than using a synchronous useEffect.
   const [memberSearch, setMemberSearch] = useState(editingRecord ? editingRecord.memberName : "");
   const [selectedMember, setSelectedMember] = useState<MemberSearchItem | null>(
     editingRecord
       ? {
           member_id: editingRecord.memberId,
           name: editingRecord.memberName,
-          phone_number: "",
+          phone_number: editingRecord.memberPhone || "",
           membership_status: "ACTIVE",
           expiry_date: "",
-          plan_name: "Active Plan",
+          plan_name: "Active Loan Lifecycle",
           maxAllowed: 20,
           currentBorrows: 0,
           compliance: { status: "GOOD", message: "", isBlocked: false }
@@ -79,7 +81,7 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
       ? {
           book_id: editingRecord.bookId,
           title: editingRecord.bookTitle,
-          author: "",
+          author: editingRecord.bookAuthor || "",
           available_copies: 1,
           compliance: { status: "AVAILABLE", message: "", isBlocked: false }
         }
@@ -97,23 +99,30 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
     complianceMessage: "",
   });
 
-  // Async load allowance metrics safely when a member is selected
+  // ✨ Safe External Effect: Only handles asynchronous network updates
   useEffect(() => {
-    if (selectedMember && isOpen && !editingRecord) {
-      axiosClient.get(`/issues/member-allowance/${selectedMember.member_id}`).then((res) => {
-        const metrics = res.data?.data || res.data;
-        setBorrowMetrics({
-          currentBorrows: metrics.currentBorrows || 0,
-          maxAllowed: metrics.maxAllowed || 20,
-          isExpired: selectedMember.membership_status === "EXPIRED" || selectedMember.compliance?.status === "EXPIRED",
-          expiryDate: selectedMember.expiry_date || "",
-          complianceStatus: selectedMember.compliance?.status || "GOOD",
-          complianceMessage: selectedMember.compliance?.message || "",
+    if (selectedMember && isOpen) {
+      axiosClient.get(`/issues/member-allowance/${selectedMember.member_id}`)
+        .then((res) => {
+          const metrics = res.data?.data || res.data;
+          setBorrowMetrics({
+            currentBorrows: metrics.currentBorrows || 0,
+            maxAllowed: metrics.maxAllowed || 20,
+            isExpired: selectedMember.membership_status === "EXPIRED" || selectedMember.compliance?.status === "EXPIRED",
+            expiryDate: selectedMember.expiry_date || metrics.expiryDate || "",
+            complianceStatus: selectedMember.compliance?.status || "GOOD",
+            complianceMessage: selectedMember.compliance?.message || "",
+          });
+        })
+        .catch(() => {
+          if (editingRecord) {
+            setBorrowMetrics(prev => ({ ...prev, expiryDate: "" }));
+          }
         });
-      });
     }
   }, [selectedMember, isOpen, editingRecord]);
 
+  // Query Suggestions Providers
   const { data: suggestedMembers = [] } = useQuery<MemberSearchItem[]>({
     queryKey: ["memberQuerySuggestions", memberSearch],
     queryFn: async () => {
@@ -136,13 +145,17 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
 
   if (!isOpen) return null;
 
-  // Real-time computation checking input content boundaries
   const hasMemberText = memberSearch.trim().length > 0;
   const isSelectedMemberMatchingInput = selectedMember && selectedMember.name === memberSearch;
-  const showMemberInfoCard = hasMemberText && isSelectedMemberMatchingInput && !editingRecord;
+  const showMemberInfoCard = hasMemberText && isSelectedMemberMatchingInput;
 
   const reachedPlanCap = borrowMetrics.currentBorrows >= borrowMetrics.maxAllowed || borrowMetrics.complianceStatus === "LIMIT_EXCEEDED";
-  const isSubmissionBlocked = (!editingRecord && (borrowMetrics.isExpired || reachedPlanCap || (selectedBook && selectedBook.available_copies <= 0))) || !selectedMember || !selectedBook || !dueDate;
+  
+  const isSubmissionBlocked = 
+    !selectedMember || 
+    !selectedBook || 
+    !dueDate ||
+    (!editingRecord && (borrowMetrics.isExpired || reachedPlanCap || (selectedBook && selectedBook.available_copies <= 0)));
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,7 +164,7 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
     onSubmit({
       memberId: selectedMember.member_id,
       bookId: selectedBook.book_id,
-      borrowDate: getTodayString(),
+      borrowDate: editingRecord ? editingRecord.borrowedDate : getTodayString(),
       dueDate,
     });
   };
@@ -161,7 +174,7 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-100 animate-zoom-in">
         <div className="bg-teal-600 p-5 text-white flex justify-between items-center">
           <h3 className="font-bold text-lg">{editingRecord ? "Adjust Loan Parameters" : "Issue New Book Voucher"}</h3>
-          <button type="button" onClick={onClose} className="text-teal-200 hover:text-white text-lg">✕</button>
+          <button type="button" onClick={onClose} className="text-teal-200 hover:text-white text-lg cursor-pointer">✕</button>
         </div>
 
         <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
@@ -178,9 +191,9 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
                 setShowMemberDropdown(true); 
               }}
               placeholder="Search member name (e.g. Alex...)"
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100"
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 disabled:opacity-60 disabled:cursor-not-allowed"
             />
-            {showMemberDropdown && suggestedMembers.length > 0 && (
+            {showMemberDropdown && suggestedMembers.length > 0 && !editingRecord && (
               <ul className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-gray-50">
                 {suggestedMembers.map((m) => {
                   const isBlocked = m.compliance?.isBlocked;
@@ -252,10 +265,10 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
                 setBookSearch(e.target.value); 
                 setShowBookDropdown(true); 
               }}
-              placeholder="Seach book name or author name..."
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100"
+              placeholder="Search book name or author name..."
+              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 disabled:opacity-60 disabled:cursor-not-allowed"
             />
-            {showBookDropdown && suggestedBooks.length > 0 && (
+            {showBookDropdown && suggestedBooks.length > 0 && !editingRecord && (
               <ul className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-gray-50">
                 {suggestedBooks.map((b) => {
                   const outOfStock = b.compliance?.isBlocked || b.available_copies <= 0;
@@ -297,34 +310,32 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
               selectedBook.available_copies <= 0 ? "bg-rose-50 border-rose-200 text-rose-950" : "bg-slate-50 border-gray-200 text-gray-800"
             }`}>
               <div>
-                <h4 className="font-bold text-gray-900">📚 Selected Book</h4>
-                <p className="text-2xs text-gray-500 font-medium">{selectedBook.title} — By {selectedBook.author}</p>
+                <h4 className="font-bold text-gray-900">📚 Selected Asset Profile</h4>
+                <p className="text-2xs text-gray-500 font-medium">{selectedBook.title} {selectedBook.author && `— By ${selectedBook.author}`}</p>
               </div>
-              {/* <div className="text-right">
-                <span className={`text-2xs font-extrabold px-2 py-0.5 rounded-md block ${
-                  selectedBook.available_copies <= 0 ? "bg-rose-200 text-rose-900" : "bg-teal-100 text-teal-900"
-                }`}>
-                  {selectedBook.available_copies <= 0 ? "Stock Depleted" : `${selectedBook.available_copies} Copies In Stack`}
-                </span>
-              </div> */}
             </div>
           )}
 
           {/* 3. CALENDAR WORK PERIOD SETTINGS */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Borrow Date (Today)</label>
-              <input type="date" readOnly value={getTodayString()} className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 outline-hidden focus:ring-0" />
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Borrow Date</label>
+              <input 
+                type="date" 
+                readOnly 
+                value={editingRecord ? editingRecord.borrowedDate : getTodayString()} 
+                className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 outline-hidden focus:ring-0 select-none" 
+              />
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">Return Date</label>
+              <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">Target Due Deadline</label>
               <input
                 type="date"
                 value={dueDate}
-                min={getTomorrowString()}
+                min={editingRecord ? editingRecord.borrowedDate : getTomorrowString()}
                 max={borrowMetrics.expiryDate ? borrowMetrics.expiryDate.split("T")[0] : undefined}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100"
+                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 cursor-pointer"
               />
             </div>
           </div>

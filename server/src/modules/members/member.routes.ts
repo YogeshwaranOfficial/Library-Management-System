@@ -55,6 +55,8 @@
  *       201:
  *         description: Member created successfully
  */
+
+
 import { Router } from "express";
 
 import auth from "../../middlewares/auth.js";

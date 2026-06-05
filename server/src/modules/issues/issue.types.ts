@@ -5,23 +5,34 @@ import {
   returnBookSchema 
 } from "./issue.validation.js";
 
-// ✨ Pro-Tip: Automatically infers pristine camelCase structures directly from schemas
+
+// Infers: { memberId: string; bookId: string; borrowDate?: string; dueDate: string; }
 export type CreateIssuePayload = z.infer<typeof createIssueSchema>["body"];
+
+// Infers: { memberId: string; bookId: string; borrowDate?: string; dueDate: string; }
 export type UpdateIssuePayload = z.infer<typeof updateIssueSchema>["body"];
+
+// Infers: { issueId: string; returnedDate?: string; }
 export type ReturnBookPayload = z.infer<typeof returnBookSchema>["body"];
 
-/* Inferred result breakdown for compilation safety:
-  
-  CreateIssuePayload & UpdateIssuePayload will map to:
-  {
-     memberId: string;
-     bookId: string;
-     dueDate: string;
-  }
 
-  ReturnBookPayload will map to:
-  {
-     issueId: string;
-     returnedDate?: string;
-  }
-*/
+// ==========================================
+// 🛡️ STRICT SERVICE LAYER DTOs (Data Transfer Objects)
+// ==========================================
+// These explicitly satisfy exactOptionalPropertyTypes by defining 
+// exactly how the service functions expect optional values.
+
+export interface BorrowBookServiceDTO {
+  memberId: string;
+  bookId: string;
+  borrowDate?: string; // Clear from undefined collision bounds
+  dueDate: string;
+}
+
+export interface UpdateIssueServiceDTO {
+  memberId: string;
+  bookId: string;
+  borrowDate?: string;
+  dueDate: string;
+}
+

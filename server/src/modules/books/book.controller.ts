@@ -7,7 +7,8 @@ import bookService from "./book.service.js";
 
 export const createBookController = asyncHandler(
   async (req: Request, res: Response) => {
-    const result = await bookService.createBook(req.body);
+    const bookData = req.body.body || req.body;
+    const result = await bookService.createBook(bookData);
 
     sendResponse(res, {
       success: true,
@@ -20,7 +21,6 @@ export const createBookController = asyncHandler(
 
 export const getBooksController = asyncHandler(
   async (req: Request, res: Response) => {
-    // Safely extract parameters coming from frontend URL params
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const search = req.query.search ? String(req.query.search).trim() : undefined;
@@ -37,7 +37,6 @@ export const getBooksController = asyncHandler(
       success: true,
       statusCode: 200,
       message: "Books fetched successfully",
-      // Contains { count, rows }
       data: result, 
     });
   }
@@ -45,9 +44,9 @@ export const getBooksController = asyncHandler(
 
 export const getBookByIdController = asyncHandler(
   async (req: Request, res: Response) => {
-    const result = await bookService.getBookById(
-      req.params.bookId as any
-    );
+    const { bookId } = req.params;
+    // 💡 FIX (Line 52): String coercion guarantees the service gets a strict string
+    const result = await bookService.getBookById(String(bookId));
 
     sendResponse(res, {
       success: true,
@@ -60,10 +59,11 @@ export const getBookByIdController = asyncHandler(
 
 export const updateBookController = asyncHandler(
   async (req: Request, res: Response) => {
-    const result = await bookService.updateBook(
-      req.params.bookId as any,
-      req.body
-    );
+    const { bookId } = req.params;
+    const updateData = req.body.body || req.body;
+    
+    // 💡 FIX (Line 69): Coerce bookId parameter safely
+    const result = await bookService.updateBook(String(bookId), updateData);
 
     sendResponse(res, {
       success: true,
@@ -76,7 +76,8 @@ export const updateBookController = asyncHandler(
 
 export const deleteBookController = asyncHandler(
   async (req: Request, res: Response) => {
-    await bookService.deleteBook(req.params.bookId as any);
+    const { bookId } = req.params;
+    await bookService.deleteBook(String(bookId));
 
     sendResponse(res, {
       success: true,
@@ -86,9 +87,6 @@ export const deleteBookController = asyncHandler(
   }
 );
 
-// =========================================================================
-// 🚀 NEW SYSTEM CHANNEL CONTROLLER: FETCH ALL CATEGORIES
-// =========================================================================
 export const getCategoriesController = asyncHandler(
   async (req: Request, res: Response) => {
     const result = await bookService.getCategories();
@@ -103,13 +101,10 @@ export const getCategoriesController = asyncHandler(
 );
 
 export const searchBooksController = asyncHandler(async (req: Request, res: Response) => {
-  // 1. Capture the type-ahead search text token from 'q' safely
-  const searchString = req.query.q as string;
-
-  // 2. Fetch inventory records along with copy availability compliance metrics
+  // 💡 FIX (Line 84): Cast req.query.q cleanly into a string primitive fallback 
+  const searchString = String(req.query.q || "");
   const structuredMatches = await bookService.searchBooks(searchString);
 
-  // 3. Dispatch structured payload back to the TanStack frontend client hooks
   sendResponse(res, {
     success: true,
     statusCode: 200,

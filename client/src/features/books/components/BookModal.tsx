@@ -58,8 +58,12 @@ export const BookModal = ({ isOpen, onClose, onSubmit, categories, editingBook }
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">Total Copies</label>
-              <input type="number" {...register("totalCopies")} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand" />
-              {errors.totalCopies && <p className="text-xs text-red-500 mt-1 font-medium">{errors.totalCopies.message}</p>}
+                <input 
+                  type="number" 
+                  {...register("totalCopies", { valueAsNumber: true })} 
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand" 
+                />              
+                {errors.totalCopies && <p className="text-xs text-red-500 mt-1 font-medium">{errors.totalCopies.message}</p>}
             </div>
 
             <div>

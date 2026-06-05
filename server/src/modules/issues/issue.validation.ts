@@ -1,12 +1,14 @@
 import { z } from "zod";
 
+const dateStringSchema = z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/));
+
 // 1. Validates: POST /issues/borrow
 export const createIssueSchema = z.object({
   body: z.object({
     memberId: z.string().uuid({ message: "Invalid Member UUID format" }),
     bookId: z.string().uuid({ message: "Invalid Book UUID format" }),
-    dueDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)), 
-    // ^ Accepts both ISO timestamp strings or raw "YYYY-MM-DD" calendar date strings
+    borrowDate: dateStringSchema.optional(), // ✨ Synchronized with client payloads
+    dueDate: dateStringSchema, 
   }),
 });
 
@@ -18,7 +20,8 @@ export const updateIssueSchema = z.object({
   body: z.object({
     memberId: z.string().uuid({ message: "Invalid Member UUID format" }),
     bookId: z.string().uuid({ message: "Invalid Book UUID format" }),
-    dueDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)),
+    borrowDate: dateStringSchema.optional(), // ✨ Synchronized with update queries
+    dueDate: dateStringSchema,
   }),
 });
 
@@ -26,8 +29,7 @@ export const updateIssueSchema = z.object({
 export const returnBookSchema = z.object({
   body: z.object({
     issueId: z.string().uuid({ message: "Invalid Issue UUID format" }),
-    returnedDate: z.string().datetime({ offset: true }).or(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional(),
-    // Optional because the service layer falls back to new Date() if omitted
+    returnedDate: dateStringSchema.optional(),
   }),
 });
 

@@ -1,18 +1,3 @@
-export interface CreateBookPayload {
-  book_name: string;
-  book_author: string;
-  category_id: string;
-  total_copies: number;
-}
-
-export interface UpdateBookPayload {
-  book_name?: string;
-  book_author?: string;
-  category_id?: string;
-  total_copies?: number;
-  available_copies?: number;
-}
-
 // ✨ NEW: Defines the payload contract returned by the inventory search engine
 export interface SearchBookResult {
   book_id: string;
@@ -24,4 +9,20 @@ export interface SearchBookResult {
     message: string;
     isBlocked: boolean;    // true means dropdown blocks click selection (0 copies)
   };
+}
+
+export interface CreateBookPayload {
+  book_name: string;
+  book_author: string;
+  category_id: string;
+  total_copies: number;
+  available_copies?: number; // 💡 Added as an optional property
+}
+
+export interface UpdateBookPayload {
+  book_name?: string;
+  book_author?: string;
+  category_id?: string;
+  total_copies?: number;
+  available_copies?: number;
 }

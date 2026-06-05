@@ -116,32 +116,59 @@ export const BooksPage = () => {
     setCurrentPage(1);
   };
 
-  // 4. Mutation Pipelines
+  // 1. Updated Save/Update Book Mutation Blueprint Pipeline
   const saveBookMutation = useMutation({
     mutationFn: async (payload: BookFormValues) => {
+      // 💡 FIX: Shape the payload into the snake_case keys your backend models require!
+      const processedPayload = {
+        book_name: payload.title,
+        book_author: payload.author,
+        total_copies: Number(payload.totalCopies),
+        category_id: payload.categoryId,
+      };
+
       if (selectedBook) {
-        return await axiosClient.put(`/books/${selectedBook.id}`, payload);
+        // If we are updating an existing entry
+        const response = await axiosClient.patch(`/books/${selectedBook.id}`, processedPayload);
+        return response.data;
       }
-      return await axiosClient.post("/books", payload);
+      
+      // If we are appending a brand new book instance
+      const response = await axiosClient.post("/books", processedPayload);
+      return response.data;
     },
     onSuccess: () => {
+      // Evict old cache immediately to render the newly populated entry live
       queryClient.invalidateQueries({ queryKey: ["libraryBooksCatalogFeed"] });
-      toast.success("updated successfully.");
+      toast.success(selectedBook ? "Book metrics updated successfully." : "New title appended to index safely!");
       setIsFormOpen(false);
+      setSelectedBook(null);
     },
-    onError: () => toast.error("An error occurred during database commit operations."),
+    onError: () => {
+      toast.error("Database schema transaction rejected our data structure formats.");
+    },
   });
 
+  // 2. Updated Delete Book Mutation Pipeline
   const deleteBookMutation = useMutation({
-    mutationFn: async (id: string) => await axiosClient.delete(`/books/${id}`),
+    mutationFn: async (id: string) => {
+      // Ensure this path matches your backend destroy handler parameters
+      const response = await axiosClient.delete(`/books/${id}`);
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["libraryBooksCatalogFeed"] });
-      toast.success("Deleted Successfully");
+      toast.success("Volume profile purged from repository catalog.");
       setIsDeleteOpen(false);
+      setSelectedBook(null); // Clear selected item state safely
+      
       if (parsedBooks.length === 1 && currentPage > 1) {
         setCurrentPage((prev) => prev - 1);
       }
     },
+    onError: () => {
+      toast.error("Unable to execute target ledger deletion contract.");
+    }
   });
 
   return (

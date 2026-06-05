@@ -33,7 +33,9 @@ export const BookDetailModal = ({
         <div className="bg-gray-50/80 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
           <div>
             <h3 className="text-base font-bold text-gray-900">Book Details</h3>
-            <p className="text-[11px] text-gray-400 font-mono">ID: {book.id}</p>
+              <p className="text-[11px] text-gray-400 font-mono tracking-wider">
+                ID: BOOK-{book.id ? String(book.id).slice(-4).toUpperCase() : "0000"}
+              </p>          
           </div>
           <button 
             onClick={onClose} 

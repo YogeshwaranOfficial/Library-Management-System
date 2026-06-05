@@ -89,8 +89,7 @@
  *
  *       401:
  *         description: Unauthorized token verification failure
- */
-import { Router } from "express";
+ */import { Router } from "express";
 import auth from "../../middlewares/auth.js";
 import validate from "../../middlewares/validate.js";
 
@@ -99,8 +98,10 @@ import {
   getMemberIssuesController,
   returnBookController,
   getAllIssuesFeedController,
-  getMemberAllowanceMetricsController, // Processes load metric counts
-  updateIssueParametersController
+  getMemberAllowanceMetricsController,
+  updateIssueParametersController,
+  deleteSingleIssueController,         // ✨ NEW
+  clearReturnedHistoryController       // ✨ NEW
 } from "./issue.controller.js";
 
 import {
@@ -113,10 +114,20 @@ import {
 
 const router = Router();
 
-// 1. Master Ledger Feed Logs
-router.get("/", auth, getAllIssuesFeedController);
+// ==========================================
+// 🔓 STATIC & AGGREGATE ROUTES (MUST BE TOP)
+// ==========================================
 
-// 2. Used by TransactionModal.tsx (Allocation Limits check)
+router.get("/", auth, getAllIssuesFeedController);
+router.get("/overdue", auth); 
+
+// ✨ NEW: Wipe entire completed history logs (Placed above /:id to prevent route collisions)
+router.delete("/clear-returned-history", auth, clearReturnedHistoryController);
+
+// ==========================================
+// 🔍 LOOKUPS & METRICS SUBSYSTEMS
+// ==========================================
+
 router.get(
   "/member-allowance/:memberId",
   auth,
@@ -124,8 +135,6 @@ router.get(
   getMemberAllowanceMetricsController
 );
 
-// 3. ✨ ADDED: Used by IssueDetailsModal.tsx (Stats counter summary popups)
-// Maps directly to the same controller to pass back active limits & safe history references!
 router.get(
   "/member-stats/:memberId",
   auth,
@@ -133,18 +142,22 @@ router.get(
   getMemberAllowanceMetricsController
 );
 
-// 4. Issue a Book Voucher
-router.post("/borrow", auth, validate(createIssueSchema), borrowBookController);
-
-// 5. Modify Active Parameters
-router.put("/:id", auth, validate(updateIssueSchema), updateIssueParametersController);
-
-// 6. Close/Process Active Asset Return
-router.post("/return", auth, validate(returnBookSchema), returnBookController);
-
-// 7. Historical Ledger logs for individual Member
 router.get("/member/:memberId", auth, validate(getMemberIssuesSchema), getMemberIssuesController);
 
-router.get("/overdue", auth);
+// ==========================================
+// ⚡ WRITE & MUTATION OPERATIONS
+// ==========================================
+
+router.post("/borrow", auth, validate(createIssueSchema), borrowBookController);
+router.post("/return", auth, validate(returnBookSchema), returnBookController);
+
+// ==========================================
+// 🛠️ DYNAMIC PARAMETER ROUTES (MUST BE BOTTOM)
+// ==========================================
+
+router.put("/:id", auth, validate(updateIssueSchema), updateIssueParametersController);
+
+// ✨ NEW: Permanent single log item delete route
+router.delete("/:id", auth, deleteSingleIssueController);
 
 export default router;

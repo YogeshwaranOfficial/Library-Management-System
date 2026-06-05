@@ -9,10 +9,14 @@ import {
 } from "./book.types.js";
 
 class BookRepository {
-  async createBook(payload: CreateBookPayload) {
+ async createBook(payload: CreateBookPayload) {
     return Book.create({
-      ...payload,
-      available_copies: payload.total_copies,
+      book_name: payload.book_name,
+      book_author: payload.book_author,
+      category_id: payload.category_id,
+      total_copies: payload.total_copies,
+      // 💡 Now perfectly legal since we expanded the interface contract type!
+      available_copies: payload.available_copies ?? payload.total_copies,
     } as CreationAttributes<Book>);
   }
 
@@ -26,28 +30,16 @@ class BookRepository {
     search?: string,
     category_id?: string
   ) {
-    // Math block to ensure correct pagination skips across pages
     const offset = (page - 1) * limit;
 
     return Book.findAndCountAll({
       where: {
-        // Handle search query criteria if present
         ...(search && {
           [Op.or]: [
-            {
-              book_name: {
-                [Op.iLike]: `%${search}%`,
-              },
-            },
-            {
-              book_author: {
-                [Op.iLike]: `%${search}%`,
-              },
-            },
+            { book_name: { [Op.iLike]: `%${search}%` } },
+            { book_author: { [Op.iLike]: `%${search}%` } },
           ],
         }),
-
-        // Handle structural category ID filter matching if selected
         ...(category_id && { category_id }),
       },
 
@@ -56,15 +48,14 @@ class BookRepository {
           model: Category,
           as: "category",
           attributes: [
-            ["category_id","id"],
-            ["category_name","name"]
-          ], // Explicitly pluck the required parameters
+            ["category_id", "id"],
+            ["category_name", "name"]
+          ],
         },
       ],
 
       limit,
       offset,
-
       order: [["created_at", "DESC"]],
     });
   }
@@ -84,7 +75,14 @@ class BookRepository {
     book_id: string,
     payload: UpdateBookPayload
   ) {
-    await Book.update(payload, {
+    // 💡 FIX: Safe, explicit assignments prevent accidental column drops on PATCH updates
+    await Book.update({
+      ...(payload.book_name && { book_name: payload.book_name }),
+      ...(payload.book_author && { book_author: payload.book_author }),
+      ...(payload.category_id && { category_id: payload.category_id }),
+      ...(payload.total_copies !== undefined && { total_copies: payload.total_copies }),
+      ...(payload.available_copies !== undefined && { available_copies: payload.available_copies }),
+    }, {
       where: { book_id },
     });
 
@@ -98,7 +96,6 @@ class BookRepository {
   }
 
   async searchBooks(searchToken: string) {
-    // 1. Search catalog items matching book names or author strings
     const matches = await Book.findAll({
       where: {
         [Op.or]: [
@@ -108,17 +105,16 @@ class BookRepository {
       },
       attributes: ["book_id", "book_name", "book_author", "available_copies"],
       order: [["book_name", "ASC"]],
-      limit: 15 // Capped to avoid blowing up the UI dropdown layout
+      limit: 15
     });
 
-    // 2. Loop over inventory items to map business rules and compliance flags
     return matches.map((book: any) => {
       const stockCount = book.available_copies ?? 0;
       const outOfStock = stockCount <= 0;
 
       return {
         book_id: book.book_id,
-        title: book.book_name,          // Mapped parameter to match 'bookSearch' tracking variables
+        title: book.book_name,
         author: book.book_author || "Unknown Author",
         available_copies: stockCount,
         compliance: {
@@ -126,19 +122,22 @@ class BookRepository {
           message: outOfStock 
             ? "❌ Out of stock! All physical asset copies currently checked out." 
             : `✓ Available: ${stockCount} copies remaining inside the stack index.`,
-          isBlocked: outOfStock        // Mapped straight to frontend dropdown 'disabled' attributes
+          isBlocked: outOfStock
         }
       };
     });
   }
 
   async getCategories() {
+    // 💡 FIX: Adding raw: true guarantees that Sequelize drops model wrapper metadata 
+    // and outputs a pure JSON object array containing exactly your custom aliased keys!
     return Category.findAll({
       attributes: [
-        ["category_id","id"],
-        ["category_name","name"]
+        ["category_id", "id"],
+        ["category_name", "name"]
       ],
-      order: [["category_name", "ASC"]], // Organized alphabetically
+      raw: true,
+      order: [["category_name", "ASC"]],
     });
   }
 }

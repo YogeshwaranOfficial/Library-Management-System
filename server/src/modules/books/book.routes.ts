@@ -171,7 +171,6 @@
  *       404:
  *         description: Book not found
  */
-
 import { Router } from "express";
 
 import validate from "../../middlewares/validate.js";
@@ -184,7 +183,7 @@ import {
   getBooksController,
   searchBooksController,
   updateBookController,
-  getCategoriesController, // 🚀 NEW: Import the category retrieval handler
+  getCategoriesController,
 } from "./book.controller.js";
 
 import {
@@ -198,14 +197,11 @@ const router = Router();
 // =========================================================================
 // 🚀 SYSTEM CATEGORY DROPDOWN CHANNELS
 // =========================================================================
-// Note: Put this ABOVE the dynamic "/:bookId" route so Express doesn't 
-// accidentally mistake the word "categories" for a book UUID string!
 router.get(
   "/categories",
   auth,
   getCategoriesController
 );
-
 
 router.get(
   "/search",
@@ -213,40 +209,20 @@ router.get(
   validate(searchBooksQueryValidation),
   searchBooksController
 );
+
 // =========================================================================
-// CORE BOOK CRUD ENDPOINTS
+// 🎯 BASE CRUD ROOT ROUTE
 // =========================================================================
-router.post(
-  "/",
-  auth,
-  validate(createBookSchema),
-  createBookController
-);
+router.route("/")
+  .get(auth, getBooksController)
+  .post(auth, validate(createBookSchema), createBookController);
 
-router.get(
-  "/",
-  auth,
-  getBooksController
-);
-
-router.get(
-  "/:bookId",
-  auth,
-  getBookByIdController
-);
-
-// Changed to PUT or PATCH depending on your network protocol specification
-router.put(
-  "/:bookId",
-  auth,
-  validate(updateBookSchema),
-  updateBookController
-);
-
-router.delete(
-  "/:bookId",
-  auth,
-  deleteBookController
-);
+// =========================================================================
+// 🆔 DYNAMIC PARAMETER CRUD ROUTE GROUP (PATCH Only for Updates)
+// =========================================================================
+router.route("/:bookId")
+  .get(auth, getBookByIdController)
+  .patch(auth, validate(updateBookSchema), updateBookController) // ✨ Pure partial edits
+  .delete(auth, deleteBookController);
 
 export default router;

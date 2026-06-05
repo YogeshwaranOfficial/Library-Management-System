@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 import { axiosClient } from "../../../api/axiosClient";
 import { MemberDetailsModal } from "../components/MemberDetailsModal";
 import { MemberModal } from "../components/MemberModal"; 
@@ -79,64 +80,101 @@ export const MembersPage = () => {
   });
 
   // Fetching System Users to fill the profile dropdown target selectors
-  const { data: users = [] } = useQuery<SystemUser[]>({
-    queryKey: ["systemUsersDropdownFeed", token],
-    queryFn: async () => {
-      const res = await axiosClient.get("/members/available-users");
-      return res.data?.data || res.data || [];
-    },
-    enabled: !!token,
-  });
+  // Fetching System Users to fill the profile dropdown target selectors
+const { data: users = [] } = useQuery<SystemUser[]>({
+  // 💡 FIX: Change this string to match exactly what your Save and Delete mutations invalidate
+  queryKey: ["eligibleUsersList", token], 
+  queryFn: async () => {
+    const res = await axiosClient.get("/members/available-users");
+    return res.data?.data || res.data || [];
+  },
+  enabled: !!token,
+});
 
-  // Create or Update Membership Master Pipeline Mutation
-  const saveMemberMutation = useMutation({
-    mutationFn: async (payload: MemberFormValues) => {
-      if (selectedMember) {
-        return await axiosClient.put(`/members/${selectedMember.id}`, payload);
-      }
-      return await axiosClient.post("/members", payload);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
-      toast.success("Subscriber membership definition updated cleanly.");
-      setIsFormOpen(false);
-      setSelectedMember(null);
-    },
-    onError: () => {
-      toast.error("Database schema validation failed on submission updates.");
+ // Create or Update Membership Master Pipeline Mutation
+// Create or Update Membership Master Pipeline Mutation
+const saveMemberMutation = useMutation({
+  mutationFn: async (payload: MemberFormValues) => {
+    // 💡 Format the payload to match what the backend database schema expects
+    const processedPayload = {
+      user_id: payload.userId,
+      membership_plan_id: payload.membershipPlanId,
+      is_active: payload.isActive ?? true
+    };
+
+    if (selectedMember) {
+      return await axiosClient.patch(`/members/${selectedMember.id}`, processedPayload);
     }
-  });
+    return await axiosClient.post("/members", processedPayload);
+  },
+  onSuccess: () => {
+    // 1. Refreshes the main dashboard data grid list view
+    queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
+    
+    // 💡 NEW MODIFICATION: Instantly invalidates the add member dropdown cache list
+    queryClient.invalidateQueries({ queryKey: ["eligibleUsersList"] });
+    
+    toast.success(selectedMember ? "Membership renewed cleanly." : "New library member created successfully!");
+    setIsFormOpen(false);
+    setSelectedMember(null);
+  },
+  onError: (error: unknown) => {
+    let serverErrorMessage = "Database schema validation failed on submission updates.";
+    
+    // Check if it's an Axios error and safely extract backend messages
+    if (error instanceof AxiosError) {
+      serverErrorMessage = error.response?.data?.message || serverErrorMessage;
+      console.error("Validation Breakdown Details:", error.response?.data);
+    } else {
+      console.error("An unexpected system error occurred:", error);
+    }
+
+    toast.error(serverErrorMessage);
+  }
+});
 
   // RENEW SUBMISSION MUTATION (From the row info cards details panel directly)
-  const renewMutation = useMutation({
-    mutationFn: async ({ memberId, planId }: { memberId: string; planId: string }) => {
-      return await axiosClient.put(`/members/${memberId}/renew`, {
-        membershipPlanId: planId,
-        start_date: new Date().toISOString().split("T")[0],
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
-      toast.success("💥 Membership activated successfully!");
-      setIsDetailsOpen(false);
-      setSelectedMember(null);
-    },
-    onError: () => {
-      toast.error("Database contract update failed.");
+ // RENEW SUBMISSION MUTATION (Aligned perfectly with backend schema parameters)
+const renewMutation = useMutation({
+  mutationFn: async ({ memberId, planId }: { memberId: string; planId: string }) => {
+    // 💡 Fix: Send ONLY what the backend update schema expects, in strict snake_case
+    return await axiosClient.patch(`/members/${memberId}`, {
+      membership_plan_id: planId,
+    });
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
+    toast.success("💥 Membership activated successfully!");
+    setIsDetailsOpen(false);
+    setSelectedMember(null);
+  },
+  onError: (error: unknown) => {
+    let serverErrorMessage = "Database contract update failed.";
+    if (error instanceof AxiosError) {
+      serverErrorMessage = error.response?.data?.message || serverErrorMessage;
     }
-  });
+    toast.error(serverErrorMessage);
+  }
+});
 
   // DELETE ACCOUNT PROFILES CLEARANCE MUTATION
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => await axiosClient.delete(`/members/${id}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
-      toast.success("Account profile cleared cleanly from matrix.");
-      setIsDetailsOpen(false);
-      setSelectedMember(null);
-    },
-    onError: () => toast.error("Purge operations rejected by database server.")
-  });
+  mutationFn: async (memberId: string) => {
+    return await axiosClient.delete(`/members/${memberId}`);
+  },
+  onSuccess: () => {
+    // 1. Instantly removes the deleted row from your dashboard grid view
+    queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
+    
+    // 2. Instantly makes that user available again in the "Add Member" dropdown!
+    queryClient.invalidateQueries({ queryKey: ["eligibleUsersList"] });
+    
+    toast.success("Member record removed successfully.");
+  },
+  onError: () => {
+    toast.error("Failed to delete member.");
+  }
+});
 
   const memberList = membersPayload?.data || [];
   const totalItems = membersPayload?.total || 0;

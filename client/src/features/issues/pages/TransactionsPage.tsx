@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
 import { TransactionModal } from "../components/TransactionModal";
 import { IssueDetailsModal } from "../components/IssueDetailsModal";
-import type { BookIssueRecord } from "../../../types/transactions";
+// ✨ Updated: Import explicit structural types from your updated declarations file
+import type { BookIssueRecord, ComputedIssueStatus } from "../../../types/transactions";
 import { toast } from "sonner";
 import { useAuthStore } from "../../../store/authStore";
 
@@ -51,57 +52,74 @@ export const TransactionsPage = () => {
 
   // Mutate: Save (Create/Update Parameter Mappings)
   const saveMutation = useMutation({
-    mutationFn: async (payload: { memberId: string; bookId: string; borrowDate: string; dueDate: string }) => {
-      if (selectedRecord) {
-        return await axiosClient.put(`/issues/${selectedRecord.id}`, payload);
-      }
-      return await axiosClient.post("/issues/borrow", payload);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
-      toast.success("Circulation parameters synchronized successfully.");
-      setIsFormOpen(false);
-      setSelectedRecord(null);
-    },
-    onError: () => toast.error("Database validation rules failed on saving."),
-  });
+  mutationFn: async (payload: { memberId: string; bookId: string; borrowDate: string; dueDate: string }) => {
+    if (selectedRecord) {
+      return await axiosClient.put(`/issues/${selectedRecord.id}`, payload);
+    }
+    return await axiosClient.post("/issues/borrow", payload);
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
+    
+    // ✨ Dynamically switch message based on creation vs editing context
+    const successMessage = selectedRecord 
+      ? "Book issue record updated successfully." 
+      : "Book issue record created successfully.";
+      
+    toast.success(successMessage);
+    
+    setIsFormOpen(false);
+    setSelectedRecord(null);
+  },
+  onError: () => toast.error("Database validation rules failed on saving."),
+});
 
   // ✨ Reset Filters Handler
   const handleClearFilters = () => {
     setSearchQuery("");
     setStatusFilter("");
-    setCurrentPage(1); // Reset back to initial index page 1
+    setCurrentPage(1);
   };
 
-  // ⚙️ Process and Filter Records (Matches active unreturned states + active criteria)
-  const allFilteredRecords = rawIssues
-    .map((record) => {
-      const isOverdue = record.status === "BORROWED" && todayIso > record.dueDate;
-      return {
-        ...record,
-        computedStatus: isOverdue ? ("OVERDUE" as const) : record.status,
-      };
-    })
-    .filter((rec) => rec.computedStatus !== "RETURNED")
-    .filter((rec) => {
-      const term = searchQuery.toLowerCase();
-      const nameMatch = rec.memberName?.toLowerCase().includes(term) || false;
-      const titleMatch = rec.bookTitle?.toLowerCase().includes(term) || false;
-      const matchesSearch = nameMatch || titleMatch;
-      const matchesStatus = statusFilter === "" || rec.computedStatus === statusFilter;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  // ⚙️ Performance Boost: Memoize single-pass filtering and sorting loops
+  const allFilteredRecords = useMemo(() => {
+    return rawIssues
+      .reduce<(BookIssueRecord & { computedStatus: ComputedIssueStatus })[]>((acc, record) => {
+        const isOverdue = record.status === "BORROWED" && todayIso > record.dueDate;
+        const computedStatus: ComputedIssueStatus = isOverdue ? "OVERDUE" : record.status;
 
-  // 🔢 Client-Side Pagination Chunking Strategy
+        // 1. Instantly skip archiving logs that match internal returned markers
+        if (computedStatus === "RETURNED") return acc;
+
+        // 2. Validate compliance filters matchers
+        const term = searchQuery.toLowerCase();
+        const nameMatch = record.memberName?.toLowerCase().includes(term) || false;
+        const titleMatch = record.bookTitle?.toLowerCase().includes(term) || false;
+        const matchesSearch = nameMatch || titleMatch;
+        const matchesStatus = statusFilter === "" || computedStatus === statusFilter;
+
+        if (matchesSearch && matchesStatus) {
+          acc.push({ ...record, computedStatus });
+        }
+        return acc;
+      }, [])
+      .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  }, [rawIssues, searchQuery, statusFilter, todayIso]);
+
+  // 🔢 Safe Client-Side Pagination Boundaries Engine
   const totalRecordsCount = allFilteredRecords.length;
   const totalPages = Math.max(1, Math.ceil(totalRecordsCount / rowsPerPage));
   
-  // Slice array down to 10 rows maximum for the matching viewport index
-  const paginatedRecords = allFilteredRecords.slice(
-    (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
-  );
+  // Force runtime state calculations inside safe bounds
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  // Slice array down to 10 rows maximum for viewport index rendering
+  const paginatedRecords = useMemo(() => {
+    return allFilteredRecords.slice(
+      (safeCurrentPage - 1) * rowsPerPage,
+      safeCurrentPage * rowsPerPage
+    );
+  }, [allFilteredRecords, safeCurrentPage, rowsPerPage]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -140,11 +158,11 @@ export const TransactionsPage = () => {
           </select>
 
           <button
-              onClick={handleClearFilters}
-             className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-all cursor-pointer col-span-2 sm:col-auto whitespace-nowrap"
-            >
-              Clear Filters
-            </button>
+            onClick={handleClearFilters}
+            className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-all cursor-pointer col-span-2 sm:col-auto whitespace-nowrap"
+          >
+            Clear Filters
+          </button>
         </div>
       </div>
 
@@ -203,21 +221,21 @@ export const TransactionsPage = () => {
             </div>
           </div>
 
-          {/* ✨ NEW: Pagination Controls Footer */}
+          {/* Pagination Controls Footer */}
           <div className="flex justify-between items-center bg-white px-5 py-4 rounded-xl border border-gray-200 shadow-2xs">
             <span className="text-xs font-medium text-gray-500">
-              Showing page <b>{currentPage}</b>of <b>{totalPages}</b> ({totalRecordsCount} Records )
+              Showing page <b>{safeCurrentPage}</b> of <b>{totalPages}</b> ({totalRecordsCount} Records)
             </span>
             <div className="flex gap-2">
               <button
-                disabled={currentPage === 1}
+                disabled={safeCurrentPage === 1}
                 onClick={() => setCurrentPage((prev) => prev - 1)}
                 className="px-3 py-1.5 text-xs font-semibold bg-white border border-gray-200 rounded-lg shadow-3xs text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-all disabled:cursor-not-allowed cursor-pointer"
               >
                 ◀ Previous
               </button>
               <button
-                disabled={currentPage === totalPages}
+                disabled={safeCurrentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => prev + 1)}
                 className="px-3 py-1.5 text-xs font-semibold bg-white border border-gray-200 rounded-lg shadow-3xs text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-all disabled:cursor-not-allowed cursor-pointer"
               >
@@ -230,7 +248,7 @@ export const TransactionsPage = () => {
 
       {/* Modals Layers */}
       <TransactionModal
-        key={selectedRecord ? `edit-${selectedRecord.id}` : "new-issue-form"}
+        key={isFormOpen ? (selectedRecord ? `edit-${selectedRecord.id}` : "new-issue-form") : "closed"}
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSubmit={(vals) => saveMutation.mutate(vals)}

@@ -24,19 +24,26 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
     name: "userId"
   });
 
-  // Autofill user details when a user profile is selected
-  useEffect(() => {
-    if (selectedUserId && !editingMember) {
+  // 1. Autofill user details AND clear them out safely if user choice becomes empty
+useEffect(() => {
+  if (!editingMember) {
+    if (selectedUserId) {
       const selectedUser = users.find(u => u.id === selectedUserId);
       if (selectedUser) {
         setValue("email", selectedUser.email);
         setValue("phoneNumber", selectedUser.phoneNumber);
       }
+    } else {
+      // 💡 FIX: Reset text fields cleanly if user clears selection back to normal
+      setValue("email", "");
+      setValue("phoneNumber", "");
     }
-  }, [selectedUserId, users, setValue, editingMember]);
+  }
+}, [selectedUserId, users, setValue, editingMember]);
 
-  // Populate data when editing an existing profile
-  useEffect(() => {
+// 2. Clear/Reset form completely every single time the modal opens or shifts modes
+useEffect(() => {
+  if (isOpen) {
     if (editingMember) {
       reset({
         userId: editingMember.userId,
@@ -46,9 +53,17 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
         isActive: editingMember.isActive
       });
     } else {
-      reset({ userId: "", email: "", phoneNumber: "", membershipPlanId: "", isActive: true });
+      // 💡 FIX: Forces deep wipe every time Create Mode opens up fresh
+      reset({ 
+        userId: "", 
+        email: "", 
+        phoneNumber: "", 
+        membershipPlanId: "", 
+        isActive: true 
+      });
     }
-  }, [editingMember, reset]);
+  }
+}, [isOpen, editingMember, reset]);
 
   if (!isOpen) return null;
 

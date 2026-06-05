@@ -17,12 +17,11 @@ export const getAllIssuesFeedController = asyncHandler(
   }
 );
 
-
-// 2. Fetch Member Checkout Limits and Real-Time Load (GET /issues/member-allowance/:memberId)
+// 2. Fetch Member Checkout Limits and Real-Time Load (GET /issues/member-allowance/:memberId & GET /issues/member-stats/:memberId)
 export const getMemberAllowanceMetricsController = asyncHandler(
   async (req: Request, res: Response) => {
-    // 🛡️ FIX: Added "as string" to satisfy TypeScript type guards
-    const memberId = req.params.memberId as string; 
+    // 🛡️ Safe Parameter Casting
+    const { memberId } = req.params as { memberId: string };
     const result = await issueService.getMemberAllowanceMetrics(memberId);
 
     sendResponse(res, {
@@ -37,14 +36,22 @@ export const getMemberAllowanceMetricsController = asyncHandler(
 // 3. Issue a Book Voucher / Borrow Action (POST /issues/borrow)
 export const borrowBookController = asyncHandler(
   async (req: Request, res: Response) => {
-    // 🛡️ Reading camelCase parameters sent directly from frontend saveMutation
-    const { memberId, bookId, dueDate } = req.body;
+    const { memberId, bookId, borrowDate, dueDate } = req.body as {
+      memberId: string;
+      bookId: string;
+      borrowDate?: string;
+      dueDate: string;
+    };
 
-    const result = await issueService.borrowBook({
+    // ✨ FIX: Safeguard exactOptionalPropertyTypes by omitting borrowDate if undefined
+    const servicePayload = {
       memberId,
       bookId,
       dueDate,
-    });
+      ...(borrowDate ? { borrowDate } : {})
+    };
+
+    const result = await issueService.borrowBook(servicePayload);
 
     sendResponse(res, {
       success: true,
@@ -58,15 +65,24 @@ export const borrowBookController = asyncHandler(
 // 4. Update Ongoing Active Asset Allocation Settings (PUT /issues/:id)
 export const updateIssueParametersController = asyncHandler(
   async (req: Request, res: Response) => {
-    // 🛡️ FIX: Added "as string" to satisfy TypeScript type guards
-    const id = req.params.id as string;
-    const { memberId, bookId, dueDate } = req.body;
+    const { id } = req.params as { id: string };
+    
+    const { memberId, bookId, borrowDate, dueDate } = req.body as {
+      memberId: string;
+      bookId: string;
+      borrowDate?: string;
+      dueDate: string;
+    };
 
-    const result = await issueService.updateIssueParameters(id, {
+    // ✨ FIX: Safeguard exactOptionalPropertyTypes by omitting borrowDate if undefined
+    const servicePayload = {
       memberId,
       bookId,
       dueDate,
-    });
+      ...(borrowDate ? { borrowDate } : {})
+    };
+
+    const result = await issueService.updateIssueParameters(id, servicePayload);
 
     sendResponse(res, {
       success: true,
@@ -80,8 +96,10 @@ export const updateIssueParametersController = asyncHandler(
 // 5. Close/Process Active Asset Return (POST /issues/return)
 export const returnBookController = asyncHandler(
   async (req: Request, res: Response) => {
-    // 🛡️ Reading camelCase properties sent from returnBookMutation
-    const { issueId, returnedDate } = req.body;
+    const { issueId, returnedDate } = req.body as { 
+      issueId: string; 
+      returnedDate: string; 
+    };
 
     const result = await issueService.returnBook(issueId, returnedDate);
 
@@ -97,7 +115,7 @@ export const returnBookController = asyncHandler(
 // 6. Get Historical Ledger logs for individual Member (GET /issues/member/:memberId)
 export const getMemberIssuesController = asyncHandler(
   async (req: Request, res: Response) => {
-    const memberId = req.params.memberId as string;
+    const { memberId } = req.params as { memberId: string };
     const result = await issueService.getMemberIssues(memberId);
 
     sendResponse(res, {
@@ -105,6 +123,36 @@ export const getMemberIssuesController = asyncHandler(
       statusCode: 200,
       message: "Issues fetched successfully",
       data: result,
+    });
+  }
+);
+
+// 7. ✨ NEW: Delete a single issue log permanently
+export const deleteSingleIssueController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params as { id: string };
+    
+    await issueService.deleteSingleIssue(id);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Circulation record log removed permanently.",
+      data: null,
+    });
+  }
+);
+
+// 8. ✨ NEW: Delete all returned history entries cleanly
+export const clearReturnedHistoryController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const deletedCount = await issueService.clearAllReturnedHistory();
+
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: `History tracking table cleared cleanly. (${deletedCount} items purged)`,
+      data: null,
     });
   }
 );

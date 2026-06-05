@@ -2,10 +2,11 @@ import Member from "../../database/models/Member.js";
 import User from "../../database/models/User.js";
 import MembershipPlan from "../../database/models/MembershipPlan.js";
 import { CreateMemberPayload, UpdateMemberPayload } from "./member.types.js";
-import { Op, WhereOptions, Sequelize } from "sequelize";
+import { Op, WhereOptions } from "sequelize";
 import Issue from "../../database/models/Issue.js"; 
 
 export const createMemberRepository = async (payload: CreateMemberPayload) => {
+  // 💡 Safe database row instantiation with clean explicit formatting
   return await Member.create(payload as any);
 };
 
@@ -14,12 +15,14 @@ export const getAllMembersRepository = async (query: Record<string, any>) => {
   const limit = Number(query.limit) || 10;
   const offset = (page - 1) * limit;
 
-  // 1. Bulk update expired records cleanly before loading data
+  // 1. Bulk update expired records cleanly using a standardized string date token
+  const todayString = new Date().toISOString().split('T')[0];
+  
   await Member.update(
     { membership_status: "EXPIRED" },
     {
       where: {
-        expiry_date: { [Op.lt]: new Date() },
+        expiry_date: { [Op.lt]: todayString }, 
         membership_status: { [Op.ne]: "EXPIRED" }
       }
     }
@@ -40,7 +43,6 @@ export const getAllMembersRepository = async (query: Record<string, any>) => {
     attributes: ["uuid", "name", "gmail", "phone_number"]
   };
 
-  // Add the where parameter only if a search token exists
   if (query.search) {
     userInclude.where = {
       name: { [Op.iLike]: `%${query.search}%` } 
@@ -53,7 +55,6 @@ export const getAllMembersRepository = async (query: Record<string, any>) => {
     attributes: ["membership_plan_id", "plan_name", "price"]
   };
 
-  // Add the where parameter only if a plan filtering tier token exists
   if (query.plan) {
     planInclude.where = {
       plan_name: query.plan
@@ -61,7 +62,7 @@ export const getAllMembersRepository = async (query: Record<string, any>) => {
   }
 
   // 4. Fire final structured find query
-  return await Member.findAndCountAll({
+  const result = await Member.findAndCountAll({
     where: memberWhereClause,
     limit,
     offset,
@@ -69,6 +70,30 @@ export const getAllMembersRepository = async (query: Record<string, any>) => {
     order: [["created_at", "DESC"]],
     distinct: true
   });
+
+  // 5. 💡 NEW: Map over the records to fix the ID mismatch and inject the custom short ID badge
+  const formattedRows = result.rows.map((memberInstance: any) => {
+    // Convert Sequelize model instance to plain JSON object so we can modify properties
+    const member = memberInstance.toJSON();
+    
+    // Explicitly grab the true member table ID key (adjust column name to match your DB schema, e.g., 'id' or 'member_id')
+    const trueMemberId = member.id || member.member_id || "";
+    
+    // Extract last 4 alphanumeric characters cleanly from the string
+    const cleanUuidString = String(trueMemberId).replace(/-/g, ""); // strip hyphens if needed
+    const shortToken = cleanUuidString.slice(-4).toUpperCase();
+    
+    return {
+      ...member,
+      id: trueMemberId,               // ✅ Forces frontend key to explicitly point to Member Table Primary Key
+      displayId: `MEMBER-${shortToken || "0000"}`, // ✨ Custom badge ready for your dashboard grid (e.g., MEMBER-2240)
+    };
+  });
+
+  return {
+    count: result.count,
+    rows: formattedRows
+  };
 };
 
 export const getMemberByIdRepository = async (memberId: string) => {
@@ -84,7 +109,7 @@ export const getMemberByIdRepository = async (memberId: string) => {
         as: "membership_plan",
         attributes: ["membership_plan_id", "plan_name"]
       }
-    ] // 💥 FIXED: Changed typo brace to proper closing bracket
+    ]
   });
 };
 
@@ -104,7 +129,6 @@ export const deleteMemberRepository = async (memberId: string) => {
   return member;
 };
 
-// 💡 UPDATED FEATURE: Returns users with role READER who are NOT already inside the members table
 export const getEligibleUsersForMemberRepository = async () => {
   // 1. Gather all existing member user IDs
   const activeMembers = await Member.findAll({
@@ -112,7 +136,6 @@ export const getEligibleUsersForMemberRepository = async () => {
     raw: true
   });
 
-  
   const existingUserIds = activeMembers.map((m: any) => m.user_id).filter(Boolean);
 
   // 2. Fetch users whose role is READER and are not in that list
@@ -124,25 +147,24 @@ export const getEligibleUsersForMemberRepository = async () => {
       }
     },
     attributes: [
-      ["uuid", "id"], // 💡 Mapping 'uuid' to 'id' to match frontend expected SystemUser contract typing
+      ["uuid", "id"], 
       "name", 
-      ["gmail", "email"], // 💡 Mapping 'gmail' to 'email' to match frontend contract expected SystemUser typing
-      ["phone_number", "phoneNumber"] // 💡 Mapping 'phone_number' to 'phoneNumber'
+      ["gmail", "email"], 
+      ["phone_number", "phoneNumber"] 
     ],
     order: [["name", "ASC"]]
   });
 };
 
 export const searchMembersByNameRepository = async (searchToken: string) => {
-  // 1. Fetch matching members based on nested user names
   const matches = await Member.findAll({
     include: [
       {
         model: User,
         as: "user",
-        required: true, // Forces an INNER JOIN so we only get members with user records
+        required: true, 
         where: {
-          name: { [Op.iLike]: `%${searchToken}%` } // Case-insensitive matching
+          name: { [Op.iLike]: `%${searchToken}%` } 
         },
         attributes: ["name", "phone_number", "gmail"]
       },
@@ -154,22 +176,24 @@ export const searchMembersByNameRepository = async (searchToken: string) => {
     ]
   });
 
+  const today = new Date();
+
   // 2. Loop over matches to compute real-time borrow load statistics
   const detailedResults = await Promise.all(
     matches.map(async (member: any) => {
-      // Count how many books this member currently has out of the building
       const activeBorrowsCount = await Issue.count({
         where: {
           member_id: member.member_id,
-          returned_date: null // Not returned yet
+          returned_date: null 
         }
       });
 
       const maxAllowed = member.membership_plan?.max_books_allowed || 0;
       const planName = member.membership_plan?.plan_name || "No Plan";
-      const isExpired = member.membership_status === "EXPIRED" || new Date(member.expiry_date) < new Date();
+      
+      // 💡 FIXED: Safely parses and evaluates string dates for accurate expiration flags
+      const isExpired = member.membership_status === "EXPIRED" || new Date(member.expiry_date) < today;
 
-      // 🚦 Implement Business Logic Rule Matrix
       let dynamicStatus = "GOOD";
       let statusMessage = `✓ Safe: Holds ${activeBorrowsCount}/${maxAllowed} books under ${planName} tier.`;
       let isBlocked = false;
@@ -185,10 +209,9 @@ export const searchMembersByNameRepository = async (searchToken: string) => {
       } else if (activeBorrowsCount + 1 === maxAllowed) {
         dynamicStatus = "WARNING_LAST_SLOT";
         statusMessage = `⚠️ Warning: Last open slot! (${activeBorrowsCount}/${maxAllowed} held).`;
-        isBlocked = false; // Librarian can still select it, but gets a clear warning indicator!
+        isBlocked = false; 
       }
 
-      // Return a flat structure tailored for dropdown presentation
       return {
         member_id: member.member_id,
         name: member.user?.name || "Unknown",
@@ -199,9 +222,9 @@ export const searchMembersByNameRepository = async (searchToken: string) => {
         maxAllowed,
         currentBorrows: activeBorrowsCount,
         compliance: {
-          status: dynamicStatus,       // "GOOD" | "EXPIRED" | "LIMIT_EXCEEDED" | "WARNING_LAST_SLOT"
-          message: statusMessage,      // Human-readable message
-          isBlocked                    // true means dropdown blocks click selection
+          status: dynamicStatus,
+          message: statusMessage,
+          isBlocked 
         }
       };
     })
