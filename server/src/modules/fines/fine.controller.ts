@@ -3,36 +3,35 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import sendResponse from "../../utils/SendResponse.js";
 import fineService from "./fine.service.js";
 
-// Make sure your payload type interface supports the optional incoming paidDate property
+// Explicit interface matching your updated payFineSchema validation definition
 interface PayFinePayload {
-  fineId?: string;
-  fine_id?: string;
-  paidDate?: string;
+  fine_id: string;
+  paidDate: string;
+  paymentMethod: "CASH" | "CARD" | "UPI";
 }
 
-// 1. Fetch All Fines Controller
-export const getAllFinesController = asyncHandler(
+// 1. Fetch Collected Paid Fines History Controller (Renamed from getAllFinesController)
+export const getCollectedFinesController = asyncHandler(
   async (req: Request, res: Response) => {
-    const result = await fineService.getAllFines();
+    // Service layer filters for records where paid_status is true
+    const result = await fineService.getCollectedFines();
 
     sendResponse(res, {
       success: true,
       statusCode: 200,
-      message: "Fines historical database records fetched successfully",
+      message: "Fines historical collection database records fetched successfully",
       data: result,
     });
   }
 );
 
 // 2. Pay Fine Controller
-// Inside backend/src/features/fines/fine.controller.ts
-// 2. Pay Fine Controller
 // Route Contract Target: PATCH /fines/pay
 export const payFineController = asyncHandler(
   async (req: Request<{}, {}, PayFinePayload>, res: Response) => {
-    const { fine_id, paidDate } = req.body;
+    const { fine_id, paidDate, paymentMethod } = req.body;
 
-    // Type Guard: Defends against undefined and satisfies strict TypeScript compilers
+    // Type Guard: Defends against undefined parameters and satisfies strict TypeScript compilers
     if (!fine_id) {
       res.status(400).json({
         success: false,
@@ -41,20 +40,22 @@ export const payFineController = asyncHandler(
       return;
     }
 
-    // TypeScript now knows with 100% certainty that fine_id is a string here
-    const result = await fineService.payFine(fine_id, paidDate || null);
+    // Pass fine_id, paidDate, and the payment audit string down to the transactional service method
+    const result = await fineService.payFine(fine_id, paidDate || null, paymentMethod);
 
     sendResponse(res, {
       success: true,
       statusCode: 200,
-      message: "Fine paid successfully",
+      message: "💸 Invoice Ledger Balanced Successfully!",
       data: result,
     });
   }
 );
+
 // 3. Fetch Pending Uncollected Fines Controller
 export const getPendingFinesController = asyncHandler(
   async (req: Request, res: Response) => {
+    // Service layer filters for records where paid_status is false
     const result = await fineService.getPendingFines();
 
     sendResponse(res, {
@@ -76,6 +77,47 @@ export const getMemberFinesController = asyncHandler(
       success: true,
       statusCode: 200,
       message: "Member fine profile portfolio loaded successfully",
+      data: result,
+    });
+  }
+);
+
+// 5. Purge/Hard Delete Fine Entry Controller
+// Route Contract Target: DELETE /fines/:id
+export const purgeFineController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const fineId = req.params.id as string;
+    const result = await fineService.purgeFine(fineId);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Invoice dropped completely from runtime ledger caches.",
+      data: result,
+    });
+  }
+);
+
+// 6. Restore Settled Fine Controller
+// Route Contract Target: PATCH /fines/restore/:id
+export const restoreFineController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const fineId = req.params.id as string;
+
+    if (!fineId) {
+      res.status(400).json({
+        success: false,
+        message: "Fine identification parameter (id) is required."
+      });
+      return;
+    }
+
+    const result = await fineService.restoreFine(fineId);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Invoice restored to active ledger successfully.",
       data: result,
     });
   }

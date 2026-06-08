@@ -19,7 +19,6 @@ export const DashboardLayout = () => {
     { name: "Borrow & Return Desk", path: "/transactions", icon: "🔄" },
     { name: "Returned Books", path: "/returnedbooks", icon: "💳" },
     { name: "Fines & Payments", path: "/fines", icon: "💳" },
-    { name: "Collected Fines", path: "/collectedfines", icon: "💳" },
   ];
 
   return (

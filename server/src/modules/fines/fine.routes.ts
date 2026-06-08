@@ -2,18 +2,31 @@ import { Router } from "express";
 import auth from "../../middlewares/auth.js";
 import validate from "../../middlewares/validate.js";
 import {
-  getAllFinesController,
-  getMemberFinesController,
+  getCollectedFinesController, // Changed from getAllFinesController
   getPendingFinesController,
+  getMemberFinesController,
   payFineController,
+  purgeFineController,
+  restoreFineController         // Added for manual invoice clearing
 } from "./fine.controller.js";
-import { payFineSchema } from "./fine.validation.js";
+import { payFineSchema, restoreFineSchema } from "./fine.validation.js";
 
 const router = Router();
 
-router.get("/", auth, getAllFinesController);
-router.get("/pending", auth, getPendingFinesController);
-router.get("/member/:memberId", auth, getMemberFinesController);
-router.patch("/pay", auth, validate(payFineSchema), payFineController);
+// 🟢 Changed from "/" to "/collected" to perfectly match your frontend history tab query
+router.get("/collected", auth, getCollectedFinesController);
 
-export default router; 
+// 🔒 Kept as-is (Matches your frontend active defaulters tab query)
+router.get("/pending", auth, getPendingFinesController);
+
+// 🔒 Kept as-is (Useful for member dashboard fine lists)
+router.get("/member/:memberId", auth, getMemberFinesController);
+
+// 🔒 Kept as-is (Matches your processPaymentMutation patch request)
+router.patch("/pay", auth, validate(payFineSchema), payFineController);
+// Example: In your fine.routes.ts
+router.patch("/restore/:id",validate(restoreFineSchema), restoreFineController);
+// 🟢 Added to handle the purgeFineMutation soft/hard delete manual overrides
+router.delete("/:id", auth, purgeFineController);
+
+export default router;

@@ -6,33 +6,31 @@ import {
 } from "./issue.validation.js";
 
 
-// Infers: { memberId: string; bookId: string; borrowDate?: string; dueDate: string; }
+// Infers body payload schemas dynamically from Zod setups
 export type CreateIssuePayload = z.infer<typeof createIssueSchema>["body"];
-
-// Infers: { memberId: string; bookId: string; borrowDate?: string; dueDate: string; }
 export type UpdateIssuePayload = z.infer<typeof updateIssueSchema>["body"];
-
-// Infers: { issueId: string; returnedDate?: string; }
 export type ReturnBookPayload = z.infer<typeof returnBookSchema>["body"];
 
 
 // ==========================================
 // 🛡️ STRICT SERVICE LAYER DTOs (Data Transfer Objects)
 // ==========================================
-// These explicitly satisfy exactOptionalPropertyTypes by defining 
-// exactly how the service functions expect optional values.
 
 export interface BorrowBookServiceDTO {
   memberId: string;
   bookId: string;
-  borrowDate?: string; // Clear from undefined collision bounds
+  borrowDate?: string; 
   dueDate: string;
 }
 
 export interface UpdateIssueServiceDTO {
-  memberId: string;
-  bookId: string;
+  // ✨ FIXED: Marked structural parameters as optional to support partial PATCH operations
+  memberId?: string;
+  bookId?: string;
   borrowDate?: string;
-  dueDate: string;
+  dueDate?: string;
+  
+  // ✨ NEW: Added restoration parameters to let controller inputs cross over safely
+  status?: string;
+  returnedDate?: string | null;
 }
-

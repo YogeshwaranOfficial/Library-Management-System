@@ -11,7 +11,7 @@ export const getAllIssuesFeedController = asyncHandler(
     sendResponse(res, {
       success: true,
       statusCode: 200,
-      message: "Circulation master log feed fetched successfully",
+      message: "All issues returned to frontend successfully",
       data: result,
     });
   }
@@ -20,7 +20,6 @@ export const getAllIssuesFeedController = asyncHandler(
 // 2. Fetch Member Checkout Limits and Real-Time Load (GET /issues/member-allowance/:memberId & GET /issues/member-stats/:memberId)
 export const getMemberAllowanceMetricsController = asyncHandler(
   async (req: Request, res: Response) => {
-    // 🛡️ Safe Parameter Casting
     const { memberId } = req.params as { memberId: string };
     const result = await issueService.getMemberAllowanceMetrics(memberId);
 
@@ -43,7 +42,6 @@ export const borrowBookController = asyncHandler(
       dueDate: string;
     };
 
-    // ✨ FIX: Safeguard exactOptionalPropertyTypes by omitting borrowDate if undefined
     const servicePayload = {
       memberId,
       bookId,
@@ -62,24 +60,27 @@ export const borrowBookController = asyncHandler(
   }
 );
 
-// 4. Update Ongoing Active Asset Allocation Settings (PUT /issues/:id)
+// 4. Update Ongoing Active Asset Allocation Settings (PUT /issues/:id & PATCH /issues/:id)
 export const updateIssueParametersController = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params as { id: string };
     
-    const { memberId, bookId, borrowDate, dueDate } = req.body as {
-      memberId: string;
-      bookId: string;
+    const { memberId, bookId, borrowDate, dueDate, status, returnedDate } = req.body as {
+      memberId?: string;
+      bookId?: string;
       borrowDate?: string;
-      dueDate: string;
+      dueDate?: string;
+      status?: string;
+      returnedDate?: string | null;
     };
 
-    // ✨ FIX: Safeguard exactOptionalPropertyTypes by omitting borrowDate if undefined
     const servicePayload = {
-      memberId,
-      bookId,
-      dueDate,
-      ...(borrowDate ? { borrowDate } : {})
+      ...(memberId ? { memberId } : {}),
+      ...(bookId ? { bookId } : {}),
+      ...(borrowDate ? { borrowDate } : {}),
+      ...(dueDate ? { dueDate } : {}),
+      ...(status ? { status } : {}),
+      ...(returnedDate !== undefined ? { returnedDate } : {})
     };
 
     const result = await issueService.updateIssueParameters(id, servicePayload);
@@ -98,9 +99,10 @@ export const returnBookController = asyncHandler(
   async (req: Request, res: Response) => {
     const { issueId, returnedDate } = req.body as { 
       issueId: string; 
-      returnedDate: string; 
+      returnedDate?: string; 
     };
 
+    // 🚀 Execution blocks here at the Service layer if fine validations fail
     const result = await issueService.returnBook(issueId, returnedDate);
 
     sendResponse(res, {
@@ -127,7 +129,7 @@ export const getMemberIssuesController = asyncHandler(
   }
 );
 
-// 7. ✨ NEW: Delete a single issue log permanently
+// 7. Delete a single issue log permanently
 export const deleteSingleIssueController = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params as { id: string };
@@ -143,7 +145,7 @@ export const deleteSingleIssueController = asyncHandler(
   }
 );
 
-// 8. ✨ NEW: Delete all returned history entries cleanly
+// 8. Delete all returned history entries cleanly
 export const clearReturnedHistoryController = asyncHandler(
   async (req: Request, res: Response) => {
     const deletedCount = await issueService.clearAllReturnedHistory();

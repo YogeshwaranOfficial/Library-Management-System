@@ -76,7 +76,7 @@ export const ReturnedDetailsModal = ({
               onClick={() => onUndoReturn(record.id)}
               className="w-full py-2.5 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-all cursor-pointer shadow-3xs"
             >
-              🔄 Accidentally Marked? Revert Back to Active desk
+              🔄 Restore Record
             </button>
             
             <div className="flex justify-between items-center gap-3 pt-2 border-t border-gray-50">
@@ -92,7 +92,7 @@ export const ReturnedDetailsModal = ({
                 onClick={() => onDeletePermanent(record.id)}
                 className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-xs rounded-xl transition-all cursor-pointer whitespace-nowrap"
               >
-                🗑️ Purge Log Item
+                🗑️ Delete Record 
               </button>
             </div>
           </div>

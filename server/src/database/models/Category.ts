@@ -3,6 +3,7 @@ import {
   InferAttributes,
   InferCreationAttributes,
   Model,
+  CreationOptional
 } from "sequelize";
 
 import sequelize from "../connection/database.js";
@@ -11,13 +12,13 @@ class Category extends Model<
   InferAttributes<Category>,
   InferCreationAttributes<Category>
 > {
-  declare category_id: string;
+  declare category_id:CreationOptional<string>;
 
   declare category_name: string;
 
-  declare readonly created_at: Date;
+  declare readonly created_at: CreationOptional<Date>;
 
-  declare readonly updated_at: Date;
+  declare readonly updated_at: CreationOptional<Date>;
 }
 
 Category.init(

@@ -9,6 +9,7 @@ import { BooksPage } from "../features/books/pages/BooksPage";
 import { TransactionsPage } from "../features/issues/pages/TransactionsPage";
 import { FinesPage } from "../features/fines/pages/FinesPage";
 import { ReturnedBooks } from "../features/returnedbooks/pages/ReturnedBooks";
+import { ManageCategories } from "../features/categories/pages/ManageCategories";
 
 export const AppRoutes = () => {
   return (
@@ -25,6 +26,7 @@ export const AppRoutes = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/members" element={<MembersPage/>} />
             <Route path="/books" element={<BooksPage/>} />
+            <Route path="/categories" element={<ManageCategories/>} />
             <Route path="/transactions" element={<TransactionsPage/>} />
             <Route path="/fines" element={<FinesPage/>} />
             <Route path="/returnedbooks" element={<ReturnedBooks/>}></Route>

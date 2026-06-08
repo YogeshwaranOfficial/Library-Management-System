@@ -12,16 +12,23 @@ export const createIssueSchema = z.object({
   }),
 });
 
-// 2. Validates: PUT /issues/:id
+// 2. Validates: PUT /issues/:id AND PATCH /issues/:id
 export const updateIssueSchema = z.object({
   params: z.object({
     id: z.string().uuid({ message: "Invalid Issue ID format in URL path" }),
   }),
   body: z.object({
-    memberId: z.string().uuid({ message: "Invalid Member UUID format" }),
-    bookId: z.string().uuid({ message: "Invalid Book UUID format" }),
-    borrowDate: dateStringSchema.optional(), // ✨ Synchronized with update queries
-    dueDate: dateStringSchema,
+    // ✨ Changed to .optional() so PATCH requests don't require re-sending IDs
+    memberId: z.string().uuid({ message: "Invalid Member UUID format" }).optional(),
+    bookId: z.string().uuid({ message: "Invalid Book UUID format" }).optional(),
+    borrowDate: dateStringSchema.optional(),
+    dueDate: dateStringSchema.optional(), // ✨ Made optional for flexibility
+    
+    // ✨ NEW: Allow status to be modified during state restoration triggers
+    status: z.enum(["BORROWED", "RETURNED", "OVERDUE"]).optional(),
+    
+    // ✨ NEW: Explicitly allow the client to send a valid date string OR a null literal
+    returnedDate: dateStringSchema.nullable().optional(),
   }),
 });
 

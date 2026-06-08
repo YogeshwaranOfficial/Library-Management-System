@@ -25,4 +25,10 @@ export interface FineRecord {
   paid_date: string | null;
   membershipActive: boolean;
   breakdown?: FineComplianceBreakdown;
+
+  // 🟢 Extra properties required by the new FinesPage component:
+  actualReturnDueDate?: string; 
+  paidDate?: string | null;
+  paymentMethod?: "CASH" | "CARD" | "UPI" | null;
+  collectedByLibrarian?: string | null;
 }

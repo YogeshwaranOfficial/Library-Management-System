@@ -18,7 +18,6 @@ import corsConfig from "./config/cors.js";
 import "./config/validateEnv.js";
 
 
-
 const app: Application = express();
 
 /* -------------------------------------------------------------------------- */
@@ -32,7 +31,6 @@ app.use(corsConfig); // Use your custom centralized config safely
 
 // 2. Traffic Flow Rate Limiting
 app.use(rateLimiter);
-
 // 3. Request Logging & Body Parsing
 // Log request details automatically if we are running tests or development
 if (process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development") {

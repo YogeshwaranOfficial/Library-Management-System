@@ -89,7 +89,9 @@
  *
  *       401:
  *         description: Unauthorized token verification failure
- */import { Router } from "express";
+ */
+
+import { Router } from "express";
 import auth from "../../middlewares/auth.js";
 import validate from "../../middlewares/validate.js";
 
@@ -114,50 +116,15 @@ import {
 
 const router = Router();
 
-// ==========================================
-// 🔓 STATIC & AGGREGATE ROUTES (MUST BE TOP)
-// ==========================================
-
 router.get("/", auth, getAllIssuesFeedController);
 router.get("/overdue", auth); 
-
-// ✨ NEW: Wipe entire completed history logs (Placed above /:id to prevent route collisions)
 router.delete("/clear-returned-history", auth, clearReturnedHistoryController);
-
-// ==========================================
-// 🔍 LOOKUPS & METRICS SUBSYSTEMS
-// ==========================================
-
-router.get(
-  "/member-allowance/:memberId",
-  auth,
-  validate(getMemberAllowanceSchema),
-  getMemberAllowanceMetricsController
-);
-
-router.get(
-  "/member-stats/:memberId",
-  auth,
-  validate(getMemberAllowanceSchema),
-  getMemberAllowanceMetricsController
-);
-
+router.get("/member-allowance/:memberId", auth, validate(getMemberAllowanceSchema), getMemberAllowanceMetricsController);
+router.get("/member-stats/:memberId", auth, validate(getMemberAllowanceSchema), getMemberAllowanceMetricsController);
 router.get("/member/:memberId", auth, validate(getMemberIssuesSchema), getMemberIssuesController);
-
-// ==========================================
-// ⚡ WRITE & MUTATION OPERATIONS
-// ==========================================
-
 router.post("/borrow", auth, validate(createIssueSchema), borrowBookController);
 router.post("/return", auth, validate(returnBookSchema), returnBookController);
-
-// ==========================================
-// 🛠️ DYNAMIC PARAMETER ROUTES (MUST BE BOTTOM)
-// ==========================================
-
-router.put("/:id", auth, validate(updateIssueSchema), updateIssueParametersController);
-
-// ✨ NEW: Permanent single log item delete route
+router.patch("/:id", auth, validate(updateIssueSchema), updateIssueParametersController);
 router.delete("/:id", auth, deleteSingleIssueController);
 
 export default router;

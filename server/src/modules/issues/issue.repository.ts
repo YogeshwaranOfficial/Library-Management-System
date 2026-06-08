@@ -1,6 +1,7 @@
 import Issue from "../../database/models/Issue.js";
 import Member from "../../database/models/Member.js";
 import User from "../../database/models/User.js";
+import Fine from "../../database/models/Fine.js";
 import Book from "../../database/models/Book.js";
 import MembershipPlan from "../../database/models/MembershipPlan.js";
 import { CreationAttributes, Transaction } from "sequelize";
@@ -26,14 +27,14 @@ class IssueRepository {
     );
   }
 
-  // ✨ FIXED: Merged into a SINGLE update function accepting optional status & returned_date flags
+  // ✨ FIXED: Added optional string/date modifiers to prevent type parameters collision with PATCH handlers
   async updateIssue(
     issue_id: string, 
     data: { 
-      member_id: string; 
-      book_id: string; 
+      member_id?: string;          // ✨ Made optional for partial PATCH operations
+      book_id?: string;            // ✨ Made optional for partial PATCH operations
       borrowed_date?: Date; 
-      due_date: Date; 
+      due_date?: Date;             // ✨ Made optional for partial PATCH operations
       issue_status?: string;       // Can accept status updates (like BORROWED / OVERDUE on undo return)
       returned_date?: Date | null;  // Can accept date removals (wiping to null on undo return)
     },
@@ -61,8 +62,7 @@ class IssueRepository {
       ...options
     });
   }
-
-  // Added optional transaction block passing parameters down to actual updater
+  
   async returnBook(issue_id: string, returned_date: Date | string, options?: { transaction?: Transaction }) {
     const finalDate = typeof returned_date === "string" ? new Date(returned_date) : returned_date;
 
@@ -89,7 +89,7 @@ class IssueRepository {
           include: [
             {
               model: User,
-              as: "user", // ✨ FIXED: Removed the duplicate "as" property here
+              as: "user",
               attributes: ["name", "gmail", "phone_number"],
             }
           ]
@@ -135,7 +135,7 @@ class IssueRepository {
     });
   }
 
-  // ✨ NEW: Delete a single record row permanently
+  // Delete a single record row permanently
   async deleteIssueById(issue_id: string, options?: { transaction?: Transaction }) {
     return await Issue.destroy({
       where: { issue_id },
@@ -143,10 +143,20 @@ class IssueRepository {
     });
   }
 
-  // ✨ NEW: Delete multiple records at once (Batch cleanup operation)
+  // Delete multiple records at once (Batch cleanup operation)
   async deleteManyIssues(issue_ids: string[], options?: { transaction?: Transaction }) {
     return await Issue.destroy({
       where: { issue_id: issue_ids },
+      ...options
+    });
+  }
+
+  async hasActiveFine(issue_id: string, options?: { transaction?: Transaction }) {
+    return await Fine.findOne({
+      where: {
+        issue_id,
+        paid_status: false
+      },
       ...options
     });
   }

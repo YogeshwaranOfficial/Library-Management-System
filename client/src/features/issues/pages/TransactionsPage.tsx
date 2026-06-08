@@ -11,7 +11,6 @@ import { useAuthStore } from "../../../store/authStore";
 export const TransactionsPage = () => {
   const queryClient = useQueryClient();
   const token = useAuthStore((state) => state.token);
-  const todayIso = new Date().toISOString().split("T")[0];
 
   // 🔎 Search, Filtering, and Pagination States
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,26 +34,28 @@ export const TransactionsPage = () => {
 
   // Mutate: Return Closed Checkouts
   const returnBookMutation = useMutation({
-    mutationFn: async (issueId: string) => {
-      return await axiosClient.post("/issues/return", {
-        issueId,
-        returnedDate: todayIso,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
-      toast.success("Book returned safely! Moved to history records logs.");
-      setIsDetailsOpen(false);
-      setSelectedRecord(null);
-    },
-    onError: () => toast.error("Failed to execute return checkout protocol."),
-  });
+  mutationFn: async (issueId: string) => {
+    // This endpoint should perform the fine check on the server
+    return await axiosClient.post("/issues/return", { issueId });
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
+    toast.success("Book returned safely!");
+    setIsDetailsOpen(false);
+  },
+ onError: (err: unknown) => {
+  // Use a type guard or cast to handle the error structure safely
+  const error = err as { response?: { data?: { message?: string } } };
+  const message = error.response?.data?.message || "Failed to return book.";
+  toast.error(message);
+ },
+});
 
   // Mutate: Save (Create/Update Parameter Mappings)
   const saveMutation = useMutation({
   mutationFn: async (payload: { memberId: string; bookId: string; borrowDate: string; dueDate: string }) => {
     if (selectedRecord) {
-      return await axiosClient.put(`/issues/${selectedRecord.id}`, payload);
+      return await axiosClient.patch(`/issues/${selectedRecord.id}`, payload);
     }
     return await axiosClient.post("/issues/borrow", payload);
   },
@@ -85,8 +86,7 @@ export const TransactionsPage = () => {
   const allFilteredRecords = useMemo(() => {
     return rawIssues
       .reduce<(BookIssueRecord & { computedStatus: ComputedIssueStatus })[]>((acc, record) => {
-        const isOverdue = record.status === "BORROWED" && todayIso > record.dueDate;
-        const computedStatus: ComputedIssueStatus = isOverdue ? "OVERDUE" : record.status;
+        const computedStatus: ComputedIssueStatus = record.status;
 
         // 1. Instantly skip archiving logs that match internal returned markers
         if (computedStatus === "RETURNED") return acc;
@@ -104,7 +104,7 @@ export const TransactionsPage = () => {
         return acc;
       }, [])
       .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
-  }, [rawIssues, searchQuery, statusFilter, todayIso]);
+  }, [rawIssues, searchQuery, statusFilter]);
 
   // 🔢 Safe Client-Side Pagination Boundaries Engine
   const totalRecordsCount = allFilteredRecords.length;

@@ -5,6 +5,7 @@ import { ReturnedDetailsModal } from "../components/ReturnedDetailsModal";
 import type { BookIssueRecord } from "../../../types/transactions";
 import { toast } from "sonner";
 import { useAuthStore } from "../../../store/authStore";
+import ConfirmationModal from "../components/ConfirmationModal";
 
 export const ReturnedBooks = () => {
   const queryClient = useQueryClient();
@@ -19,6 +20,25 @@ export const ReturnedBooks = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BookIssueRecord | null>(null);
 
+  // 1. Declare state trackers for managing the confirmation modal interface
+  const [modalConfig, setModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    confirmText: string;
+    variant: "info" | "warning" | "danger";
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    confirmText: "",
+    variant: "info",
+    onConfirm: () => {},
+  });
+
+  const closeModal = () => setModalConfig((prev) => ({ ...prev, isOpen: false }));
+
   // Query: Feed raw ledger (Fetches full table, filtered to "RETURNED" values below)
   const { data: rawIssues = [], isLoading } = useQuery<BookIssueRecord[]>({
     queryKey: ["circulationMasterRecordsFeed", token],
@@ -32,7 +52,6 @@ export const ReturnedBooks = () => {
   // Mutation: Reverse drop-off marker back to active desk tracking matrices
   const revertReturnMutation = useMutation({
     mutationFn: async (issueId: string) => {
-      // ✨ CHANGED: Updated from axiosClient.put to axiosClient.patch
       return await axiosClient.patch(`/issues/${issueId}`, {
         status: "BORROWED",
         returnedDate: null,
@@ -111,24 +130,51 @@ export const ReturnedBooks = () => {
     );
   }, [auditedRecords, safeCurrentPage, rowsPerPage]);
 
-  // Unified Handler Closures with Reconfirmation Modals Promptings
+  // 2. Refactored interactive triggers to dynamically feed parameters directly to the modal
   const handleUndoReturn = (id: string) => {
-    if (window.confirm("Revert this book back to out-of-building status? This updates the borrower's open allocation counts.")) {
-      revertReturnMutation.mutate(id);
-    }
+    setModalConfig({
+      isOpen: true,
+      title: "Revert Transaction Status",
+      description: "Are you sure you want to revert this book back to out-of-building status? This will reduce available warehouse inventory allocations and add it back to the borrower's active counts.",
+      confirmText: "Restore Log",
+      variant: "warning",
+      onConfirm: () => {
+        revertReturnMutation.mutate(id, { onSuccess: closeModal });
+      },
+    });
   };
 
   const handleDeleteSingle = (id: string) => {
-    if (window.confirm("Are you sure you want to permanently delete this checkout log? This cannot be undone.")) {
-      deleteSingleMutation.mutate(id);
-    }
+    setModalConfig({
+      isOpen: true,
+      title: "Delete Checkout Log Entries",
+      description: "Are you sure you want to permanently delete this checkout log configuration? This structural history profile cannot be recovered afterwards.",
+      confirmText: "Delete Record",
+      variant: "danger",
+      onConfirm: () => {
+        deleteSingleMutation.mutate(id, { onSuccess: closeModal });
+      },
+    });
   };
 
   const handleClearAllHistory = () => {
-    if (window.confirm("⚠️ DANGER CONTROL: Are you sure you want to delete ALL returned history records? This removes all historical transaction logs permanently.")) {
-      clearAllHistoryMutation.mutate();
-    }
+    setModalConfig({
+      isOpen: true,
+      title: "⚠️ Clear Entire Historical Logs Ledger",
+      description: "DANGER CONTROL: Are you completely sure you want to drop ALL returned history rows? This structural matrix action is immediate and completely purges all historical circulation files permanently.",
+      confirmText: "Wipe All Records",
+      variant: "danger",
+      onConfirm: () => {
+        clearAllHistoryMutation.mutate(undefined, { onSuccess: closeModal });
+      },
+    });
   };
+
+  // Determine if any mutations are actively loading to show spinner feedback
+  const isActionLoading = 
+    revertReturnMutation.isPending || 
+    deleteSingleMutation.isPending || 
+    clearAllHistoryMutation.isPending;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -268,6 +314,18 @@ export const ReturnedBooks = () => {
         record={selectedRecord}
         onUndoReturn={(id) => handleUndoReturn(id)}
         onDeletePermanent={(id) => handleDeleteSingle(id)}
+      />
+
+      {/* Render the unified confirmation modal element */}
+      <ConfirmationModal
+        isOpen={modalConfig.isOpen}
+        onClose={closeModal}
+        onConfirm={modalConfig.onConfirm}
+        title={modalConfig.title}
+        description={modalConfig.description}
+        confirmText={modalConfig.confirmText}
+        variant={modalConfig.variant}
+        isLoading={isActionLoading}
       />
     </div>
   );
