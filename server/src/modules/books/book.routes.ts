@@ -171,11 +171,9 @@
  *       404:
  *         description: Book not found
  */
-
 import { Router } from "express";
 
 import validate from "../../middlewares/validate.js";
-
 import auth from "../../middlewares/auth.js";
 
 import {
@@ -183,46 +181,48 @@ import {
   deleteBookController,
   getBookByIdController,
   getBooksController,
+  searchBooksController,
   updateBookController,
+  getCategoriesController,
 } from "./book.controller.js";
 
 import {
   createBookSchema,
   updateBookSchema,
+  searchBooksQueryValidation
 } from "./book.validation.js";
 
 const router = Router();
 
-router.post(
-  "/",
+// =========================================================================
+// 🚀 SYSTEM CATEGORY DROPDOWN CHANNELS
+// =========================================================================
+router.get(
+  "/categories",
   auth,
-  validate(createBookSchema),
-  createBookController
+  getCategoriesController
 );
 
 router.get(
-  "/",
+  "/search",
   auth,
-  getBooksController
+  validate(searchBooksQueryValidation),
+  searchBooksController
 );
 
-router.get(
-  "/:bookId",
-  auth,
-  getBookByIdController
-);
+// =========================================================================
+// 🎯 BASE CRUD ROOT ROUTE
+// =========================================================================
+router.route("/")
+  .get(auth, getBooksController)
+  .post(auth, validate(createBookSchema), createBookController);
 
-router.patch(
-  "/:bookId",
-  auth,
-  validate(updateBookSchema),
-  updateBookController
-);
-
-router.delete(
-  "/:bookId",
-  auth,
-  deleteBookController
-);
+// =========================================================================
+// 🆔 DYNAMIC PARAMETER CRUD ROUTE GROUP (PATCH Only for Updates)
+// =========================================================================
+router.route("/:bookId")
+  .get(auth, getBookByIdController)
+  .patch(auth, validate(updateBookSchema), updateBookController) // ✨ Pure partial edits
+  .delete(auth, deleteBookController);
 
 export default router;

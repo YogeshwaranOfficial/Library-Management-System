@@ -90,6 +90,7 @@
  *       401:
  *         description: Unauthorized token verification failure
  */
+
 import { Router } from "express";
 import auth from "../../middlewares/auth.js";
 import validate from "../../middlewares/validate.js";
@@ -98,43 +99,32 @@ import {
   borrowBookController,
   getMemberIssuesController,
   returnBookController,
-  // overdueIssuesController // 👈 Import this once you build its logic!
+  getAllIssuesFeedController,
+  getMemberAllowanceMetricsController,
+  updateIssueParametersController,
+  deleteSingleIssueController,         // ✨ NEW
+  clearReturnedHistoryController       // ✨ NEW
 } from "./issue.controller.js";
 
 import {
   createIssueSchema,
+  updateIssueSchema,
+  getMemberAllowanceSchema,
   returnBookSchema,
-  getMemberIssuesSchema, // ✨ Added parameter validation
+  getMemberIssuesSchema, 
 } from "./issue.validation.js";
 
 const router = Router();
 
-router.post(
-  "/borrow",
-  auth,
-  validate(createIssueSchema),
-  borrowBookController
-);
-
-router.post(
-  "/return",
-  auth,
-  validate(returnBookSchema),
-  returnBookController
-);
-
-router.get(
-  "/member/:memberId",
-  auth,
-  validate(getMemberIssuesSchema), // ✨ Added validation middleware check here
-  getMemberIssuesController
-);
-
-// ✨ FIXED: Added missing route discovered during Swagger audit
-router.get(
-  "/overdue",
-  auth,
-  // overdueIssuesController
-);
+router.get("/", auth, getAllIssuesFeedController);
+router.get("/overdue", auth); 
+router.delete("/clear-returned-history", auth, clearReturnedHistoryController);
+router.get("/member-allowance/:memberId", auth, validate(getMemberAllowanceSchema), getMemberAllowanceMetricsController);
+router.get("/member-stats/:memberId", auth, validate(getMemberAllowanceSchema), getMemberAllowanceMetricsController);
+router.get("/member/:memberId", auth, validate(getMemberIssuesSchema), getMemberIssuesController);
+router.post("/borrow", auth, validate(createIssueSchema), borrowBookController);
+router.post("/return", auth, validate(returnBookSchema), returnBookController);
+router.patch("/:id", auth, validate(updateIssueSchema), updateIssueParametersController);
+router.delete("/:id", auth, deleteSingleIssueController);
 
 export default router;

@@ -7,7 +7,8 @@ import bookService from "./book.service.js";
 
 export const createBookController = asyncHandler(
   async (req: Request, res: Response) => {
-    const result = await bookService.createBook(req.body);
+    const bookData = req.body.body || req.body;
+    const result = await bookService.createBook(bookData);
 
     sendResponse(res, {
       success: true,
@@ -21,13 +22,10 @@ export const createBookController = asyncHandler(
 export const getBooksController = asyncHandler(
   async (req: Request, res: Response) => {
     const page = Number(req.query.page) || 1;
-
     const limit = Number(req.query.limit) || 10;
-
-    const search = req.query.search as string;
-
-    const category_id = req.query.category_id as string;
-
+    const search = req.query.search ? String(req.query.search).trim() : undefined;
+    const category_id = req.query.category_id ? String(req.query.category_id).trim() : undefined;
+   
     const result = await bookService.getBooks(
       page,
       limit,
@@ -39,16 +37,16 @@ export const getBooksController = asyncHandler(
       success: true,
       statusCode: 200,
       message: "Books fetched successfully",
-      data: result,
+      data: result, 
     });
   }
 );
 
 export const getBookByIdController = asyncHandler(
   async (req: Request, res: Response) => {
-    const result = await bookService.getBookById(
-      req.params.bookId as any
-    );
+    const { bookId } = req.params;
+    // 💡 FIX (Line 52): String coercion guarantees the service gets a strict string
+    const result = await bookService.getBookById(String(bookId));
 
     sendResponse(res, {
       success: true,
@@ -61,10 +59,11 @@ export const getBookByIdController = asyncHandler(
 
 export const updateBookController = asyncHandler(
   async (req: Request, res: Response) => {
-    const result = await bookService.updateBook(
-      req.params.bookId as any,
-      req.body
-    );
+    const { bookId } = req.params;
+    const updateData = req.body.body || req.body;
+    
+    // 💡 FIX (Line 69): Coerce bookId parameter safely
+    const result = await bookService.updateBook(String(bookId), updateData);
 
     sendResponse(res, {
       success: true,
@@ -77,7 +76,8 @@ export const updateBookController = asyncHandler(
 
 export const deleteBookController = asyncHandler(
   async (req: Request, res: Response) => {
-    await bookService.deleteBook(req.params.bookId as any);
+    const { bookId } = req.params;
+    await bookService.deleteBook(String(bookId));
 
     sendResponse(res, {
       success: true,
@@ -86,3 +86,29 @@ export const deleteBookController = asyncHandler(
     });
   }
 );
+
+export const getCategoriesController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const result = await bookService.getCategories();
+
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Categories fetched successfully",
+      data: result,
+    });
+  }
+);
+
+export const searchBooksController = asyncHandler(async (req: Request, res: Response) => {
+  // 💡 FIX (Line 84): Cast req.query.q cleanly into a string primitive fallback 
+  const searchString = String(req.query.q || "");
+  const structuredMatches = await bookService.searchBooks(searchString);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Library inventory search indices queried successfully matching criteria.",
+    data: structuredMatches,
+  });
+});

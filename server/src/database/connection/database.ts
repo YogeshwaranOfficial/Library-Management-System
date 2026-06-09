@@ -3,6 +3,7 @@ import cls from 'cls-hooked';
 import dotenv from "dotenv";
 import databaseConfig from '../config/database.js'; 
 
+
 dotenv.config();
 
 const namespace = cls.createNamespace('sequelize-test-namespace');
