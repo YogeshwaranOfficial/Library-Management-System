@@ -7,77 +7,84 @@ import { LoginSchema } from "../../../types/schemas";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
+// ... keep existing imports unchanged
+
 export const Login = () => {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  // Form Field Tracking Configuration states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [selectedRole, setSelectedRole] = useState<"ADMIN" | "LIBRARIAN">("LIBRARIAN");
   
-  // UI Presentation States
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
-  const handleFormSubmission = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setFieldErrors({});
+const handleFormSubmission = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setFieldErrors({});
 
-    // 1. Client-Side Parsing via your frontend schema
-    const parsingResults = LoginSchema.safeParse({
-      email,
-      password,
-      role: selectedRole,
+  const parsingResults = LoginSchema.safeParse({
+    email,
+    password,
+    role: selectedRole,
+  });
+
+  if (!parsingResults.success) {
+    const structuredErrors: { email?: string; password?: string } = {};
+    parsingResults.error.issues.forEach((err) => {
+      if (err.path[0] === "email") structuredErrors.email = err.message;
+      if (err.path[0] === "password") structuredErrors.password = err.message;
+    });
+    setFieldErrors(structuredErrors);
+    setIsLoading(false);
+    toast.error("Validation failed. Please address layout errors.");
+    return;
+  }
+
+  try {
+    const networkResponse = await axiosClient.post("/auth/login", {
+      gmail: email,      
+      password: password, 
+      role: selectedRole, 
     });
 
-    if (!parsingResults.success) {
-      const structuredErrors: { email?: string; password?: string } = {};
-      parsingResults.error.issues.forEach((err) => {
-        if (err.path[0] === "email") structuredErrors.email = err.message;
-        if (err.path[0] === "password") structuredErrors.password = err.message;
-      });
-      setFieldErrors(structuredErrors);
-      setIsLoading(false);
-      toast.error("Validation failed. Please address layout errors.");
+    const targetPayload = networkResponse.data?.data || networkResponse.data;
+    const { user, token } = targetPayload;
+
+    if (!token || !user) {
+      toast.error("Invalid token package structural layout returned from server.");
       return;
     }
 
-    // 2. Transmit Handshake request to the backend REST API
-    try {
-      const networkResponse = await axiosClient.post("/auth/login", {
-        gmail: email,      
-        password: password, 
-        role: selectedRole, 
-      });
-
-      const targetPayload = networkResponse.data?.data || networkResponse.data;
-      const { user, token } = targetPayload;
-
-      if (!token || !user) {
-        toast.error("Invalid token package structural layout returned from server.");
-        return;
-      }
-
+    // Explicit Role Matching Verification Strategy
+    if (user.role === "ADMIN" && selectedRole === "ADMIN") {
       setAuth(user, token);
-      toast.success("Login Successfully");
+      toast.success("Admin Logged In Successfully");
+      navigate("/admin/dashboard");
+    } else if (user.role === "LIBRARIAN" && selectedRole === "LIBRARIAN") {
+      setAuth(user, token);
+      toast.success("Librarian Logged In Successfully");
       navigate("/dashboard");
-
-    } catch (error: unknown) {
-      console.error("Login Failed:", error);
-      
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Invalid account credentials.");
-      } else {
-        toast.error("An unexpected infrastructure error occurred.");
-      }
-    } finally {
-      setIsLoading(false);
+    } else {
+      // Security fallback: if selected role tab does not perfectly match database configuration role
+      toast.error("Access Denied: Role mismatch error. Redirecting...");
+      navigate("/login");
     }
-  };
 
+  } catch (error: unknown) {
+    console.error("Login Failed:", error);
+    if (axios.isAxiosError(error)) {
+      toast.error(error.response?.data?.message || "Invalid account credentials.");
+    } else {
+      toast.error("An unexpected infrastructure error occurred.");
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
   return (
     <div className="min-h-screen h-screen w-screen flex items-center justify-center bg-slate-secondary px-4 relative overflow-hidden font-sans">
       {/* Decorative Branding Background Blobs */}
