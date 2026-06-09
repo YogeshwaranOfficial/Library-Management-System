@@ -35,7 +35,7 @@ export const BookModal = ({ isOpen, onClose, onSubmit, categories, editingBook }
     defaultValues: { title: "", author: "", totalCopies: 1, categoryId: "" }
   });
 
-  // ✅ FIXED: Simple synchronization cycle without cascading state updates
+  // Simple synchronization cycle without cascading state updates
   useEffect(() => {
     if (editingBook) {
       reset({
@@ -49,7 +49,7 @@ export const BookModal = ({ isOpen, onClose, onSubmit, categories, editingBook }
     }
   }, [editingBook, reset]);
 
-  // ✅ FIXED: Safely cleans state artifacts within action contexts outside of reactive render loops
+  // Safely cleans state artifacts within action contexts outside of reactive render loops
   const handleCloseModal = () => {
     setOcrAlternatives([]); 
     onClose();
@@ -84,7 +84,7 @@ export const BookModal = ({ isOpen, onClose, onSubmit, categories, editingBook }
           setOcrAlternatives(payload.alternativeLines);
         }
 
-        // ✅ AUTOFILL EXECUTION: Hydrates form controllers with pristine Gemini data properties directly
+        // AUTOFILL EXECUTION: Hydrates form controllers with pristine Gemini data properties directly
         setValue("title", payload.title || "");
         setValue("author", payload.author || "");
 
@@ -96,7 +96,6 @@ export const BookModal = ({ isOpen, onClose, onSubmit, categories, editingBook }
       } else {
         toast.error("Parsing threshold matching failed.", { id: "azure-scan" });
       }
-    // ✅ FIXED: Eliminated explicit 'any' to appease strict lint configurations via type predicates
     } catch (error) { 
       console.error(error);
       
@@ -115,59 +114,59 @@ export const BookModal = ({ isOpen, onClose, onSubmit, categories, editingBook }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-      <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col md:flex-row max-h-[90vh] transition-all duration-300 ${ocrAlternatives.length > 0 ? "w-full max-w-4xl" : "w-full max-w-md"}`}>
+    <div className="fixed inset-0 bg-slate-secondary/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans text-slate-secondary">
+      <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-light/10 flex flex-col md:flex-row max-h-[90vh] transition-all duration-300 ${ocrAlternatives.length > 0 ? "w-full max-w-4xl" : "w-full max-w-md"}`}>
         
         {/* LEFT COMPONENT: Primary Form Input Layout */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b border-gray-100">
-            <h3 className="font-bold text-lg text-gray-800">{editingBook ? "Modify Details" : "Add New Book"}</h3>
-            <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">✕</button>
+          <div className="flex justify-between items-center pb-3 border-b border-slate-light/10">
+            <h3 className="font-bold text-base text-slate-secondary tracking-tight">{editingBook ? "Modify Details" : "Add New Book"}</h3>
+            <button onClick={handleCloseModal} className="text-slate-light hover:text-slate-secondary transition-colors cursor-pointer text-sm font-bold">✕</button>
           </div>
 
           {!editingBook && (
-            <div className="p-4 bg-teal-50/40 border border-dashed border-teal-200 rounded-xl space-y-2">
+            <div className="p-4 bg-sage-primary/5 border border-dashed border-sage-primary/30 rounded-xl space-y-2">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-bold text-teal-800 uppercase tracking-wide">🔮 Intelligent OCR Engine</label>
-                <span className="text-[10px] font-mono font-bold bg-teal-100 text-teal-800 px-2 py-0.5 rounded-md">Scans: {scanCounter}/10</span>
+                <label className="text-[10px] font-bold text-sage-primary uppercase tracking-wide">🔮 Intelligent OCR Engine</label>
+                <span className="text-[10px] font-mono font-bold bg-sage-primary/10 text-sage-primary px-2 py-0.5 rounded-md">Scans: {scanCounter}/10</span>
               </div>
               <input 
                 type="file" accept="image/*" onChange={handleAIScanUpload} disabled={isScanning || scanCounter >= 10}
-                className="block w-full text-xs text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 cursor-pointer"
+                className="block w-full text-xs text-slate-light file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-sage-primary file:text-white hover:file:bg-sage-primary/90 transition-all cursor-pointer"
               />
             </div>
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">Book Title</label>
-              <input type="text" {...register("title")} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand outline-none" />
-              {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>}
+              <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Book Title</label>
+              <input type="text" {...register("title")} className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold focus:bg-white outline-hidden focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all" />
+              {errors.title && <p className="text-xs text-utility-crimson font-medium mt-1">{errors.title.message}</p>}
             </div>
 
             <div>
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">Author Name</label>
-              <input type="text" {...register("author")} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand outline-none" />
-              {errors.author && <p className="text-xs text-red-500 mt-1">{errors.author.message}</p>}
+              <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Author Name</label>
+              <input type="text" {...register("author")} className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold focus:bg-white outline-hidden focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all" />
+              {errors.author && <p className="text-xs text-utility-crimson font-medium mt-1">{errors.author.message}</p>}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-gray-700 uppercase block mb-1">Copies</label>
-                <input type="number" {...register("totalCopies", { valueAsNumber: true })} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none" />
+                <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Copies</label>
+                <input type="number" {...register("totalCopies", { valueAsNumber: true })} className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-bold font-data outline-hidden focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all" />
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-700 uppercase block mb-1">Category</label>
-                <select {...register("categoryId")} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none">
+                <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Category</label>
+                <select {...register("categoryId")} className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold outline-hidden cursor-pointer focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all">
                   <option value="">Select Category</option>
                   {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                 </select>
               </div>
             </div>
 
-            <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
-              <button type="button" onClick={handleCloseModal} className="px-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors">Cancel</button>
-              <button type="submit" disabled={isScanning} className="px-5 py-2 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 transition-all shadow-md rounded-xl disabled:bg-gray-300">
+            <div className="pt-4 flex justify-end gap-2 border-t border-slate-light/10 text-xs font-bold">
+              <button type="button" onClick={handleCloseModal} className="px-4 py-2 text-slate-light hover:text-slate-secondary transition-colors cursor-pointer">Cancel</button>
+              <button type="submit" disabled={isScanning} className="px-5 py-2.5 text-white bg-sage-primary hover:bg-sage-primary/90 transition-all shadow-xs rounded-xl disabled:bg-slate-light/20 disabled:text-slate-light/50 disabled:cursor-not-allowed cursor-pointer">
                 {editingBook ? "Update Details" : "Create Book Entry"}
               </button>
             </div>
@@ -176,24 +175,22 @@ export const BookModal = ({ isOpen, onClose, onSubmit, categories, editingBook }
 
         {/* RIGHT COMPONENT: Interactive Diagnostic Mapping Helper Column */}
         {!editingBook && ocrAlternatives.length > 0 && (
-          <div className="w-full md:w-80 bg-slate-50 border-t md:border-t-0 md:border-l border-gray-200 p-5 overflow-y-auto max-h-[40vh] md:max-h-full flex flex-col">
-            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">🔮 OCR Raw Layout Fragments</h4>
-            <p className="text-[11px] text-slate-400 mb-4 leading-normal">If the AI missed a specific structural block, click a tag location element to force-overwrite values:</p>
+          <div className="w-full md:w-80 bg-canvas-dominant border-t md:border-t-0 md:border-l border-slate-light/10 p-5 overflow-y-auto max-h-[40vh] md:max-h-full flex flex-col">
+            <h4 className="text-xs font-bold text-slate-secondary uppercase tracking-wider mb-1">🔮 OCR Raw Layout Fragments</h4>
+            <p className="text-[11px] text-slate-light mb-4 leading-normal font-medium">If the AI missed a specific structural block, click a tag location element to force-overwrite values:</p>
             
             <div className="space-y-3 flex-1">
               {ocrAlternatives.map((item, idx) => {
-                const colorClasses = "border-slate-200 bg-white text-slate-800";
-
                 return (
-                  <div key={idx} className={`p-3 rounded-xl border text-xs leading-snug shadow-3xs transition-all hover:translate-x-0.5 ${colorClasses}`}>
-                    <div className="font-semibold font-sans tracking-tight">{item.translatedText}</div>
+                  <div key={idx} className="p-3 rounded-xl border border-slate-light/10 bg-white text-slate-secondary text-xs leading-snug shadow-3xs transition-all hover:translate-x-0.5">
+                    <div className="font-bold font-data tracking-tight text-slate-secondary">{item.translatedText}</div>
                     {item.originalText !== item.translatedText && (
-                      <div className="text-[10px] opacity-60 italic mt-1">Original OCR: "{item.originalText}"</div>
+                      <div className="text-[10px] text-slate-light opacity-80 italic mt-1 font-data">Original OCR: "{item.originalText}"</div>
                     )}
                     
-                    <div className="mt-2.5 flex gap-1.5 pt-2 border-t border-slate-100">
-                      <button type="button" onClick={() => setValue("title", item.translatedText)} className="px-2 py-0.5 bg-slate-50 hover:bg-teal-50 hover:text-teal-700 rounded text-[9px] font-bold uppercase tracking-tight shadow-3xs border border-gray-200 transition-colors cursor-pointer">+ Title</button>
-                      <button type="button" onClick={() => setValue("author", item.translatedText)} className="px-2 py-0.5 bg-slate-50 hover:bg-teal-50 hover:text-teal-700 rounded text-[9px] font-bold uppercase tracking-tight shadow-3xs border border-gray-200 transition-colors cursor-pointer">+ Author</button>
+                    <div className="mt-2.5 flex gap-1.5 pt-2 border-t border-slate-light/5">
+                      <button type="button" onClick={() => setValue("title", item.translatedText)} className="px-2 py-0.5 bg-canvas-dominant hover:bg-sage-primary/10 hover:text-sage-primary rounded text-[9px] font-bold uppercase tracking-wider border border-slate-light/10 transition-colors cursor-pointer">+ Title</button>
+                      <button type="button" onClick={() => setValue("author", item.translatedText)} className="px-2 py-0.5 bg-canvas-dominant hover:bg-sage-primary/10 hover:text-sage-primary rounded text-[9px] font-bold uppercase tracking-wider border border-slate-light/10 transition-colors cursor-pointer">+ Author</button>
                     </div>
                   </div>
                 );

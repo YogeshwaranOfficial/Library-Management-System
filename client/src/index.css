@@ -1,23 +1,28 @@
 @import "tailwindcss";
 
+/* 🔤 Google Fonts Integration: Inter & Roboto */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap');
+
 @theme {
-  --color-brand-primary: #0056b3;
-  --color-brand-secondary: #f8f9fa;
-  --color-text-dark: #212529;
-  --color-border-light: #e9ecef;
+  /* 🎨 Core Sage & Slate Configuration Matrix */
+  --color-sage-primary: #27AE60;      /* 10% Accent Call-to-Actions */
+  --color-sage-hover: #219653;        /* Darker Sage for hover interactions */
+  --color-slate-secondary: #2C3E50;   /* 30% Secondary Text / Structural Sidebars */
+  --color-slate-light: #34495E;       /* Muted variant for subtitles/borders */
+  --color-canvas-dominant: #F9FBFB;   /* 60% Dominant Background / Card spaces */
+  --color-utility-crimson: #C0392B;   /* Critical validation / blocks / alerts */
   
-  /* Modern Professional Corporate Color Palette */
-  --color-ocean-blue: #0f172a;   /* Deep slate-tinted ocean blue background */
-  --color-ocean-light: #1e293b;  /* Shaded panel blue */
-  --color-teal-brand: #0d9488;   /* Primary component teal-600 buttons */
-  --color-teal-hover: #0f766e;   /* Secondary focus teal-700 hover states */
-  
-  --font-sans: "Inter", system-ui, sans-serif;
+  /* 📐 Font Pair Configuration */
+  --font-sans: "Inter", system-ui, sans-serif;    /* Inter for Primary UI & Headings */
+  --font-data: "Roboto", sans-serif;              /* Roboto for numbers, dates, lists */
 }
 
+/* 🏢 Base Global Application Resets */
 body {
-  background-color: #f3f4f6;
-  color: var(--color-text-dark);
+  background-color: var(--color-canvas-dominant);
+  color: var(--color-slate-secondary);
   font-family: var(--font-sans);
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }

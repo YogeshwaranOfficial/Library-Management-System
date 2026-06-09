@@ -32,9 +32,10 @@ export const Dashboard = () => {
 
   if (isLoading || !token) {
     return (
-      <div className="flex h-screen w-full items-center justify-center flex-col gap-3 bg-gray-50/50">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-600 border-t-transparent" />
-        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest animate-pulse">
+      <div className="flex h-screen w-full items-center justify-center flex-col gap-3.5 bg-canvas-dominant font-sans">
+        {/* Canonical Theme Class: border-sage-primary */}
+        <div className="animate-spin rounded-full h-11 w-11 border-4 border-sage-primary border-t-transparent" />
+        <p className="text-xs text-slate-secondary/60 font-bold uppercase tracking-widest animate-pulse font-data">
           Booting Control Center Intelligence...
         </p>
       </div>
@@ -43,9 +44,10 @@ export const Dashboard = () => {
 
   if (isError) {
     return (
-      <div className="p-6 bg-red-50 border border-red-200 rounded-xl text-center max-w-xl mx-auto my-12">
-        <h3 className="text-base font-bold text-red-800">Operational Sync Failure</h3>
-        <p className="text-xs text-red-600 mt-1">Unable to pull central analytical datasets from backend records.</p>
+      <div className="p-6 bg-utility-crimson/10 border border-utility-crimson/20 rounded-2xl text-center max-w-xl mx-auto my-12 font-sans">
+        {/* Canonical Theme Classes for Error state handles */}
+        <h3 className="text-sm font-bold text-utility-crimson uppercase tracking-wide">Operational Sync Failure</h3>
+        <p className="text-xs text-utility-crimson/80 font-medium font-data mt-1">Unable to pull central analytical datasets from backend records.</p>
       </div>
     );
   }
@@ -65,7 +67,9 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-6 p-1 animate-fade-in bg-gray-50/30 pb-12">
+    /* Canonical Theme Background and Color Assignments Active */
+    <div className="space-y-6 p-4 animate-fade-in bg-canvas-dominant pb-12 font-sans text-slate-secondary">
+      
       {/* Level 1: Core System KPI Indicators */}
       <MetricsGrid data={gridMetrics} />
 

@@ -33,6 +33,8 @@ export interface BookIssueRecord {
   memberEmail?: string;
   memberPhone?: string;
   bookAuthor?: string;
+  fineAmount?: number;      // Optional number for outstanding balances
+  finePaidStatus?: boolean; // Optional boolean flag tracking payment state
 }
 
 // 🏷️ 4. Dynamic Auto-Suggest Lookup Models

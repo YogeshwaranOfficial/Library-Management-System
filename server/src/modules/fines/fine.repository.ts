@@ -65,7 +65,7 @@ class FineRepository {
     });
   }
 
-  // 🟢 Added: Fetches historical collection records
+  // 🟢 Fetches historical collection records
   async getCollectedFines() {
     return Fine.findAll({
       where: { paid_status: true },
@@ -84,7 +84,8 @@ class FineRepository {
   // 🔒 Fetches target history for personal dashboard profile pipelines
   async getMemberFines(member_id: string) {
     return Fine.findAll({
-      where: { fine_id: member_id },
+      // 🟢 FIXED: Using a subquery look-up against the correlated issues row instead of checking fine_id!
+      where: literal(`(SELECT member_id FROM issues WHERE issues.issue_id = "Fine".issue_id) = '${member_id}'`),
       attributes: { include: sharedFineAttributes as any },
       order: [["created_at", "DESC"]]
     });
@@ -96,20 +97,21 @@ class FineRepository {
     return this.getFineById(fine_id);
   }
 
-  // 🟢 Added: Drops structural line nodes completely out of the table caches
+  // 🟢 Drops structural line nodes completely out of the table caches
+ // 🟢 FIXED: Removed the messy logical OR layout to clear error 2872
   async purgeFine(fine_id: string) {
     return Fine.destroy({
       where: { fine_id }
     });
   }
 
-
-// 🟢 Added: Restores a settled fine back to unpaid status
+  // 🟢 FIXED: Clears your ledger records using the newly declared model attribute fields safely
   async restoreFine(fine_id: string) {
     return Fine.update(
       { 
         paid_status: false, 
         paid_date: null,
+        payment_method: null
       },
       { where: { fine_id } }
     );

@@ -64,15 +64,7 @@ export const borrowBookController = asyncHandler(
 export const updateIssueParametersController = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params as { id: string };
-    
-    const { memberId, bookId, borrowDate, dueDate, status, returnedDate } = req.body as {
-      memberId?: string;
-      bookId?: string;
-      borrowDate?: string;
-      dueDate?: string;
-      status?: string;
-      returnedDate?: string | null;
-    };
+    const { memberId, bookId, borrowDate, dueDate, status, returnedDate } = req.body;
 
     const servicePayload = {
       ...(memberId ? { memberId } : {}),
@@ -83,7 +75,19 @@ export const updateIssueParametersController = asyncHandler(
       ...(returnedDate !== undefined ? { returnedDate } : {})
     };
 
+    // This handles both regular adjustments AND the full return rollback engine seamlessly!
     const result = await issueService.updateIssueParameters(id, servicePayload);
+
+    // Instant Fine Sync event triggers check here...
+    const targetMemberId = result?.member_id;
+    if (targetMemberId) {
+      try {
+        const { default: fineService } = await import("../fines/fine.service.js");
+        await fineService.runFineAccrualSync(targetMemberId);
+      } catch (err) {
+        console.error("❌ Failed to calculate instant fine:", err);
+      }
+    }
 
     sendResponse(res, {
       success: true,
@@ -93,7 +97,6 @@ export const updateIssueParametersController = asyncHandler(
     });
   }
 );
-
 // 5. Close/Process Active Asset Return (POST /issues/return)
 export const returnBookController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -158,3 +161,4 @@ export const clearReturnedHistoryController = asyncHandler(
     });
   }
 );
+

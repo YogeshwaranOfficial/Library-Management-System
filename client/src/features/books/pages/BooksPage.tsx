@@ -11,12 +11,12 @@ import { toast } from "sonner";
 export const BooksPage = () => {
   const queryClient = useQueryClient();
 
-  // 💡 Dynamic Search Orchestration states
+  // Dynamic Search Orchestration states
   const [localSearch, setLocalSearch] = useState("");
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
 
-  // 📑 Dynamic Pagination Tracking States
+  // Dynamic Pagination Tracking States
   const [currentPage, setCurrentPage] = useState(1);
   const RECORDS_PER_PAGE = 10;
 
@@ -116,10 +116,9 @@ export const BooksPage = () => {
     setCurrentPage(1);
   };
 
-  // 1. Updated Save/Update Book Mutation Blueprint Pipeline
+  // Save/Update Book Mutation Pipeline
   const saveBookMutation = useMutation({
     mutationFn: async (payload: BookFormValues) => {
-      // 💡 FIX: Shape the payload into the snake_case keys your backend models require!
       const processedPayload = {
         book_name: payload.title,
         book_author: payload.author,
@@ -128,17 +127,14 @@ export const BooksPage = () => {
       };
 
       if (selectedBook) {
-        // If we are updating an existing entry
         const response = await axiosClient.patch(`/books/${selectedBook.id}`, processedPayload);
         return response.data;
       }
       
-      // If we are appending a brand new book instance
       const response = await axiosClient.post("/books", processedPayload);
       return response.data;
     },
     onSuccess: () => {
-      // Evict old cache immediately to render the newly populated entry live
       queryClient.invalidateQueries({ queryKey: ["libraryBooksCatalogFeed"] });
       toast.success(selectedBook ? "Book metrics updated successfully." : "New title appended to index safely!");
       setIsFormOpen(false);
@@ -149,10 +145,9 @@ export const BooksPage = () => {
     },
   });
 
-  // 2. Updated Delete Book Mutation Pipeline
+  // Delete Book Mutation Pipeline
   const deleteBookMutation = useMutation({
     mutationFn: async (id: string) => {
-      // Ensure this path matches your backend destroy handler parameters
       const response = await axiosClient.delete(`/books/${id}`);
       return response.data;
     },
@@ -160,7 +155,7 @@ export const BooksPage = () => {
       queryClient.invalidateQueries({ queryKey: ["libraryBooksCatalogFeed"] });
       toast.success("Volume profile purged from repository catalog.");
       setIsDeleteOpen(false);
-      setSelectedBook(null); // Clear selected item state safely
+      setSelectedBook(null); 
       
       if (parsedBooks.length === 1 && currentPage > 1) {
         setCurrentPage((prev) => prev - 1);
@@ -172,35 +167,36 @@ export const BooksPage = () => {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in font-sans text-slate-secondary">
+      
       {/* Action Title Jumbotron Header block */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-light/10 shadow-xs">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Library Books Catalog</h2>
-          <p className="text-xs text-gray-500">View, evaluate, and trace total volume distribution limits across the facility.</p>
+          <h2 className="text-lg font-bold text-slate-secondary tracking-tight">Library Books Catalog</h2>
+          <p className="text-xs text-slate-light mt-0.5 font-medium">View, evaluate, and trace total volume distribution limits across the facility.</p>
         </div>
         <button
           onClick={() => { setSelectedBook(null); setIsFormOpen(true); }}
-          className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-xs transition-all cursor-pointer"
+          className="px-4 py-2.5 bg-sage-primary hover:bg-sage-primary/90 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
         >
           📚 Add New Book
         </button>
       </div>
 
       {/* Query Filter Navigation Controls Line */}
-      <div className="flex flex-col md:flex-row gap-3 bg-white p-4 rounded-xl border border-gray-200 items-center justify-between">
+      <div className="flex flex-col md:flex-row gap-3 bg-white p-4 rounded-xl border border-slate-light/10 items-center justify-between">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-4/5">
           <input
             type="text"
             placeholder="🔎 Search by book title or author name..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="sm:col-span-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white outline-none focus:ring-2 focus:ring-teal-100 focus:border-teal-600 transition-all"
+            className="sm:col-span-2 px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold focus:bg-white outline-hidden focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all"
           />
           <select
             value={categoryFilter}
             onChange={(e) => handleCategoryChange(e.target.value)}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white outline-none focus:ring-2 focus:ring-teal-100 transition-all cursor-pointer"
+            className="px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold focus:bg-white outline-hidden focus:ring-4 focus:ring-sage-primary/10 transition-all cursor-pointer"
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
@@ -212,7 +208,7 @@ export const BooksPage = () => {
         {/* Clear Filter Control Button */}
         <button
           onClick={handleClearAllFilters}
-          className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-all cursor-pointer col-span-2 sm:col-auto whitespace-nowrap"
+          className="px-4 py-2 bg-utility-crimson/10 hover:bg-utility-crimson/20 text-utility-crimson text-xs font-bold rounded-xl transition-all cursor-pointer col-span-2 sm:col-auto whitespace-nowrap"
         >
           Clear Filters
         </button>
@@ -220,50 +216,53 @@ export const BooksPage = () => {
 
       {/* Ledger Grid Framework View */}
       {isLoading ? (
-        <div className="text-center py-20 text-xs text-gray-400 font-semibold animate-pulse">Syncing Active Media Ledger Records...</div>
+        <div className="text-center py-20 text-xs text-slate-light font-bold font-data animate-pulse">Syncing Active Media Ledger Records...</div>
       ) : (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-light/10 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 text-xs font-bold text-gray-500 uppercase bg-gray-50/70">
-                    <th className="py-3.5 px-4">Book Title & Creator Index</th>
-                    <th className="py-3.5 px-4">Category</th>
-                    <th className="py-3.5 px-4 text-center">Total Volumes</th>
-                    <th className="py-3.5 px-4 text-center">Shelf Availability</th>
-                    <th className="py-3.5 px-4 text-center">Book Lending Count</th>
+                  <tr className="border-b border-slate-light/10 text-xs font-bold text-slate-light uppercase bg-canvas-dominant/60">
+                    <th className="py-3.5 px-4 font-bold tracking-wider">Book Title & Creator Index</th>
+                    <th className="py-3.5 px-4 font-bold tracking-wider">Category</th>
+                    <th className="py-3.5 px-4 text-center font-bold tracking-wider">Total Volumes</th>
+                    <th className="py-3.5 px-4 text-center font-bold tracking-wider">Shelf Availability</th>
+                    <th className="py-3.5 px-4 text-center font-bold tracking-wider">Book Lending Count</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm divide-y divide-gray-100 text-gray-700">
+                <tbody className="text-sm divide-y divide-slate-light/5 text-slate-secondary">
                   {parsedBooks.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-10 text-xs text-gray-400 italic">No book matches found in the ledger indexes.</td>
+                      <td colSpan={5} className="text-center py-10 text-xs text-slate-light font-medium italic">No book matches found in the ledger indexes.</td>
                     </tr>
                   ) : (
                     parsedBooks.map((book) => (
-                      /* 💡 MODIFIED: Added onClick context and cursor styling directly onto the table row wrapper */
                       <tr 
                         key={book.id} 
                         onClick={() => { setSelectedBook(book); setIsDetailOpen(true); }}
-                        className="hover:bg-gray-50/80 transition-colors cursor-pointer select-none"
+                        className="hover:bg-canvas-dominant/60 transition-colors cursor-pointer select-none"
                       >
-                        <td className="py-3.5 px-4 font-medium text-gray-900">
+                        <td className="py-3.5 px-4 font-semibold text-slate-secondary">
                           <div className="truncate max-w-xs">{book.title}</div>
-                          <div className="text-xs text-gray-400 font-normal">By {book.author}</div>
+                          <div className="text-xs text-slate-light font-medium mt-0.5">By {book.author}</div>
                         </td>
                         <td className="py-3.5 px-4">
-                          <span className="px-2 py-0.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                          <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-sage-primary/10 text-sage-primary border border-sage-primary/10">
                             {book.categoryName}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-center font-mono font-semibold">{book.totalCopies}</td>
+                        <td className="py-3.5 px-4 text-center font-data font-bold">{book.totalCopies}</td>
                         <td className="py-3.5 px-4 text-center">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-xs font-mono font-bold ${book.availableCopies > 0 ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700"}`}>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-data font-bold border ${
+                            book.availableCopies > 0 
+                              ? "bg-sage-primary/10 text-sage-primary border-sage-primary/10" 
+                              : "bg-utility-crimson/10 text-utility-crimson border-utility-crimson/10"
+                          }`}>
                             {book.availableCopies} left
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-center font-mono font-medium text-gray-600">{book.lendingCount} times</td>
+                        <td className="py-3.5 px-4 text-center font-data font-semibold text-slate-light">{book.lendingCount} times</td>
                       </tr>
                     ))
                   )}
@@ -274,23 +273,23 @@ export const BooksPage = () => {
 
           {/* RELIABLE PAGINATION FOOTER ROW CONTROLS */}
           {totalPages > 0 && (
-            <div className="flex items-center justify-between bg-white px-5 py-4 rounded-xl border border-gray-200 shadow-xs">
-              <div className="text-xs text-gray-500 font-medium">
+            <div className="flex items-center justify-between bg-white px-5 py-4 rounded-xl border border-slate-light/10 shadow-xs">
+              <div className="text-xs text-slate-light font-bold font-data">
                 Showing Page {currentPage} of{" "}
                 {totalPages} ({totalDatabaseRecords} Books Found)
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 font-data text-xs font-bold">
                 <button
                   disabled={currentPage === 1}
                   onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(1, p - 1)); }}
-                  className="px-3 py-1.5 border border-gray-200 text-xs font-semibold rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="px-3 py-1.5 border border-slate-light/10 rounded-xl bg-canvas-dominant text-slate-secondary hover:bg-slate-light/5 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   ◀ Previous
                 </button>
                 <button
                   disabled={currentPage === totalPages}
                   onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(totalPages, p + 1)); }}
-                  className="px-4 py-1.5 border border-gray-200 text-xs font-semibold rounded-lg bg-gray-50 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  className="px-4 py-1.5 border border-slate-light/10 rounded-xl bg-canvas-dominant text-slate-secondary hover:bg-slate-light/5 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   Next ▶
                 </button>

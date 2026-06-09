@@ -22,6 +22,7 @@ class Fine extends Model<
 
   declare paid_status: CreationOptional<boolean>;
   declare paid_date: CreationOptional<Date | null>;
+  declare payment_method: CreationOptional<string | null>;
 
   declare readonly created_at: CreationOptional<Date>;
   declare readonly updated_at: CreationOptional<Date>;
@@ -58,7 +59,12 @@ Fine.init(
     },
 
     paid_date: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    payment_method: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
 

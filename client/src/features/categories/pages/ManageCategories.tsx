@@ -14,7 +14,6 @@ interface UpdateMutationResponse {
   };
 }
 
-// 💡 Contract matching your backend paginated { rows, totalCount, totalPages, currentPage } schema
 interface ServerPaginationWrapper {
   rows: CategoryMetrics[];
   totalCount: number;
@@ -30,7 +29,7 @@ export const ManageCategories = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [bookSort, setBookSort] = useState<"NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH">("NONE");
   const [borrowSort, setBorrowSort] = useState<"NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH">("NONE");
-  const [currentPage, setCurrentPage] = useState(1); // 💡 New pagination state tracker
+  const [currentPage, setCurrentPage] = useState(1); 
   const rowsPerPage = 10;
 
   // 📝 Creation Dialog Variables
@@ -50,7 +49,6 @@ export const ManageCategories = () => {
 
   // Query: Fetch structured aggregation framework from server
   const { data: serverPayload, isLoading } = useQuery<ServerPaginationWrapper>({
-    // 💡 Appended pagination/filter keys to trigger auto-refetching
     queryKey: ["libraryCategoriesAggregationFeed", token, currentPage, searchQuery, bookSort, borrowSort],
     queryFn: async () => {
       const params = new URLSearchParams({
@@ -66,7 +64,6 @@ export const ManageCategories = () => {
     enabled: !!token,
   });
 
-  // 💡 Safe extractions from our wrapper mapping contracts
   const categoriesList = serverPayload?.rows || [];
   const totalRecordsCount = serverPayload?.totalCount || 0;
   const totalPages = serverPayload?.totalPages || 1;
@@ -119,22 +116,19 @@ export const ManageCategories = () => {
     onError: () => toast.error("Database constraint rejected Delete transaction profile."),
   });
 
-  // Action: Open Create Modal and Ensure Form is Blank
   const handleOpenCreateModal = () => {
     setNewCatName("");
     setCreateValidationError("");
     setIsCreateOpen(true);
   };
 
-  // Action: Reset all query parameters back to initial state
   const handleResetFilters = () => {
     setSearchQuery("");
     setBookSort("NONE");
     setBorrowSort("NONE");
-    setCurrentPage(1); // Reset page indices
+    setCurrentPage(1);
   };
 
-  // Action: Add Button Submit Click Execution Handler
   const handleExecuteCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     const activeNames = categoriesList.map(c => c.category_name);
@@ -157,41 +151,41 @@ export const ManageCategories = () => {
   const isFilterActive = searchQuery.trim() !== "" || bookSort !== "NONE" || borrowSort !== "NONE";
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in font-sans text-slate-secondary">
       
       {/* Top Deck Banner */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-light/10 shadow-xs">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Manage Catalog Categories</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Control library book categories, analyze category engagement volumes, and manage inventory segments.</p>
+          <h2 className="text-xl font-bold text-slate-secondary tracking-tight">Manage Catalog Categories</h2>
+          <p className="text-xs text-slate-light mt-0.5 font-medium">Control library book categories, analyze category engagement volumes, and manage inventory segments.</p>
         </div>
         <button
           onClick={handleOpenCreateModal}
-          className="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
+          className="px-4 py-2.5 bg-sage-primary hover:bg-sage-primary/90 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap uppercase tracking-wider"
         >
           ＋ Add New Category
         </button>
       </div>
 
       {/* Control Filtering Deck */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 bg-white p-4 rounded-xl border border-slate-light/10 shadow-2xs">
         
         {/* Search Input Box Container */}
         <div className="relative flex-1">
           <input
             type="text"
-            placeholder="🔎 Filter down table rows by category name..."
+            placeholder="Filter down table rows by category name..."
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
               setSearchQuery(e.target.value);
-              setCurrentPage(1); // 💡 Reset page when applying a search filter
+              setCurrentPage(1); 
             }}
-            className="w-full pl-3 pr-10 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-slate-100 focus:border-slate-600"
+            className="w-full pl-3 pr-10 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold outline-hidden focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all"
           />
           {searchQuery && (
             <button
               onClick={() => { setSearchQuery(""); setCurrentPage(1); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs font-bold cursor-pointer transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-light hover:text-slate-secondary text-xs font-bold cursor-pointer transition-colors"
             >
               ✕
             </button>
@@ -200,30 +194,28 @@ export const ManageCategories = () => {
 
         {/* Filters Grouping Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 lg:flex-none lg:w-[55%]">
-          {/* Owned Books Count Sorting Filter */}
           <select
             value={bookSort}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
               setBookSort(e.target.value as "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH");
               setBorrowSort("NONE"); 
-              setCurrentPage(1); // 💡 Reset page when changing sort criteria
+              setCurrentPage(1); 
             }}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white cursor-pointer text-gray-600 font-medium"
+            className="px-3 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold outline-hidden focus:bg-white cursor-pointer transition-all"
           >
             <option value="NONE">Sort by Owned Count: Default (ABC)</option>
             <option value="HIGH_TO_LOW">Owned Count: Highest to Lowest</option>
             <option value="LOW_TO_HIGH">Owned Count: Lowest to Highest</option>
           </select>
 
-          {/* Borrowing Engagement / Lending Count Sorting Filter */}
           <select
             value={borrowSort}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
               setBorrowSort(e.target.value as "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH");
               setBookSort("NONE"); 
-              setCurrentPage(1); // 💡 Reset page when changing sort criteria
+              setCurrentPage(1); 
             }}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white cursor-pointer text-gray-600 font-medium"
+            className="px-3 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold outline-hidden focus:bg-white cursor-pointer transition-all"
           >
             <option value="NONE">Sort by Borrows: Default (ABC)</option>
             <option value="HIGH_TO_LOW">Borrows Count: Highest to Lowest</option>
@@ -235,7 +227,7 @@ export const ManageCategories = () => {
         {isFilterActive && (
           <button
             onClick={handleResetFilters}
-            className="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 hover:bg-slate-100 rounded-xl shadow-3xs cursor-pointer transition-all animate-fade-in text-center whitespace-nowrap"
+            className="px-4 py-2 text-xs font-bold text-slate-light bg-canvas-dominant border border-slate-light/10 hover:text-slate-secondary rounded-xl shadow-3xs cursor-pointer transition-all animate-fade-in text-center whitespace-nowrap"
           >
             Reset Filters
           </button>
@@ -244,25 +236,25 @@ export const ManageCategories = () => {
 
       {/* Main Grid Render Table Section */}
       {isLoading ? (
-        <div className="text-center py-20 text-xs text-gray-400 font-semibold animate-pulse">
+        <div className="text-center py-20 text-xs text-slate-light font-bold animate-pulse tracking-wide">
           Compiling catalog taxonomy architecture indices...
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-light/10 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 text-xs font-bold text-gray-400 uppercase bg-gray-50/60 tracking-wider">
+                  <tr className="border-b border-slate-light/10 text-xs font-bold text-slate-light uppercase bg-canvas-dominant tracking-wider">
                     <th className="py-4 px-5">Category Name Listing</th>
                     <th className="py-4 px-5">Total Volume Stack</th>
                     <th className="py-4 px-5">Active Circulation Borrow Count</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm divide-y divide-gray-100 text-gray-700">
+                <tbody className="text-sm divide-y divide-slate-light/5 text-slate-secondary">
                   {categoriesList.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="py-12 text-center text-sm text-gray-400 font-medium">
+                      <td colSpan={3} className="py-12 text-center text-sm text-slate-light font-medium">
                         No library category profiles matches the search key terms.
                       </td>
                     </tr>
@@ -271,19 +263,19 @@ export const ManageCategories = () => {
                       <tr
                         key={cat.category_id}
                         onClick={() => { setSelectedCategory(cat); setIsDetailsOpen(true); }}
-                        className="hover:bg-slate-50 transition-colors cursor-pointer group select-none animate-fade-in"
+                        className="hover:bg-canvas-dominant/60 transition-colors cursor-pointer group select-none animate-fade-in"
                       >
-                        <td className="py-4 px-5 font-bold text-gray-900 group-hover:text-slate-950">
+                        <td className="py-4 px-5 font-bold text-slate-secondary group-hover:text-sage-primary transition-colors">
                           {cat.category_name}
                         </td>
-                        <td className="py-4 px-5 font-semibold text-gray-500 font-mono">
+                        <td className="py-4 px-5 font-bold text-slate-light font-data">
                           {cat.booksCount} books
                         </td>
                         <td className="py-4 px-5">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-3xs font-extrabold font-mono tracking-wider ${
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold font-data tracking-wider border ${
                             cat.lendingCount > 15 
-                              ? "bg-amber-50 text-amber-700 border border-amber-100"
-                              : "bg-slate-50 text-slate-500 border border-slate-100"
+                              ? "bg-sage-primary/10 text-sage-primary border-sage-primary/10"
+                              : "bg-canvas-dominant text-slate-light border-slate-light/10"
                           }`}>
                             {cat.lendingCount} times
                           </span>
@@ -296,23 +288,23 @@ export const ManageCategories = () => {
             </div>
           </div>
 
-          {/* 💡 Pagination Controls Block UI Section */}
-          <div className="flex justify-between items-center bg-white px-5 py-4 rounded-xl border border-gray-200 shadow-2xs">
-            <span className="text-xs font-medium text-gray-500">
-              Showing page <b>{currentPage}</b> of <b>{totalPages}</b> ({totalRecordsCount} Archives)
+          {/* Pagination Controls Block UI Section */}
+          <div className="flex justify-between items-center bg-white px-5 py-4 rounded-xl border border-slate-light/10 shadow-2xs">
+            <span className="text-xs font-medium text-slate-light">
+              Showing page <b className="text-slate-secondary font-data">{currentPage}</b> of <b className="text-slate-secondary font-data">{totalPages}</b> (<span className="font-data">{totalRecordsCount}</span> Archives)
             </span>
-            <div className="flex gap-2">
+            <div className="flex gap-2 text-xs font-bold">
               <button
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => prev - 1)}
-                className="px-3 py-1.5 text-xs font-semibold bg-white border border-gray-200 rounded-lg shadow-3xs text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="px-3 py-1.5 bg-white border border-slate-light/10 rounded-lg shadow-3xs text-slate-light hover:text-slate-secondary disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
                 ◀ Previous
               </button>
               <button
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => prev + 1)}
-                className="px-3 py-1.5 text-xs font-semibold bg-white border border-gray-200 rounded-lg shadow-3xs text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="px-3 py-1.5 bg-white border border-slate-light/10 rounded-lg shadow-3xs text-slate-light hover:text-slate-secondary disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
                 Next ▶
               </button>
@@ -323,42 +315,42 @@ export const ManageCategories = () => {
 
       {/* Modal A: Pop-up Form for Quick Add Creation */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center">
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs" onClick={() => setIsCreateOpen(false)} />
+        <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-secondary/40 backdrop-blur-xs" onClick={() => setIsCreateOpen(false)} />
           <form 
             onSubmit={handleExecuteCreate} 
-            className="relative z-10 w-full max-w-md bg-white rounded-2xl p-6 border border-slate-100 shadow-xl m-4 space-y-4"
+            className="relative z-10 w-full max-w-md bg-white rounded-2xl p-6 border border-slate-light/10 shadow-xl space-y-4 text-slate-secondary"
           >
             <div>
-              <h3 className="text-base font-bold text-slate-900">Add New Category Classification</h3>
-              <p className="text-3xs text-slate-400 mt-0.5">Input a unique classification name to initialize shelf tags mapping slots.</p>
+              <h3 className="text-base font-bold text-slate-secondary tracking-tight">Add New Category Classification</h3>
+              <p className="text-xs text-slate-light mt-0.5 font-medium">Input a unique classification name to initialize shelf tags mapping slots.</p>
             </div>
 
-            <div className="space-y-1">
-              <label className="block text-3xs font-bold text-slate-400 uppercase tracking-wide">Category Name</label>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-light uppercase tracking-wider">Category Name</label>
               <input
                 type="text"
                 autoFocus
                 placeholder="e.g. Science Fiction, Biography, History"
                 value={newCatName}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewCatName(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:ring-2 focus:ring-slate-100 focus:border-slate-600 outline-hidden"
+                className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold focus:bg-white outline-hidden focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all"
               />
-              {createValidationError && <p className="text-3xs font-bold text-rose-500">{createValidationError}</p>}
+              {createValidationError && <p className="text-xs text-utility-crimson font-medium mt-1">{createValidationError}</p>}
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="flex justify-end gap-2 pt-2 text-xs font-bold">
               <button
                 type="button"
                 onClick={() => setIsCreateOpen(false)}
-                className="px-4 py-2 border border-slate-200 text-slate-600 text-xs font-bold rounded-xl hover:bg-slate-50 cursor-pointer"
+                className="px-4 py-2 border border-slate-light/10 text-slate-light rounded-xl hover:text-slate-secondary transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isPending}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white disabled:opacity-50 text-xs font-bold rounded-xl cursor-pointer"
+                className="px-4 py-2 bg-sage-primary hover:bg-sage-primary/90 text-white disabled:bg-slate-light/20 disabled:text-slate-light/50 rounded-xl cursor-pointer transition-all"
               >
                 {createMutation.isPending ? "Creating..." : "Add Category"}
               </button>

@@ -4,7 +4,12 @@ import { axiosClient } from "../../../api/axiosClient";
 import type { BookIssueRecord } from "../../../types/transactions";
 import { toast } from "sonner";
 
-// 🛡️ Strong local interfaces matching our backend payloads to pass ESLint rules
+// 🛡️ Explicit type extension to handle conditional backend properties without using 'any'
+interface ExtendedBookIssueRecord extends BookIssueRecord {
+  membershipExpiryDate?: string;
+  expiryDate?: string;
+}
+
 interface SearchCompliance {
   status: "GOOD" | "EXPIRED" | "LIMIT_EXCEEDED" | "WARNING_LAST_SLOT" | "AVAILABLE" | "OUT_OF_STOCK";
   message: string;
@@ -44,7 +49,7 @@ interface TransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (payload: { memberId: string; bookId: string; borrowDate: string; dueDate: string }) => void;
-  editingRecord?: BookIssueRecord | null;
+  editingRecord?: ExtendedBookIssueRecord | null;
 }
 
 export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: TransactionModalProps) => {
@@ -55,8 +60,16 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
     return tomorrow.toISOString().split("T")[0];
   };
 
-  // ✨ Safe Initial State: Derive initial values directly during state configuration 
-  // rather than using a synchronous useEffect.
+  // Helper utility to safely extract clean YYYY-MM-DD from any timestamp variations
+  const formatToISODate = (dateInput?: string | null) => {
+    if (!dateInput) return "";
+    return dateInput.split("T")[0];
+  };
+
+  // ✨ Structural fallback for edit sessions
+  const fixedRecordExpiry = editingRecord ? (editingRecord.membershipExpiryDate || editingRecord.expiryDate || "") : "";
+
+  // ✨ Initial State Configuration
   const [memberSearch, setMemberSearch] = useState(editingRecord ? editingRecord.memberName : "");
   const [selectedMember, setSelectedMember] = useState<MemberSearchItem | null>(
     editingRecord
@@ -65,7 +78,7 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
           name: editingRecord.memberName,
           phone_number: editingRecord.memberPhone || "",
           membership_status: "ACTIVE",
-          expiry_date: "",
+          expiry_date: fixedRecordExpiry,
           plan_name: "Active Loan Lifecycle",
           maxAllowed: 20,
           currentBorrows: 0,
@@ -94,35 +107,41 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
     currentBorrows: 0,
     maxAllowed: 20,
     isExpired: false,
-    expiryDate: "",
+    expiryDate: fixedRecordExpiry,
     complianceStatus: "GOOD",
     complianceMessage: "",
   });
 
-  // ✨ Safe External Effect: Only handles asynchronous network updates
+  // ✨ Async Network Lifecycle Synchronization
   useEffect(() => {
     if (selectedMember && isOpen) {
       axiosClient.get(`/issues/member-allowance/${selectedMember.member_id}`)
         .then((res) => {
           const metrics = res.data?.data || res.data;
+          
+          // Fallback parsing priority order for custom API schemas
+          const dynamicExpiry = metrics.expiryDate || metrics.membershipExpiryDate || selectedMember.expiry_date || fixedRecordExpiry;
+
           setBorrowMetrics({
             currentBorrows: metrics.currentBorrows || 0,
             maxAllowed: metrics.maxAllowed || 20,
             isExpired: selectedMember.membership_status === "EXPIRED" || selectedMember.compliance?.status === "EXPIRED",
-            expiryDate: selectedMember.expiry_date || metrics.expiryDate || "",
+            expiryDate: dynamicExpiry,
             complianceStatus: selectedMember.compliance?.status || "GOOD",
             complianceMessage: selectedMember.compliance?.message || "",
           });
         })
         .catch(() => {
-          if (editingRecord) {
-            setBorrowMetrics(prev => ({ ...prev, expiryDate: "" }));
-          }
+          // Keep the baseline structural record expiration values safe even if server fails
+          setBorrowMetrics(prev => ({ 
+            ...prev, 
+            expiryDate: fixedRecordExpiry 
+          }));
         });
     }
-  }, [selectedMember, isOpen, editingRecord]);
+  }, [selectedMember, isOpen, editingRecord, fixedRecordExpiry]);
 
-  // Query Suggestions Providers
+  // Data Providers
   const { data: suggestedMembers = [] } = useQuery<MemberSearchItem[]>({
     queryKey: ["memberQuerySuggestions", memberSearch],
     queryFn: async () => {
@@ -147,14 +166,24 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
 
   const hasMemberText = memberSearch.trim().length > 0;
   const isSelectedMemberMatchingInput = selectedMember && selectedMember.name === memberSearch;
-  const showMemberInfoCard = hasMemberText && isSelectedMemberMatchingInput;
+  
+  // Ensure info card stays loaded instantly on edit parameters
+  const showMemberInfoCard = !!editingRecord || (hasMemberText && isSelectedMemberMatchingInput);
 
   const reachedPlanCap = borrowMetrics.currentBorrows >= borrowMetrics.maxAllowed || borrowMetrics.complianceStatus === "LIMIT_EXCEEDED";
   
+  // 🔒 Fixed Absolute Calendaring System
+  const cleanDueDate = formatToISODate(dueDate);
+  const maxAllowedDate = formatToISODate(borrowMetrics.expiryDate);
+  const minAllowedDate = editingRecord ? formatToISODate(editingRecord.borrowedDate) : getTomorrowString();
+
+  const isDateRangeInvalid = !!(maxAllowedDate && cleanDueDate > maxAllowedDate) || (cleanDueDate < minAllowedDate);
+
   const isSubmissionBlocked = 
     !selectedMember || 
     !selectedBook || 
     !dueDate ||
+    isDateRangeInvalid ||
     (!editingRecord && (borrowMetrics.isExpired || reachedPlanCap || (selectedBook && selectedBook.available_copies <= 0)));
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -249,8 +278,13 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
                 <span>{borrowMetrics.currentBorrows} / {borrowMetrics.maxAllowed} Assets Held</span>
               </div>
               <p className="text-2xs opacity-90 font-medium">
-                {borrowMetrics.complianceMessage || `✓ Profile clear. Member has ${borrowMetrics.maxAllowed - borrowMetrics.currentBorrows} open checkout channels.`}
+                {borrowMetrics.complianceMessage || `✓ Profile active. Selected member context loaded for due configuration.`}
               </p>
+              {maxAllowedDate && (
+                <p className="text-3xs text-rose-700 pt-0.5 font-bold uppercase tracking-wider">
+                  📅 Membership Expiration Limit: {maxAllowedDate}
+                </p>
+              )}
             </div>
           )}
 
@@ -311,7 +345,7 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
             }`}>
               <div>
                 <h4 className="font-bold text-gray-900">📚 Selected Asset Profile</h4>
-                <p className="text-2xs text-gray-500 font-medium">{selectedBook.title} {selectedBook.author && `— By ${selectedBook.author}`}</p>
+                <p className="text-2xs text-gray-500 font-medium w-50 truncate">{selectedBook.title} {selectedBook.author && `— By ${selectedBook.author}`}</p>
               </div>
             </div>
           )}
@@ -323,7 +357,7 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
               <input 
                 type="date" 
                 readOnly 
-                value={editingRecord ? editingRecord.borrowedDate : getTodayString()} 
+                value={editingRecord ? formatToISODate(editingRecord.borrowedDate) : getTodayString()} 
                 className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 outline-hidden focus:ring-0 select-none" 
               />
             </div>
@@ -331,12 +365,17 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
               <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">Target Due Deadline</label>
               <input
                 type="date"
-                value={dueDate}
-                min={editingRecord ? editingRecord.borrowedDate : getTomorrowString()}
-                max={borrowMetrics.expiryDate ? borrowMetrics.expiryDate.split("T")[0] : undefined}
+                value={cleanDueDate}
+                min={minAllowedDate}
+                max={maxAllowedDate || undefined}
                 onChange={(e) => setDueDate(e.target.value)}
                 className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 cursor-pointer"
               />
+              {maxAllowedDate && (
+                <span className="text-[10px] text-rose-600 font-medium block mt-1 pl-1">
+                  * Limit tied to plan expiration ({maxAllowedDate})
+                </span>
+              )}
             </div>
           </div>
 

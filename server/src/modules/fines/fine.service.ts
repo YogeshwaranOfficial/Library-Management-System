@@ -1,6 +1,13 @@
 import httpStatus from "http-status-codes";
 import AppError from "../../utils/AppError.js";
 import fineRepository from "./fine.repository.js";
+import { sequelize } from "../../database/index.js";
+import Issue from "../../database/models/Issue.js";
+import Member from "../../database/models/Member.js";
+import MembershipPlan from "../../database/models/MembershipPlan.js";
+import Fine from "../../database/models/Fine.js";
+import { v4 as uuidv4 } from "uuid";
+
 
 class FineService {
   /**
@@ -8,7 +15,7 @@ class FineService {
    * Uses safe fallbacks (`|| {}`) and defaults for every field to ensure 
    * that if an association object is missing, the code doesn't crash with a 500 error.
    */
-private transformFineRecord(f: any) {
+  private transformFineRecord(f: any) {
     // 1. Convert to plain JS object safely
     const fRaw = f && typeof f.toJSON === "function" ? f.toJSON() : (f || {});
     
@@ -42,7 +49,6 @@ private transformFineRecord(f: any) {
       issue_id: fRaw.issue_id || "N/A",
       member_id: fRaw.member_id || "N/A",
       
-      // 🟢 Fixed: Pulling directly from repository subquery alias fields
       memberName: fRaw.memberName || "Unknown Member",
       memberEmail: fRaw.memberEmail || "N/A",
       memberPhone: fRaw.memberPhone || "N/A",
@@ -51,7 +57,7 @@ private transformFineRecord(f: any) {
       bookAuthor: fRaw.bookAuthor || "Unknown Author",
       borrowedDate: fRaw.borrowed_date || null,
       actualReturnDate: fRaw.returned_date || fRaw.actual_return_date || null,
-      actualReturnDueDate: fRaw.due_date || null, // 🟢 Directly maps to repo 'due_date'
+      actualReturnDueDate: fRaw.due_date || null,
       
       delayed_days: Number(fRaw.delayed_days || 0),
       fine_amount: Number(fRaw.fine_amount || 0), 
@@ -71,7 +77,6 @@ private transformFineRecord(f: any) {
     };
   }
 
-  // 🟢 Renamed from getAllFines to getCollectedFines to isolate settled balances
   async getCollectedFines() {
     try {
       const fines = await fineRepository.getCollectedFines();
@@ -102,7 +107,6 @@ private transformFineRecord(f: any) {
     }
   }
 
-  // 🟢 Updated to accept and log the paymentMethod parameter string
   async payFine(fine_id: string, paidDate: string | Date | null, paymentMethod: "CASH" | "CARD" | "UPI") {
     const fine = await fineRepository.getFineById(fine_id);
 
@@ -119,14 +123,13 @@ private transformFineRecord(f: any) {
     const paymentUpdates = {
       paid_status: true,
       paid_date: validatedExecutionDate,
-      payment_method: paymentMethod // 🟢 Logging our new transactional tracking method
+      payment_method: paymentMethod
     };
 
     const updatedRecord = await fineRepository.payFine(fine_id, paymentUpdates);
     return this.transformFineRecord(updatedRecord);
   }
 
-  // 🟢 Added to handle the admin/manual override soft or hard deletion mechanics
   async purgeFine(fine_id: string) {
     if (!fine_id) {
       throw new AppError("Fine unique identifier parameter is missing", httpStatus.BAD_REQUEST);
@@ -144,29 +147,110 @@ private transformFineRecord(f: any) {
     }
   }
 
-
-  // 🟢 Added to handle the manual restoration of a settled fine record
   async restoreFine(fine_id: string) {
     if (!fine_id) {
       throw new AppError("Fine unique identifier parameter is missing", httpStatus.BAD_REQUEST);
     }
 
-    // 1. Verify existence
     const fine = await fineRepository.getFineById(fine_id);
     if (!fine) {
       throw new AppError("Fine registry record not found for restoration", httpStatus.NOT_FOUND);
     }
 
-    // 2. Perform restoration logic
     try {
       await fineRepository.restoreFine(fine_id);
-      
-      // 3. Return the updated record for frontend UI state syncing
       const updatedRecord = await fineRepository.getFineById(fine_id);
       return this.transformFineRecord(updatedRecord);
     } catch (error: any) {
       throw new AppError(`Ledger Restoration Error: ${error.message}`, httpStatus.INTERNAL_SERVER_ERROR);
     }
+  }
+
+  /**
+   * ⏰ BACKGROUND DAEMON AUTOMATED ENGINE
+   * Runs nightly to dynamically calculate accrual amounts across your split-rate structure:
+   * Days inside Active Plan window -> ₹10/day | Days outside/after Plan Expiry -> ₹20/day
+   */
+/**
+   * ⏰ DUAL-TRIGGER FINE ACCRUAL SYNC ENGINE
+   * Can be triggered globally by midnight cron, or targeted via member_id for instant manual overrides!
+   */
+  async runFineAccrualSync(targetMemberId?: string) {
+    console.log(`🚀 Starting Fine Accrual Sync (${targetMemberId ? `Targeted: ${targetMemberId}` : 'Global Midnight Run'})...`);
+    const today = new Date();
+
+    await sequelize.transaction(async (t) => {
+      // 🟢 Build dynamic conditions based on target
+      const issueConditions: any = {
+        returned_date: null,
+        due_date: { [Symbol.for("lte") as any]: today }
+      };
+
+      // If triggered manually by a librarian update, lock it down to just this member
+      if (targetMemberId) {
+        issueConditions.member_id = targetMemberId;
+      }
+
+      const overdueIssues = await Issue.findAll({
+        where: issueConditions,
+        include: [
+          {
+            model: Member,
+            as: "member",
+            include: [{ model: MembershipPlan, as: "membership_plan" }]
+          }
+        ],
+        transaction: t
+      });
+
+      for (const issue of overdueIssues) {
+        const member = (issue as any).member;
+        const planExpiryDateStr = member?.expiry_date;
+        const planStatusStr = member?.membership_status || "ACTIVE";
+
+        const expiryDate = planExpiryDateStr ? new Date(planExpiryDateStr) : null;
+        const isPlanActiveNow = planStatusStr === "ACTIVE" && (expiryDate ? expiryDate >= today : true);
+
+        const dueDateObj = new Date(issue.due_date);
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const totalDelayedDays = Math.ceil((today.getTime() - dueDateObj.getTime()) / msPerDay);
+        
+        let withinPlanDays = totalDelayedDays;
+        let outsidePlanDays = 0;
+
+        if (!isPlanActiveNow && expiryDate) {
+          if (expiryDate > dueDateObj) {
+            withinPlanDays = Math.max(0, Math.floor((expiryDate.getTime() - dueDateObj.getTime()) / msPerDay));
+            outsidePlanDays = Math.max(0, totalDelayedDays - withinPlanDays);
+          } else {
+            withinPlanDays = 0;
+            outsidePlanDays = totalDelayedDays;
+          }
+        }
+
+        const totalComputedFineAmount = (withinPlanDays * 10) + (outsidePlanDays * 20);
+
+        const existingFine = await Fine.findOne({
+          where: { issue_id: issue.issue_id },
+          transaction: t
+        });
+
+        if (!existingFine) {
+          await Fine.create({
+            fine_id: uuidv4(),
+            issue_id: issue.issue_id,
+            delayed_days: totalDelayedDays,
+            fine_amount: totalComputedFineAmount,
+            paid_status: false
+          }, { transaction: t });
+        } else if (!existingFine.paid_status) {
+          await existingFine.update({
+            delayed_days: totalDelayedDays,
+            fine_amount: totalComputedFineAmount
+          }, { transaction: t });
+        }
+      }
+    });
   }
 }
 

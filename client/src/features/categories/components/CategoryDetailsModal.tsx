@@ -22,7 +22,6 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
   const [editName, setEditName] = useState("");
   const [localError, setLocalError] = useState("");
 
-  // Track modal opening state changes cleanly without hook dependency issues
   const [prevIsOpen, setPrevIsOpen] = useState(false);
 
   if (isOpen !== prevIsOpen) {
@@ -36,7 +35,6 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
 
   if (!isOpen || !category) return null;
 
-  // Generate Human Readable ID: CAT-last 4 digits of UUID
   const readableId = `CAT-${category.category_id.slice(-4).toUpperCase()}`;
 
   const handleSaveEdit = async () => {
@@ -55,55 +53,55 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto">
-      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs" onClick={onClose} />
+    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto font-sans">
+      <div className="fixed inset-0 bg-slate-950/20 backdrop-blur-sm" onClick={onClose} />
       
-      <div className="relative z-10 w-full max-w-lg bg-white rounded-2xl p-6 border border-slate-100 shadow-xl m-4">
+      <div className="relative z-10 w-full max-w-lg bg-white rounded-2xl p-6 border border-slate-200 shadow-2xl m-4">
         {/* Header */}
         <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
           <div>
-            <span className="text-3xs font-mono font-bold tracking-widest text-slate-400 uppercase bg-slate-50 px-2 py-0.5 rounded-sm">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-md">
               {readableId}
             </span>
-            <h3 className="text-lg font-bold text-slate-900 mt-1">Category Information</h3>
+            <h3 className="text-lg font-bold text-slate-950 mt-2">Category Information</h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-800 transition-colors cursor-pointer text-lg font-light">✕</button>
         </div>
 
         {/* Content Details Block */}
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
-            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Category Name</label>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Category Name</label>
             {isEditing ? (
               <div className="space-y-1">
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-slate-100 focus:border-slate-600 outline-hidden"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-sage-primary/20 focus:border-sage-primary outline-none transition-all"
                 />
-                {localError && <p className="text-3xs font-bold text-rose-500">{localError}</p>}
+                {localError && <p className="text-[10px] font-bold text-rose-600 px-1">{localError}</p>}
               </div>
             ) : (
-              <p className="text-base font-bold text-slate-800 bg-slate-50/50 px-3 py-2 rounded-xl border border-slate-100">
+              <p className="text-sm font-semibold text-slate-800 bg-slate-50 px-4 py-3 rounded-xl border border-slate-100">
                 {category.category_name}
               </p>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100">
-              <span className="text-3xs font-bold text-slate-400 uppercase tracking-wider block mb-0.5">Total Owned Books</span>
-              <span className="text-xl font-extrabold text-slate-800 font-mono">{category.booksCount}</span>
+            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Total Owned Books</span>
+              <span className="text-2xl font-black text-slate-900 font-mono tracking-tight">{category.booksCount}</span>
             </div>
-            <div className="p-3 bg-sky-50/30 rounded-xl border border-sky-100/50">
-              <span className="text-3xs font-bold text-sky-600/80 uppercase tracking-wider block mb-0.5">Lending Circulation Count</span>
-              <span className="text-xl font-extrabold text-sky-700 font-mono">{category.lendingCount}</span>
+            <div className="p-4 bg-sage-primary/5 rounded-xl border border-sage-primary/10">
+              <span className="text-[10px] font-bold text-sage-primary/70 uppercase tracking-widest block mb-1">Total Borrows</span>
+              <span className="text-2xl font-black text-sage-primary font-mono tracking-tight">{category.lendingCount}</span>
             </div>
           </div>
 
-          <div className="pt-2 text-xs text-slate-400 font-medium space-y-1 font-sans">
-            <p>Category Entry Date: <span className="font-mono text-slate-600">{new Date(category.created_at).toLocaleString()}</span></p>
+          <div className="pt-2 text-xs text-slate-500 font-medium">
+            <p>Created on: <span className="font-mono text-slate-700">{new Date(category.created_at).toLocaleDateString()}</span></p>
           </div>
         </div>
 
@@ -112,7 +110,7 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
           <button
             disabled={isMutating}
             onClick={() => onDeleteCategory(category)}
-            className="px-4 py-2 bg-rose-50 border border-rose-100 text-rose-600 hover:bg-rose-100/70 disabled:opacity-50 text-xs font-bold rounded-xl transition-all cursor-pointer"
+            className="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 text-xs font-bold rounded-xl transition-all cursor-pointer"
           >
             Delete Category
           </button>
@@ -122,14 +120,14 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
               <>
                 <button
                   onClick={() => { setIsEditing(false); setEditName(category.category_name); setLocalError(""); }}
-                  className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold rounded-xl cursor-pointer"
+                  className="px-5 py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold rounded-xl cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   disabled={isMutating}
                   onClick={handleSaveEdit}
-                  className="px-4 py-2 bg-slate-800 text-white hover:bg-slate-900 disabled:opacity-50 text-xs font-bold rounded-xl cursor-pointer"
+                  className="px-5 py-2.5 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 text-xs font-bold rounded-xl cursor-pointer"
                 >
                   Save Changes
                 </button>
@@ -137,7 +135,7 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-slate-100 border border-slate-200 text-slate-700 hover:bg-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                className="px-5 py-2.5 bg-slate-100 text-slate-800 hover:bg-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer"
               >
                 Modify Name
               </button>

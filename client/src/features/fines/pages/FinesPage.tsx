@@ -31,7 +31,7 @@ export const FinesPage = () => {
 
   // Search & Metric Filter States
   const [searchQuery, setSearchQuery] = useState("");
-  const [delayIntervalFilter, setDelayIntervalFilter] = useState(""); // "", "7", "14", "30"
+  const [delayIntervalFilter, setDelayIntervalFilter] = useState(""); 
 
   // Pagination Controls State
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,7 +57,12 @@ export const FinesPage = () => {
       queryClient.invalidateQueries({ queryKey: ["finesMasterLedgerFeed"] });
       setShowRestoreModal(false);
       setSelectedFine(null);
-      toast.success("Entry restored to active ledger.");
+      
+      // 🟢 CUSTOM TOAST REMINDER: Reminds the librarian about the other screen!
+      toast.success("Entry restored to active ledger!", {
+        description: "💡 ACTION REQUIRED: Remember to go to the 'Returned Books' page to mark this volume as unreturned if needed.",
+        duration: 6000
+      });
     }
   });
 
@@ -65,7 +70,7 @@ export const FinesPage = () => {
   const processPaymentMutation = useMutation({
     mutationFn: async ({ id, paidDate, paymentMethod }: { id: string; paidDate: string; paymentMethod: "CASH" | "CARD" | "UPI" }) => {
       return await axiosClient.patch("/fines/pay", {
-        fine_id: id, // 🟢 FIXED: Changed from fineId to fine_id to pass your backend validation schema cleanly!
+        fine_id: id, 
         paidDate: paidDate,
         paymentMethod: paymentMethod
       });
@@ -83,14 +88,14 @@ export const FinesPage = () => {
     }
   });
 
-  // 3. Invoice Target Hard/Soft Delete Mutation Node (Triggered when adjusting ledger states manually)
+  // 3. Invoice Target Hard/Soft Delete Mutation Node 
   const purgeFineMutation = useMutation({
     mutationFn: async (id: string) => {
       return await axiosClient.delete(`/fines/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finesMasterLedgerFeed"] });
-      setSelectedFine(null); // Close the detail modal
+      setSelectedFine(null); 
       toast.info("Invoice purged from ledger.");
     }
   });
@@ -164,7 +169,6 @@ export const FinesPage = () => {
         </div>
       </div>
 
-      {/* Render Real-time Dashboard Summary Metrics when reading Active Invoices view state */}
       {activeTab === "active" && (
         <FinesNotificationBanner 
           totalCount={totalUnpaidInvoicesCount} 
@@ -172,7 +176,6 @@ export const FinesPage = () => {
         />
       )}
 
-      {/* Audit Metric Aggregates for Payment History Views */}
       {activeTab === "history" && (
         <div className="bg-emerald-600 p-4 rounded-xl text-white flex justify-between items-center shadow-md">
           <div>
@@ -219,67 +222,66 @@ export const FinesPage = () => {
 
       {/* Central Interactive Data Core Grid Matrix */}
       {isLoading ? (
-  <div className="text-center py-20 text-xs text-gray-400 font-semibold animate-pulse">Syncing Master Banking Ledger Channels...</div>
-) : (
-  <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
-    <div className="overflow-x-auto">
-      <table className="w-full text-left border-collapse">
-        <thead>
-          <tr className="border-b border-gray-200 text-xs font-bold text-gray-500 uppercase bg-gray-50/70">
-            <th className="py-3 px-4">Account Holder Member</th>
-            <th className="py-3 px-4">Media Asset Context</th>
-            <th className="py-3 px-4 text-center">{activeTab === "active" ? "Delayed Days" : "Settled Scope"}</th>
-            <th className="py-3 px-4">Accrued Amount</th>
-            <th className="py-3 px-4 text-center">Plan Clause</th>
-            {/* 🟢 Column removed for cleaner layout */}
-          </tr>
-        </thead>
-        <tbody className="text-xs divide-y divide-gray-100">
-          {paginatedRowsData.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="text-center py-12 text-xs text-gray-400 font-medium">
-                Operational Clear View. Zero matching layout targets found.
-              </td>
-            </tr>
-          ) : (
-            paginatedRowsData.map((fine) => (
-              <tr 
-                key={fine.fine_id} 
-                onClick={() => setSelectedFine(fine)}
-                className="hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                <td className="py-3 px-4">
-                  <div className="font-bold text-gray-900">{fine.memberName}</div>
-                  <div className="text-[10px] font-mono text-gray-400">{fine.memberEmail}</div>
-                </td>
-                <td className="py-3 px-4 font-medium text-gray-600">
-                  📖 {fine.bookTitle}
-                  <span className="block text-3xs font-mono text-gray-400">Due Date: {fine.actualReturnDueDate || fine.actualReturnDate || "N/A"}</span>
-                </td>
-                <td className="py-3 px-4 text-center font-bold font-mono">
-                  {activeTab === "active" ? (
-                    <span className="text-amber-700">{fine.delayed_days} Days Overdue</span>
-                  ) : (
-                    <span className="text-emerald-700 text-3xs font-bold bg-emerald-50 px-2 py-0.5 rounded-sm uppercase tracking-wide">Paid ({fine.paidDate || fine.paid_date || "Settled"})</span>
-                  )}
-                </td>
-                <td className="py-3 px-4 font-mono font-black text-gray-950 text-sm">
-                  ₹{fine.fine_amount}.00
-                  {fine.paymentMethod && <span className="block text-3xs text-gray-400 uppercase font-sans font-medium">via {fine.paymentMethod}</span>}
-                </td>
-                <td className="py-3 px-4 text-center">
-                  <span className={`px-2 py-0.5 rounded-sm font-extrabold text-3xs tracking-wide uppercase ${
-                    fine.membershipActive ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"
-                  }`}>
-                    {fine.membershipActive ? "Active Plan" : "Plan Expired"}
-                  </span>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+        <div className="text-center py-20 text-xs text-gray-400 font-semibold animate-pulse">Syncing Master Banking Ledger Channels...</div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-200 text-xs font-bold text-gray-500 uppercase bg-gray-50/70">
+                  <th className="py-3 px-4">Account Holder Member</th>
+                  <th className="py-3 px-4">Media Asset Context</th>
+                  <th className="py-3 px-4 text-center">{activeTab === "active" ? "Delayed Days" : "Settled Scope"}</th>
+                  <th className="py-3 px-4">Accrued Amount</th>
+                  <th className="py-3 px-4 text-center">Plan Clause</th>
+                </tr>
+              </thead>
+              <tbody className="text-xs divide-y divide-gray-100">
+                {paginatedRowsData.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-12 text-xs text-gray-400 font-medium">
+                      Operational Clear View. Zero matching layout targets found.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedRowsData.map((fine) => (
+                    <tr 
+                      key={fine.fine_id} 
+                      onClick={() => setSelectedFine(fine)}
+                      className="hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                      <td className="py-3 px-4">
+                        <div className="font-bold text-gray-900">{fine.memberName}</div>
+                        <div className="text-[10px] font-mono text-gray-400">{fine.memberEmail}</div>
+                      </td>
+                      <td className="py-3 px-4 font-medium text-gray-600">
+                        📖 {fine.bookTitle}
+                        <span className="block text-3xs font-mono text-gray-400">Due Date: {fine.actualReturnDueDate || fine.actualReturnDate || "N/A"}</span>
+                      </td>
+                      <td className="py-3 px-4 text-center font-bold font-mono">
+                        {activeTab === "active" ? (
+                          <span className="text-amber-700">{fine.delayed_days} Days Overdue</span>
+                        ) : (
+                          <span className="text-emerald-700 text-3xs font-bold bg-emerald-50 px-2 py-0.5 rounded-sm uppercase tracking-wide">Paid ({fine.paidDate || fine.paid_date || "Settled"})</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 font-mono font-black text-gray-950 text-sm">
+                        ₹{fine.fine_amount}.00
+                        {fine.paymentMethod && <span className="block text-3xs text-gray-400 uppercase font-sans font-medium">via {fine.paymentMethod}</span>}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className={`px-2 py-0.5 rounded-sm font-extrabold text-3xs tracking-wide uppercase ${
+                          fine.membershipActive ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"
+                        }`}>
+                          {fine.membershipActive ? "Active Plan" : "Plan Expired"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
           {/* Pagination Command Module */}
           <div className="p-4 bg-gray-50/60 border-t border-gray-200 flex justify-between items-center text-2xs font-semibold text-gray-500">
@@ -303,73 +305,73 @@ export const FinesPage = () => {
               </button>
             </div>
           </div>
-
         </div>
       )}
 
-      {/* Modals Rendering Layer Ports */}
-     {/* Modals */}
-    {/* Active View Logic */}
-{activeTab === "active" && (
-  <FineDetailsModal
-    isOpen={!!selectedFine}
-    fine={selectedFine}
-    onClose={() => setSelectedFine(null)}
-    onSettle={(fine) => { setSelectedFine(null); setSelectedFineForSettlement(fine); }}
-    onDelete={(id) => { 
-        purgeFineMutation.mutate(id)
-    }}
-  />
-)}
+      {/* Active View Logic */}
+      {activeTab === "active" && (
+        <FineDetailsModal
+          isOpen={!!selectedFine}
+          fine={selectedFine}
+          onClose={() => setSelectedFine(null)}
+          onSettle={(fine) => { setSelectedFine(null); setSelectedFineForSettlement(fine); }}
+          onDelete={(id) => { 
+              purgeFineMutation.mutate(id)
+          }}
+        />
+      )}
 
-{/* History View Logic */}
-{/* History View Logic - Fixed Modal Implementation */}
-{activeTab === "history" && selectedFine && (
-  <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
-    <div className="bg-white p-6 rounded-2xl w-96 shadow-2xl border border-gray-100 animate-zoom-in">
-      <h3 className="font-bold text-gray-900">Settled Record: {selectedFine.memberName}</h3>
-      <p className="text-xs text-gray-500 mt-2 mb-6 leading-relaxed">
-        This invoice was paid on <span className="font-bold">{selectedFine.paidDate || selectedFine.paid_date}</span>. 
-        If this was marked as paid by accident, you can restore it to the active ledger to recalculate fines.
-      </p>
-      <div className="flex gap-2">
-        <button 
-          onClick={() => setSelectedFine(null)} 
-          className="flex-1 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors cursor-pointer"
-        >
-          Close
-        </button>
-        <button 
-          onClick={() => {
-            // Note: We keep the fine selected so RestoreFineModal can access it
-            setShowRestoreModal(true);
-          }} 
-          className="flex-1 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-sm transition-all cursor-pointer"
-        >
-          Restore Entry
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      {/* History View Logic - Updated Modal Implementation with Explicit Reminder Notice */}
+      {activeTab === "history" && selectedFine && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white p-6 rounded-2xl w-96 shadow-2xl border border-gray-100 animate-zoom-in">
+            <h3 className="font-bold text-gray-900">Warning for : {selectedFine.memberName} Record </h3>
+            
+            {/* 🟢 ENHANCED EXPLICIT INLINE INSTRUCTION REMINDER BOX FOR LIBRARIANS */}
+            <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200/60 text-amber-900 text-xs space-y-1.5 leading-relaxed">
+              <p className="font-bold flex items-center gap-1 text-amber-800">
+                ⚠️ Operational Reminder
+              </p>
+              <p>
+                Restoring this fine resets it to unpaid status. This balance tracker is bound to a closed book loan.
+              </p>
+              <p className="font-semibold text-amber-950">
+                Please visit the <span className="underline">Returned Books</span> panel afterwards to manually click "Undo Return" if the physical asset is still out of the building.
+              </p>
+            </div>
 
-{/* Restore and Settle Modals */}
-<RestoreFineModal 
-  isOpen={showRestoreModal}
-  fine={selectedFine}
-  onClose={() => setShowRestoreModal(false)}
-  onConfirm={(id) => restoreFineMutation.mutate(id)}
-/>
+            <div className="flex gap-2 mt-5">
+              <button 
+                onClick={() => setSelectedFine(null)} 
+                className="flex-1 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  setShowRestoreModal(true);
+                }} 
+                className="flex-1 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-sm transition-all cursor-pointer"
+              >
+                Continue to Restore
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-
-
+      <RestoreFineModal 
+        isOpen={showRestoreModal}
+        fine={selectedFine}
+        onClose={() => setShowRestoreModal(false)}
+        onConfirm={(id) => restoreFineMutation.mutate(id)}
+      />
 
       <SettleFinePaymentModal
         isOpen={!!selectedFineForSettlement}
         fine={selectedFineForSettlement}
         onClose={() => setSelectedFineForSettlement(null)}
         onConfirmSettlement={(payload: { id: string; paidDate: string; paymentMethod?: string }) => {
-          // Fallback parsing pattern to respect our refined validation structure
           const resolvedMethod = (payload.paymentMethod === "CARD" || payload.paymentMethod === "UPI") 
             ? payload.paymentMethod 
             : "CASH";
@@ -380,7 +382,6 @@ export const FinesPage = () => {
             paymentMethod: resolvedMethod
           });
         }}
-     
       />
 
     </div>

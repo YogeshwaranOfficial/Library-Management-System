@@ -22,7 +22,6 @@ class IssueService {
     const isPastDue = new Date() > new Date(dueDate);
     const calculatedStatus = isPastDue ? "OVERDUE" : "BORROWED";
 
-    // If database status has fallen out of sync with chronological reality, heal it instantly
     if (currentStatus !== calculatedStatus) {
       await Issue.update(
         { issue_status: calculatedStatus },
@@ -34,12 +33,10 @@ class IssueService {
     return currentStatus;
   }
 
-  // 1. Get Main Circulation Feed Logs (With Automated Self-Healing State Synchronization)
-  async getAllIssuesFeed() {
+  // 1. Get Main Circulation Feed Logs (With Fine Context Injected Directly)
+  async getAllIssuesFeed(): Promise<any> {
     const records = await issueRepository.getAllIssuesDetailed();
-    const todayStr = new Date().toISOString().split("T")[0];
 
-    // Using Promise.all to cleanly run async database status updates inside our data map
     return Promise.all(
       records.map(async (record: any) => {
         const formatIso = (dateVal: any) =>
@@ -56,6 +53,10 @@ class IssueService {
         const userInfo = memberInfo?.user;
         const bookInfo = record.book;
 
+        // 🟢 Fetch associated fine directly from DB to enrich the payload mapping
+        const fineRecord = await Fine.findOne({ where: { issue_id: record.issue_id } });
+
+        // 🟢 ALL FIELDS RESTORED - This will perfectly return everything to the frontend now!
         return {
           id: record.issue_id,
           memberId: record.member_id,
@@ -69,6 +70,10 @@ class IssueService {
           dueDate: formatIso(record.due_date),
           returnedDate: formatIso(record.returned_date),
           status: sourceOfTruthStatus, // Sent directly as source-of-truth status to client UI
+          
+          // 🟢 ENRICHMENT FOR FRONTEND CHECKS:
+          fineAmount: fineRecord ? fineRecord.fine_amount : 0,
+          finePaidStatus: fineRecord ? fineRecord.paid_status : false,
         };
       })
     );
@@ -95,27 +100,15 @@ class IssueService {
 
     return await sequelize.transaction(async (t) => {
       const member = await Member.findByPk(member_id, {
-        include: [
-          {
-            model: MembershipPlan,
-            as: "membership_plan",
-          },
-        ],
+        include: [{ model: MembershipPlan, as: "membership_plan" }],
         transaction: t
       });
 
-      if (!member) {
-        throw new AppError("Member not found", httpStatus.NOT_FOUND);
-      }
-
-      if (member.membership_status !== "ACTIVE") {
-        throw new AppError("Membership is not active", httpStatus.BAD_REQUEST);
-      }
+      if (!member) throw new AppError("Member not found", httpStatus.NOT_FOUND);
+      if (member.membership_status !== "ACTIVE") throw new AppError("Membership is not active", httpStatus.BAD_REQUEST);
 
       const plan = (member as any).membership_plan; 
-      if (!plan) {
-        throw new AppError("No membership plan associated with this account", httpStatus.BAD_REQUEST);
-      }
+      if (!plan) throw new AppError("No membership plan associated with this account", httpStatus.BAD_REQUEST);
 
       const allowedLimit = plan.max_books_allowed;
       const planName = plan.plan_name || "Current";
@@ -132,23 +125,12 @@ class IssueService {
         );
       }
 
-      const book = await Book.findByPk(book_id, { 
-        lock: t.LOCK.UPDATE,
-        transaction: t 
-      });
-
-      if (!book) {
-        throw new AppError("Book not found", httpStatus.NOT_FOUND);
-      }
-
-      if (book.available_copies <= 0) {
-        throw new AppError("Book unavailable in current inventory slots", httpStatus.BAD_REQUEST);
-      }
+      const book = await Book.findByPk(book_id, { lock: t.LOCK.UPDATE, transaction: t });
+      if (!book) throw new AppError("Book not found", httpStatus.NOT_FOUND);
+      if (book.available_copies <= 0) throw new AppError("Book unavailable in current inventory slots", httpStatus.BAD_REQUEST);
 
       const existingIssue = await issueRepository.getActiveIssue(member_id, book_id, { transaction: t });
-      if (existingIssue) {
-        throw new AppError("Book already borrowed and not returned yet", httpStatus.BAD_REQUEST);
-      }
+      if (existingIssue) throw new AppError("Book already borrowed and not returned yet", httpStatus.BAD_REQUEST);
 
       const borrowed_date = borrowDate ? new Date(borrowDate) : new Date(); 
       const due_date = new Date(dueDate);
@@ -167,31 +149,19 @@ class IssueService {
     });
   }
 
-  // 5. Close/Process Active Asset Return (With Explicit Fine Restrictions Verification)
   async returnBook(issue_id: string, returnedDateString?: string) {
     return await sequelize.transaction(async (t) => {
       const issue = await issueRepository.findIssueById(issue_id, { transaction: t });
 
-      if (!issue) {
-        throw new AppError("Issue record not found", httpStatus.NOT_FOUND);
-      }
-
-      if (issue.returned_date) {
-        throw new AppError("Book already returned", httpStatus.BAD_REQUEST);
-      }
+      if (!issue) throw new AppError("Issue record not found", httpStatus.NOT_FOUND);
+      if (issue.returned_date) throw new AppError("Book already returned", httpStatus.BAD_REQUEST);
 
       const returned_date = returnedDateString ? new Date(returnedDateString) : new Date();
       const dueDate = new Date(issue.due_date);
 
-      // 🚨 CORE RECONCILIATION GUARD logic block
       if (returned_date > dueDate) {
-        // Look up if a fine record entry row is logged for this checkout block instance
-        const associatedFine = await Fine.findOne({
-          where: { issue_id },
-          transaction: t
-        });
+        const associatedFine = await Fine.findOne({ where: { issue_id }, transaction: t });
 
-        // Case A: Fine structure does not exist yet -> We must create it and stop processing immediately
         if (!associatedFine) {
           const difference = returned_date.getTime() - dueDate.getTime();
           const delayed_days = Math.ceil(difference / (1000 * 60 * 60 * 24));
@@ -210,7 +180,6 @@ class IssueService {
           );
         }
 
-        // Case B: Fine is explicitly registered but has not been resolved by librarian yet
         if (associatedFine && !associatedFine.paid_status) {
           throw new AppError(
             "Return Blocked: Outstanding fine detected for this volume checkout sequence. Process cash registration balances first.",
@@ -219,7 +188,6 @@ class IssueService {
         }
       }
 
-      // If safe or fine has been validated as paid_status === true, apply close handlers
       const updatedIssue = await issueRepository.returnBook(issue_id, returned_date, { transaction: t });
 
       const book = await Book.findByPk(issue.book_id, { transaction: t });
@@ -235,7 +203,7 @@ class IssueService {
     return issueRepository.getMemberIssues(member_id);
   }
 
-  // 4. Update Settings (PUT/PATCH Extensions Engine)
+  // 4. Update Settings (Includes Robust Integrated Return Undo Framework Engine)
   async updateIssueParameters(
     issue_id: string,
     payload: { 
@@ -253,29 +221,40 @@ class IssueService {
         throw new AppError("Issue asset context instance not found", httpStatus.NOT_FOUND);
       }
 
-      // 🔄 CHECK: Undo returning action
+      /* -------------------------------------------------------------------------- */
+      /* 🔄 DUAL-COMPLIANT REVERT RETURN LOGIC ACTIVATION                            */
+      /* -------------------------------------------------------------------------- */
       if (issue.issue_status === "RETURNED" && payload.status === "BORROWED") {
         const book = await Book.findByPk(issue.book_id, { lock: t.LOCK.UPDATE, transaction: t });
-        if (!book) {
-          throw new AppError("Associated book inventory asset missing.", httpStatus.NOT_FOUND);
-        }
+        if (!book) throw new AppError("Associated book inventory asset missing.", httpStatus.NOT_FOUND);
+        
+        // Decrement available shelf inventory because the book is moving back out of the library
         if (book.available_copies <= 0) {
           throw new AppError("Cannot undo! This book's shelf slot is fully allocated right now.", httpStatus.BAD_REQUEST);
         }
-
-        const isPastDue = new Date() > new Date(issue.due_date);
-        const dynamicRestoredStatus = isPastDue ? "OVERDUE" : "BORROWED";
-
         await book.decrement("available_copies", { by: 1, transaction: t });
-        await Fine.destroy({ where: { issue_id }, transaction: t });
+
+        // 🧠 Dynamically calculate corrected status based on target date vs today
+        const targetDueDate = payload.dueDate ? new Date(payload.dueDate) : new Date(issue.due_date);
+        const dynamicRestoredStatus = new Date() > targetDueDate ? "OVERDUE" : "BORROWED";
+
+        // 🟢 FIX: Update fine row instead of running Fine.destroy()
+        const existingFine = await Fine.findOne({ where: { issue_id }, transaction: t });
+        if (existingFine) {
+          await existingFine.update({
+            paid_status: false,
+            paid_date: null,
+            payment_method: null as any
+          }, { transaction: t });
+        }
 
         return await issueRepository.updateIssue(issue_id, {
           member_id: payload.memberId || issue.member_id,
           book_id: payload.bookId || issue.book_id,
           borrowed_date: payload.borrowDate ? new Date(payload.borrowDate) : issue.borrowed_date,
-          due_date: new Date(payload.dueDate || issue.due_date),
+          due_date: targetDueDate,
           issue_status: dynamicRestoredStatus,
-          returned_date: null
+          returned_date: null // Wipe timestamp marker row
         }, { transaction: t });
       }
 
@@ -284,12 +263,10 @@ class IssueService {
       }
 
       // 📈 DYNAMIC EXTENSION STATE HANDLING
-      // Calculate final target due target explicitly
       const finalTargetDueDate = payload.dueDate ? new Date(payload.dueDate) : new Date(issue.due_date);
       const isNowSafe = finalTargetDueDate > new Date();
       const recalculatedStatus = isNowSafe ? "BORROWED" : "OVERDUE";
 
-      // If extended cleanly into safety parameters, clear outstanding fine rows attached to this log
       if (isNowSafe) {
         await Fine.destroy({ where: { issue_id, paid_status: false }, transaction: t });
       }
@@ -299,7 +276,7 @@ class IssueService {
         book_id: payload.bookId || issue.book_id,
         borrowed_date: payload.borrowDate ? new Date(payload.borrowDate) : issue.borrowed_date,
         due_date: finalTargetDueDate,
-        issue_status: recalculatedStatus // Synchronizes status back to database immediately
+        issue_status: recalculatedStatus 
       }, { transaction: t });
     });
   }
@@ -307,15 +284,11 @@ class IssueService {
   async deleteSingleIssue(issue_id: string) {
     return await sequelize.transaction(async (t) => {
       const issue = await issueRepository.findIssueById(issue_id, { transaction: t });
-      if (!issue) {
-        throw new AppError("Issue log element not found", httpStatus.NOT_FOUND);
-      }
+      if (!issue) throw new AppError("Issue log element not found", httpStatus.NOT_FOUND);
 
       if (!issue.returned_date) {
         const book = await Book.findByPk(issue.book_id, { transaction: t });
-        if (book) {
-          await book.increment("available_copies", { by: 1, transaction: t });
-        }
+        if (book) await book.increment("available_copies", { by: 1, transaction: t });
       }
 
       await Fine.destroy({ where: { issue_id }, transaction: t });

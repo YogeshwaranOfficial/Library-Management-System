@@ -80,101 +80,85 @@ export const MembersPage = () => {
   });
 
   // Fetching System Users to fill the profile dropdown target selectors
-  // Fetching System Users to fill the profile dropdown target selectors
-const { data: users = [] } = useQuery<SystemUser[]>({
-  // 💡 FIX: Change this string to match exactly what your Save and Delete mutations invalidate
-  queryKey: ["eligibleUsersList", token], 
-  queryFn: async () => {
-    const res = await axiosClient.get("/members/available-users");
-    return res.data?.data || res.data || [];
-  },
-  enabled: !!token,
-});
+  const { data: users = [] } = useQuery<SystemUser[]>({
+    queryKey: ["eligibleUsersList", token], 
+    queryFn: async () => {
+      const res = await axiosClient.get("/members/available-users");
+      return res.data?.data || res.data || [];
+    },
+    enabled: !!token,
+  });
 
- // Create or Update Membership Master Pipeline Mutation
-// Create or Update Membership Master Pipeline Mutation
-const saveMemberMutation = useMutation({
-  mutationFn: async (payload: MemberFormValues) => {
-    // 💡 Format the payload to match what the backend database schema expects
-    const processedPayload = {
-      user_id: payload.userId,
-      membership_plan_id: payload.membershipPlanId,
-      is_active: payload.isActive ?? true
-    };
+  // Create or Update Membership Master Pipeline Mutation
+  const saveMemberMutation = useMutation({
+    mutationFn: async (payload: MemberFormValues) => {
+      const processedPayload = {
+        user_id: payload.userId,
+        membership_plan_id: payload.membershipPlanId,
+        is_active: payload.isActive ?? true
+      };
 
-    if (selectedMember) {
-      return await axiosClient.patch(`/members/${selectedMember.id}`, processedPayload);
+      if (selectedMember) {
+        return await axiosClient.patch(`/members/${selectedMember.id}`, processedPayload);
+      }
+      return await axiosClient.post("/members", processedPayload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
+      queryClient.invalidateQueries({ queryKey: ["eligibleUsersList"] });
+      
+      toast.success(selectedMember ? "Membership renewed cleanly." : "New library member created successfully!");
+      setIsFormOpen(false);
+      setSelectedMember(null);
+    },
+    onError: (error: unknown) => {
+      let serverErrorMessage = "Database schema validation failed on submission updates.";
+      if (error instanceof AxiosError) {
+        serverErrorMessage = error.response?.data?.message || serverErrorMessage;
+        console.error("Validation Breakdown Details:", error.response?.data);
+      } else {
+        console.error("An unexpected system error occurred:", error);
+      }
+      toast.error(serverErrorMessage);
     }
-    return await axiosClient.post("/members", processedPayload);
-  },
-  onSuccess: () => {
-    // 1. Refreshes the main dashboard data grid list view
-    queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
-    
-    // 💡 NEW MODIFICATION: Instantly invalidates the add member dropdown cache list
-    queryClient.invalidateQueries({ queryKey: ["eligibleUsersList"] });
-    
-    toast.success(selectedMember ? "Membership renewed cleanly." : "New library member created successfully!");
-    setIsFormOpen(false);
-    setSelectedMember(null);
-  },
-  onError: (error: unknown) => {
-    let serverErrorMessage = "Database schema validation failed on submission updates.";
-    
-    // Check if it's an Axios error and safely extract backend messages
-    if (error instanceof AxiosError) {
-      serverErrorMessage = error.response?.data?.message || serverErrorMessage;
-      console.error("Validation Breakdown Details:", error.response?.data);
-    } else {
-      console.error("An unexpected system error occurred:", error);
-    }
-
-    toast.error(serverErrorMessage);
-  }
-});
+  });
 
   // RENEW SUBMISSION MUTATION (From the row info cards details panel directly)
- // RENEW SUBMISSION MUTATION (Aligned perfectly with backend schema parameters)
-const renewMutation = useMutation({
-  mutationFn: async ({ memberId, planId }: { memberId: string; planId: string }) => {
-    // 💡 Fix: Send ONLY what the backend update schema expects, in strict snake_case
-    return await axiosClient.patch(`/members/${memberId}`, {
-      membership_plan_id: planId,
-    });
-  },
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
-    toast.success("💥 Membership activated successfully!");
-    setIsDetailsOpen(false);
-    setSelectedMember(null);
-  },
-  onError: (error: unknown) => {
-    let serverErrorMessage = "Database contract update failed.";
-    if (error instanceof AxiosError) {
-      serverErrorMessage = error.response?.data?.message || serverErrorMessage;
+  const renewMutation = useMutation({
+    mutationFn: async ({ memberId, planId }: { memberId: string; planId: string }) => {
+      return await axiosClient.patch(`/members/${memberId}`, {
+        membership_plan_id: planId,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
+      toast.success("💥 Membership activated successfully!");
+      setIsDetailsOpen(false);
+      setSelectedMember(null);
+    },
+    onError: (error: unknown) => {
+      let serverErrorMessage = "Database contract update failed.";
+      if (error instanceof AxiosError) {
+        serverErrorMessage = error.response?.data?.message || serverErrorMessage;
+      }
+      toast.error(serverErrorMessage);
     }
-    toast.error(serverErrorMessage);
-  }
-});
+  });
 
   // DELETE ACCOUNT PROFILES CLEARANCE MUTATION
   const deleteMutation = useMutation({
-  mutationFn: async (memberId: string) => {
-    return await axiosClient.delete(`/members/${memberId}`);
-  },
-  onSuccess: () => {
-    // 1. Instantly removes the deleted row from your dashboard grid view
-    queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
-    
-    // 2. Instantly makes that user available again in the "Add Member" dropdown!
-    queryClient.invalidateQueries({ queryKey: ["eligibleUsersList"] });
-    
-    toast.success("Member record removed successfully.");
-  },
-  onError: () => {
-    toast.error("Failed to delete member.");
-  }
-});
+    mutationFn: async (memberId: string) => {
+      return await axiosClient.delete(`/members/${memberId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
+      queryClient.invalidateQueries({ queryKey: ["eligibleUsersList"] });
+      toast.success("Member record removed successfully.");
+    },
+    onError: () => {
+      toast.error("Failed to delete member.");
+    }
+  });
 
   const memberList = membersPayload?.data || [];
   const totalItems = membersPayload?.total || 0;
@@ -188,39 +172,38 @@ const renewMutation = useMutation({
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in bg-canvas-dominant font-sans text-slate-secondary">
       {/* Page Core Header Block */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-xs">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-light/10 shadow-xs">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Library Members Registry</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Click any record row to manage tier tracking, view info cards, or extend membership renewals.</p>
+          <h2 className="text-xl font-bold text-slate-secondary tracking-tight">Library Members Registry</h2>
+          <p className="text-xs text-slate-light mt-0.5">Click any record row to manage tier tracking, view info cards, or extend membership renewals.</p>
         </div>
         <button
           onClick={() => { setSelectedMember(null); setIsFormOpen(true); }}
-          className="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold rounded-xl shadow-xs transition-all whitespace-nowrap cursor-pointer"
+          className="px-4 py-2.5 bg-sage-primary hover:bg-sage-primary/90 text-white text-sm font-bold rounded-xl shadow-xs transition-all whitespace-nowrap cursor-pointer"
         >
           ➕ Add New Member
         </button>
       </div>
 
       {/* Control Utility Toolbar Filters Line */}
-      <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
+      <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-xl border border-slate-light/10 shadow-2xs">
         <div className="relative flex-1">
           <input
             type="text"
             placeholder="🔎 Search by member name..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand outline-hidden transition-all"
+            className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden transition-all font-data"
           />
         </div>
 
         <div className="grid grid-cols-2 sm:flex gap-3">
-          {/* 💡 UPDATED FILTER: Rendering real database options dynamically instead of static placeholders */}
           <select
             value={tierFilter}
             onChange={(e) => { setTierFilter(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand outline-hidden cursor-pointer"
+            className="px-3 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden cursor-pointer font-sans font-semibold"
           >
             <option value="">All Membership Plans</option>
             {plans.map((p) => (
@@ -233,7 +216,7 @@ const renewMutation = useMutation({
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-brand outline-hidden cursor-pointer"
+            className="px-3 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden cursor-pointer font-sans font-semibold"
           >
             <option value="">Status</option>
             <option value="ACTIVE">Active Plan</option>
@@ -242,7 +225,7 @@ const renewMutation = useMutation({
 
           <button
             onClick={handleClearFilters}
-            className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-all cursor-pointer col-span-2 sm:col-auto whitespace-nowrap"
+            className="px-4 py-2 bg-utility-crimson/10 hover:bg-utility-crimson/20 text-utility-crimson text-xs font-bold rounded-xl transition-all cursor-pointer col-span-2 sm:col-auto whitespace-nowrap"
           >
             Clear Filters
           </button>
@@ -251,25 +234,25 @@ const renewMutation = useMutation({
 
       {/* Master Content Ledger Grid */}
       {isLoading ? (
-        <div className="text-center py-20 text-xs text-gray-400 font-semibold animate-pulse">Syncing Library Membership Database...</div>
+        <div className="text-center py-20 text-xs text-slate-light font-bold uppercase tracking-wider animate-pulse">Syncing Library Membership Database...</div>
       ) : (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-light/10 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-gray-200 text-xs font-bold text-gray-400 uppercase bg-gray-50/60 tracking-wider">
+                  <tr className="border-b border-slate-light/10 text-xs font-bold text-slate-light uppercase bg-canvas-dominant/60 tracking-wider font-sans">
                     <th className="py-4 px-5">Member Name</th>
                     <th className="py-4 px-5">Contact Details</th>
                     <th className="py-4 px-5">Current Plan</th>
                     <th className="py-4 px-5">Plan Expiry Date</th>
-                    <th className="py-4 px-5 text-center">Status</th>
+                    <th className="py-4 px-5网页 center text-center">Status</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm divide-y divide-gray-100 text-gray-700">
+                <tbody className="text-sm divide-y divide-slate-light/10 text-slate-secondary font-data">
                   {memberList.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-sm text-gray-400 font-medium">
+                      <td colSpan={5} className="py-12 text-center text-sm text-slate-light font-medium font-sans">
                         No active matching subscriber accounts found on server indexing.
                       </td>
                     </tr>
@@ -278,26 +261,28 @@ const renewMutation = useMutation({
                       <tr 
                         key={member.id} 
                         onClick={() => { setSelectedMember(member); setIsDetailsOpen(true); }}
-                        className="hover:bg-teal-50/40 transition-colors cursor-pointer group select-none"
+                        className="hover:bg-sage-primary/5 transition-colors cursor-pointer group select-none"
                       >
-                        <td className="py-4 px-5 font-bold text-gray-900 group-hover:text-teal-900 transition-colors">
+                        <td className="py-4 px-5 font-bold text-slate-secondary group-hover:text-sage-primary transition-colors font-sans">
                           {member.name}
                         </td>
                         <td className="py-4 px-5">
-                          <div className="font-medium text-gray-700">{member.email}</div>
-                          <div className="text-xs text-gray-400 mt-0.5">{member.phoneNumber || "No Phone Contact"}</div>
+                          <div className="font-semibold text-slate-secondary">{member.email}</div>
+                          <div className="text-xs text-slate-light mt-0.5 font-medium">{member.phoneNumber || "No Phone Contact"}</div>
                         </td>
-                        <td className="py-4 px-5">
-                          <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-gray-100 text-gray-700 tracking-wide">
+                        <td className="py-4 px-5 font-sans">
+                          <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-canvas-dominant text-slate-secondary border border-slate-light/10 tracking-wide">
                             {member.membershipPlanName}
                           </span>
                         </td>
-                        <td className="py-4 px-5 font-medium text-gray-600">
+                        <td className="py-4 px-5 font-semibold text-slate-light">
                           {member.expiryDate}
                         </td>
-                        <td className="py-4 px-5 text-center">
+                        <td className="py-4 px-5 text-center font-sans">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-extrabold tracking-wide uppercase ${
-                            member.isActive ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"
+                            member.isActive 
+                              ? "bg-sage-primary/10 text-sage-primary border border-sage-primary/20" 
+                              : "bg-utility-crimson/10 text-utility-crimson border border-utility-crimson/20"
                           }`}>
                             {member.isActive ? "Active" : "Expired"}
                           </span>
@@ -311,22 +296,22 @@ const renewMutation = useMutation({
           </div>
 
           {/* SERVER PAGINATION NAVIGATION FOOTER */}
-          <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
-            <span className="text-xs text-gray-500 font-medium">
-              Showing Page <b>{currentPage}</b> of <b>{totalPages}</b> ({totalItems} Members Found)
+          <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-light/10 shadow-2xs">
+            <span className="text-xs text-slate-light font-semibold font-sans">
+              Showing Page <b className="text-slate-secondary font-data">{currentPage}</b> of <b className="text-slate-secondary font-data">{totalPages}</b> ({totalItems} Members Found)
             </span>
-            <div className="flex gap-2">
+            <div className="flex gap-2 font-sans">
               <button
                 disabled={currentPage === 1 || totalPages <= 1}
                 onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.max(prev - 1, 1)); }}
-                className="px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 transition-all cursor-pointer"
+                className="px-3 py-1.5 bg-canvas-dominant text-slate-secondary border border-slate-light/10 rounded-lg text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-light/5 transition-all cursor-pointer"
               >
                 ◀ Previous
               </button>
               <button
                 disabled={currentPage === totalPages || totalPages <= 1}
                 onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.min(prev + 1, totalPages)); }}
-                className="px-3 py-1.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 transition-all cursor-pointer"
+                className="px-3 py-1.5 bg-canvas-dominant text-slate-secondary border border-slate-light/10 rounded-lg text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-light/5 transition-all cursor-pointer"
               >
                 Next ▶
               </button>

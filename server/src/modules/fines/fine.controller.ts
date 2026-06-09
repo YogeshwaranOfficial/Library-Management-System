@@ -3,19 +3,16 @@ import asyncHandler from "../../utils/asyncHandler.js";
 import sendResponse from "../../utils/SendResponse.js";
 import fineService from "./fine.service.js";
 
-// Explicit interface matching your updated payFineSchema validation definition
 interface PayFinePayload {
   fine_id: string;
   paidDate: string;
   paymentMethod: "CASH" | "CARD" | "UPI";
 }
 
-// 1. Fetch Collected Paid Fines History Controller (Renamed from getAllFinesController)
+// 1. Fetch Collected Paid Fines History Controller
 export const getCollectedFinesController = asyncHandler(
   async (req: Request, res: Response) => {
-    // Service layer filters for records where paid_status is true
     const result = await fineService.getCollectedFines();
-
     sendResponse(res, {
       success: true,
       statusCode: 200,
@@ -26,12 +23,11 @@ export const getCollectedFinesController = asyncHandler(
 );
 
 // 2. Pay Fine Controller
-// Route Contract Target: PATCH /fines/pay
+// 🟢 FIXED: Clean type parameters configuration to eliminate error 1117
 export const payFineController = asyncHandler(
-  async (req: Request<{}, {}, PayFinePayload>, res: Response) => {
+  async (req: Request<any, any, PayFinePayload>, res: Response) => {
     const { fine_id, paidDate, paymentMethod } = req.body;
 
-    // Type Guard: Defends against undefined parameters and satisfies strict TypeScript compilers
     if (!fine_id) {
       res.status(400).json({
         success: false,
@@ -40,7 +36,6 @@ export const payFineController = asyncHandler(
       return;
     }
 
-    // Pass fine_id, paidDate, and the payment audit string down to the transactional service method
     const result = await fineService.payFine(fine_id, paidDate || null, paymentMethod);
 
     sendResponse(res, {
@@ -55,9 +50,7 @@ export const payFineController = asyncHandler(
 // 3. Fetch Pending Uncollected Fines Controller
 export const getPendingFinesController = asyncHandler(
   async (req: Request, res: Response) => {
-    // Service layer filters for records where paid_status is false
     const result = await fineService.getPendingFines();
-
     sendResponse(res, {
       success: true,
       statusCode: 200,
@@ -83,7 +76,6 @@ export const getMemberFinesController = asyncHandler(
 );
 
 // 5. Purge/Hard Delete Fine Entry Controller
-// Route Contract Target: DELETE /fines/:id
 export const purgeFineController = asyncHandler(
   async (req: Request, res: Response) => {
     const fineId = req.params.id as string;
@@ -99,7 +91,6 @@ export const purgeFineController = asyncHandler(
 );
 
 // 6. Restore Settled Fine Controller
-// Route Contract Target: PATCH /fines/restore/:id
 export const restoreFineController = asyncHandler(
   async (req: Request, res: Response) => {
     const fineId = req.params.id as string;
@@ -107,7 +98,7 @@ export const restoreFineController = asyncHandler(
     if (!fineId) {
       res.status(400).json({
         success: false,
-        message: "Fine identification parameter (id) is required."
+        message: "Fine unique identifier parameter is required."
       });
       return;
     }
