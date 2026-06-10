@@ -11,7 +11,17 @@ import { SettleFinePaymentModal } from "../components/SettleFinePaymentModal";
 import { RestoreFineModal } from "../components/RestoreFineModal";
 
 // Lucide Icons
-import { Search, Filter, ChevronLeft, ChevronRight, ShieldAlert, History } from "lucide-react";
+import { 
+  Search, 
+  Filter, 
+  ChevronLeft, 
+  ChevronRight, 
+  ShieldAlert, 
+  History, 
+  BookOpen, 
+  AlertCircle,
+  AlertTriangle 
+} from "lucide-react";
 
 interface AxiosErrorResponse {
   response?: {
@@ -22,10 +32,10 @@ interface AxiosErrorResponse {
 }
 
 export const FinesPage = () => {
-  
   const queryClient = useQueryClient();
   const [selectedFine, setSelectedFine] = useState<FineRecord | null>(null);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
+  
   // Active View Tab Panel Layout Selector ("active" | "history")
   const [activeTab, setActiveTab] = useState<"active" | "history">("active");
 
@@ -49,7 +59,6 @@ export const FinesPage = () => {
       return response.data?.data || response.data || [];
     }
   });
-  
 
   const restoreFineMutation = useMutation({
     mutationFn: async (id: string) => await axiosClient.patch(`/fines/restore/${id}`),
@@ -58,7 +67,6 @@ export const FinesPage = () => {
       setShowRestoreModal(false);
       setSelectedFine(null);
       
-      // 🟢 CUSTOM TOAST REMINDER: Reminds the librarian about the other screen!
       toast.success("Entry restored to active ledger!", {
         description: "💡 ACTION REQUIRED: Remember to go to the 'Returned Books' page to mark this volume as unreturned if needed.",
         duration: 6000
@@ -137,34 +145,36 @@ export const FinesPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in pb-12">
+    <div className="space-y-6 animate-fade-in pb-12 text-left">
       
       {/* Dynamic Header View Deck */}
-      <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-white p-6 rounded-2xl border border-slate-light/10 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Institutional Fine Management Desk</h2>
-          <p className="text-xs text-gray-500">
+          <h2 className="text-xs font-black text-slate-secondary uppercase tracking-wider">Institutional Fine Management Desk</h2>
+          <p className="text-xs text-slate-light mt-1 font-medium">
             Realtime data syncing. Automatic accrual rates apply dynamically at 12:00 AM nightly: Active Plans (₹10/day) | Expired Plans (₹20/day).
           </p>
         </div>
 
         {/* Tab Selection Pill Elements */}
-        <div className="flex bg-gray-100 p-1 rounded-xl self-stretch sm:self-auto">
+        <div className="flex bg-canvas-dominant p-1 rounded-xl self-stretch sm:self-auto border border-slate-light/5">
           <button
+            type="button"
             onClick={() => handleTabChange("active")}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              activeTab === "active" ? "bg-white text-teal-700 shadow-xs" : "text-gray-500 hover:text-gray-900"
+            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+              activeTab === "active" ? "bg-white text-slate-secondary shadow-xs" : "text-slate-light hover:text-slate-secondary"
             }`}
           >
-            <ShieldAlert className="w-3.5 h-3.5" /> Active Defaulters
+            <ShieldAlert size={14} /> Active Defaulters
           </button>
           <button
+            type="button"
             onClick={() => handleTabChange("history")}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-              activeTab === "history" ? "bg-white text-teal-700 shadow-xs" : "text-gray-500 hover:text-gray-900"
+            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
+              activeTab === "history" ? "bg-white text-slate-secondary shadow-xs" : "text-slate-light hover:text-slate-secondary"
             }`}
           >
-            <History className="w-3.5 h-3.5" /> Collected History
+            <History size={14} /> Collected History
           </button>
         </div>
       </div>
@@ -177,13 +187,13 @@ export const FinesPage = () => {
       )}
 
       {activeTab === "history" && (
-        <div className="bg-emerald-600 p-4 rounded-xl text-white flex justify-between items-center shadow-md">
+        <div className="bg-emerald-600 p-5 rounded-2xl text-white flex justify-between items-center shadow-xs">
           <div>
-            <div className="text-[10px] uppercase font-bold tracking-widest opacity-75">Total Audited Balance Collected</div>
-            <div className="text-2xl font-black font-mono mt-0.5">₹{aggregateAccruedSumVal}.00</div>
+            <div className="text-[9px] uppercase font-black tracking-widest opacity-80">Total Audited Balance Collected</div>
+            <div className="text-2xl font-black font-data mt-1">₹{aggregateAccruedSumVal}.00</div>
           </div>
           <div className="text-right">
-            <span className="text-[10px] font-bold bg-emerald-500/50 px-2.5 py-1 rounded-md border border-emerald-400/30">
+            <span className="text-[9px] font-black uppercase tracking-wider bg-emerald-500/40 px-3 py-1.5 rounded-lg border border-emerald-400/20">
               {totalItemsCount} Settled Invoices In Archive Ledger
             </span>
           </div>
@@ -191,55 +201,56 @@ export const FinesPage = () => {
       )}
 
       {/* Search Filter Control Grid */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 flex flex-col md:flex-row gap-3 items-center">
+      <div className="bg-white p-4 rounded-2xl border border-slate-light/10 flex flex-col md:flex-row gap-3 items-center">
         <div className="relative w-full md:flex-1">
           <input
             type="text"
             placeholder={activeTab === "active" ? "Search active balances by name or title strings..." : "Search historical collections..."}
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 focus:border-teal-600"
+            className="w-full pl-9 pr-4 py-2.5 bg-canvas-dominant border border-slate-light/10 rounded-xl text-xs font-medium text-slate-secondary placeholder:text-slate-light outline-hidden focus:bg-white focus:border-slate-secondary transition-all"
           />
-          <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3" />
+          <Search size={14} className="text-slate-light absolute left-3.5 top-3.5" />
         </div>
 
         {activeTab === "active" && (
-          <div className="w-full md:w-56 relative">
+          <div className="w-full md:w-64 relative">
             <select
               value={delayIntervalFilter}
               onChange={(e) => { setDelayIntervalFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-700 appearance-none outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100"
+              className="w-full pl-9 pr-8 py-2.5 bg-canvas-dominant border border-slate-light/10 rounded-xl text-xs font-black uppercase tracking-wider text-slate-secondary appearance-none outline-hidden focus:bg-white focus:border-slate-secondary transition-all cursor-pointer"
             >
               <option value="">All Overdue Invoices</option>
-              <option value="7">⚠️ Critical (&gt; 7 Days)</option>
-              <option value="14">🚨 Severe (&gt; 14 Days)</option>
-              <option value="30">🔥 High Delinquency (&gt; 30 Days)</option>
+              <option value="7">Critical (&gt; 7 Days)</option>
+              <option value="14">Severe (&gt; 14 Days)</option>
+              <option value="30">High Delinquency (&gt; 30 Days)</option>
             </select>
-            <Filter className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-3 pointer-events-none" />
+            <Filter size={14} className="text-slate-light absolute left-3.5 top-3.5 pointer-events-none" />
+            <div className="absolute right-3.5 top-4 pointer-events-none border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-secondary w-0 h-0" />
           </div>
         )}
       </div>
 
       {/* Central Interactive Data Core Grid Matrix */}
       {isLoading ? (
-        <div className="text-center py-20 text-xs text-gray-400 font-semibold animate-pulse">Syncing Master Banking Ledger Channels...</div>
+        <div className="text-center py-24 text-xs text-slate-light font-black uppercase tracking-widest animate-pulse font-data">Syncing Master Banking Ledger Channels...</div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-xs overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-light/10 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-gray-200 text-xs font-bold text-gray-500 uppercase bg-gray-50/70">
-                  <th className="py-3 px-4">Account Holder Member</th>
-                  <th className="py-3 px-4">Media Asset Context</th>
-                  <th className="py-3 px-4 text-center">{activeTab === "active" ? "Delayed Days" : "Settled Scope"}</th>
-                  <th className="py-3 px-4">Accrued Amount</th>
-                  <th className="py-3 px-4 text-center">Plan Clause</th>
+                <tr className="border-b border-slate-light/10 text-[10px] font-black text-slate-light uppercase bg-canvas-dominant/60 tracking-wider">
+                  <th className="py-3.5 px-5">Account Holder Member</th>
+                  <th className="py-3.5 px-5">Media Asset Context</th>
+                  <th className="py-3.5 px-5 text-center">{activeTab === "active" ? "Delayed Days" : "Settled Scope"}</th>
+                  <th className="py-3.5 px-5">Accrued Amount</th>
+                  <th className="py-3.5 px-5 text-center">Plan Clause</th>
                 </tr>
               </thead>
-              <tbody className="text-xs divide-y divide-gray-100">
+              <tbody className="text-xs divide-y divide-slate-light/5 text-slate-secondary">
                 {paginatedRowsData.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-12 text-xs text-gray-400 font-medium">
+                    <td colSpan={5} className="text-center py-16 text-xs text-slate-light font-medium">
                       Operational Clear View. Zero matching layout targets found.
                     </td>
                   </tr>
@@ -248,30 +259,35 @@ export const FinesPage = () => {
                     <tr 
                       key={fine.fine_id} 
                       onClick={() => setSelectedFine(fine)}
-                      className="hover:bg-slate-50 transition-colors cursor-pointer"
+                      className="hover:bg-canvas-dominant/40 transition-colors cursor-pointer"
                     >
-                      <td className="py-3 px-4">
-                        <div className="font-bold text-gray-900">{fine.memberName}</div>
-                        <div className="text-[10px] font-mono text-gray-400">{fine.memberEmail}</div>
+                      <td className="py-3.5 px-5">
+                        <div className="font-bold text-slate-secondary">{fine.memberName}</div>
+                        <div className="text-[10px] font-data text-slate-light mt-0.5">{fine.memberEmail}</div>
                       </td>
-                      <td className="py-3 px-4 font-medium text-gray-600">
-                        📖 {fine.bookTitle}
-                        <span className="block text-3xs font-mono text-gray-400">Due Date: {fine.actualReturnDueDate || fine.actualReturnDate || "N/A"}</span>
+                      <td className="py-3.5 px-5 font-medium">
+                        <div className="flex items-center gap-1.5 text-slate-secondary">
+                          <BookOpen size={12} className="text-slate-light shrink-0" />
+                          <span>{fine.bookTitle}</span>
+                        </div>
+                        <span className="block text-[10px] font-data text-slate-light pl-4.5 mt-0.5">Due Date: {fine.actualReturnDueDate || fine.actualReturnDate || "N/A"}</span>
                       </td>
-                      <td className="py-3 px-4 text-center font-bold font-mono">
+                      <td className="py-3.5 px-5 text-center font-bold font-data">
                         {activeTab === "active" ? (
-                          <span className="text-amber-700">{fine.delayed_days} Days Overdue</span>
+                          <span className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md font-bold text-[10px]">{fine.delayed_days} Days Overdue</span>
                         ) : (
-                          <span className="text-emerald-700 text-3xs font-bold bg-emerald-50 px-2 py-0.5 rounded-sm uppercase tracking-wide">Paid ({fine.paidDate || fine.paid_date || "Settled"})</span>
+                          <span className="text-emerald-700 text-[9px] font-black bg-emerald-50 px-2 py-0.5 rounded-md uppercase tracking-wide border border-emerald-100/40">Paid ({fine.paidDate || fine.paid_date || "Settled"})</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 font-mono font-black text-gray-950 text-sm">
+                      <td className="py-3.5 px-5 font-data font-black text-slate-secondary text-sm">
                         ₹{fine.fine_amount}.00
-                        {fine.paymentMethod && <span className="block text-3xs text-gray-400 uppercase font-sans font-medium">via {fine.paymentMethod}</span>}
+                        {fine.paymentMethod && <span className="block text-[9px] text-slate-light uppercase font-sans font-black tracking-wider mt-0.5">via {fine.paymentMethod}</span>}
                       </td>
-                      <td className="py-3 px-4 text-center">
-                        <span className={`px-2 py-0.5 rounded-sm font-extrabold text-3xs tracking-wide uppercase ${
-                          fine.membershipActive ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"
+                      <td className="py-3.5 px-5 text-center">
+                        <span className={`px-2 py-0.5 rounded-md font-black text-[9px] tracking-wider uppercase border ${
+                          fine.membershipActive 
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200/40" 
+                            : "bg-rose-50 text-rose-700 border-rose-200/40"
                         }`}>
                           {fine.membershipActive ? "Active Plan" : "Plan Expired"}
                         </span>
@@ -284,24 +300,26 @@ export const FinesPage = () => {
           </div>
 
           {/* Pagination Command Module */}
-          <div className="p-4 bg-gray-50/60 border-t border-gray-200 flex justify-between items-center text-2xs font-semibold text-gray-500">
+          <div className="p-4 bg-canvas-dominant/50 border-t border-slate-light/10 flex justify-between items-center text-[10px] font-black uppercase tracking-wider text-slate-light">
             <span>
-              Showing Page {currentPage} of {totalPagesCount} ( Total {totalItemsCount} Fines)
+              Showing Page {currentPage} of {totalPagesCount} (Total {totalItemsCount} Fines)
             </span>
-            <div className="flex gap-1">
+            <div className="flex gap-1.5">
               <button
+                type="button"
                 disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => p - 1)}
-                className="p-1.5 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => p - 1); }}
+                className="p-1.5 border border-slate-light/10 bg-white hover:bg-canvas-dominant text-slate-secondary rounded-xl disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-2xs"
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
+                <ChevronLeft size={14} />
               </button>
               <button
+                type="button"
                 disabled={currentPage === totalPagesCount}
-                onClick={() => setCurrentPage((p) => p + 1)}
-                className="p-1.5 border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => p + 1); }}
+                className="p-1.5 border border-slate-light/10 bg-white hover:bg-canvas-dominant text-slate-secondary rounded-xl disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-2xs"
               >
-                <ChevronRight className="w-3.5 h-3.5" />
+                <ChevronRight size={14} />
               </button>
             </div>
           </div>
@@ -323,37 +341,42 @@ export const FinesPage = () => {
 
       {/* History View Logic - Updated Modal Implementation with Explicit Reminder Notice */}
       {activeTab === "history" && selectedFine && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white p-6 rounded-2xl w-96 shadow-2xl border border-gray-100 animate-zoom-in">
-            <h3 className="font-bold text-gray-900">Warning for : {selectedFine.memberName} Record </h3>
+        <div className="fixed inset-0 bg-slate-secondary/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in text-left">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-light/10 animate-zoom-in">
+            <h3 className="text-xs font-black text-slate-secondary uppercase tracking-wider flex items-center gap-1.5">
+              <AlertCircle size={14} className="text-amber-600" /> Restoration Warning
+            </h3>
+            <p className="text-[11px] font-bold text-slate-light mt-1 mb-3 font-data uppercase tracking-wider">{selectedFine.memberName}</p>
             
-            {/* 🟢 ENHANCED EXPLICIT INLINE INSTRUCTION REMINDER BOX FOR LIBRARIANS */}
-            <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200/60 text-amber-900 text-xs space-y-1.5 leading-relaxed">
-              <p className="font-bold flex items-center gap-1 text-amber-800">
-                ⚠️ Operational Reminder
+            {/* ENHANCED EXPLICIT INLINE INSTRUCTION REMINDER BOX FOR LIBRARIANS */}
+            <div className="p-4 bg-amber-50/50 rounded-xl border border-amber-200/40 text-amber-900 text-xs space-y-2 leading-relaxed">
+              <p className="font-black uppercase tracking-wider text-[10px] flex items-center gap-1.5 text-amber-800">
+                <AlertTriangle size={12} /> Operational Reminder
               </p>
-              <p>
+              <p className="font-medium text-slate-secondary">
                 Restoring this fine resets it to unpaid status. This balance tracker is bound to a closed book loan.
               </p>
-              <p className="font-semibold text-amber-950">
-                Please visit the <span className="underline">Returned Books</span> panel afterwards to manually click "Undo Return" if the physical asset is still out of the building.
+              <p className="font-bold text-amber-950">
+                Please visit the <span className="underline decoration-amber-600/60 font-black">Returned Books</span> panel afterwards to manually click "Undo Return" if the physical asset is still out of the building.
               </p>
             </div>
 
-            <div className="flex gap-2 mt-5">
+            <div className="flex gap-2 mt-5 pt-3 border-t border-slate-light/5">
               <button 
+                type="button"
                 onClick={() => setSelectedFine(null)} 
-                className="flex-1 py-2 text-xs font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors cursor-pointer"
+                className="flex-1 py-2.5 text-xs font-black uppercase tracking-wider bg-canvas-dominant hover:bg-slate-light/10 text-slate-light hover:text-slate-secondary rounded-xl transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button 
+                type="button"
                 onClick={() => {
                   setShowRestoreModal(true);
                 }} 
-                className="flex-1 py-2 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-sm transition-all cursor-pointer"
+                className="flex-1 py-2.5 text-xs font-black uppercase tracking-wider bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs transition-all cursor-pointer"
               >
-                Continue to Restore
+                Confirm Desk
               </button>
             </div>
           </div>

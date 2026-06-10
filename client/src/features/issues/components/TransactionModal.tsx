@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
 import type { BookIssueRecord } from "../../../types/transactions";
 import { toast } from "sonner";
+import { X, User, BookOpen, Calendar, HelpCircle } from "lucide-react";
 
 // 🛡️ Explicit type extension to handle conditional backend properties without using 'any'
 interface ExtendedBookIssueRecord extends BookIssueRecord {
@@ -199,31 +200,46 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-100 animate-zoom-in">
-        <div className="bg-teal-600 p-5 text-white flex justify-between items-center">
-          <h3 className="font-bold text-lg">{editingRecord ? "Adjust Loan Parameters" : "Issue New Book Voucher"}</h3>
-          <button type="button" onClick={onClose} className="text-teal-200 hover:text-white text-lg cursor-pointer">✕</button>
+    <div className="fixed inset-0 bg-slate-secondary/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-light/10 animate-zoom-in">
+        
+        {/* HEADER BLOCK BRANDED SYSTEM */}
+        <div className="bg-slate-secondary p-5 text-white flex justify-between items-center border-b border-slate-light/10">
+          <div>
+            <h3 className="font-black text-xs uppercase tracking-widest text-sage-primary">Circulation Terminal</h3>
+            <p className="font-bold text-sm text-white mt-0.5">{editingRecord ? "Adjust Loan Parameters" : "Issue New Book Voucher"}</p>
+          </div>
+          <button 
+            type="button" 
+            onClick={onClose} 
+            className="p-1.5 hover:bg-white/10 text-slate-light hover:text-white rounded-xl transition-all cursor-pointer"
+          >
+            <X size={16} />
+          </button>
         </div>
 
         <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
           
           {/* 1. MEMBER LOOKUP INPUT SECTION */}
           <div className="relative">
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">Member Name</label>
-            <input
-              type="text"
-              disabled={!!editingRecord}
-              value={memberSearch}
-              onChange={(e) => { 
-                setMemberSearch(e.target.value); 
-                setShowMemberDropdown(true); 
-              }}
-              placeholder="Search member name (e.g. Alex...)"
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 disabled:opacity-60 disabled:cursor-not-allowed"
-            />
+            <label className="text-[10px] font-black text-slate-light uppercase tracking-wider block mb-1.5">Member Registration</label>
+            <div className="relative">
+              <User className="absolute left-3.5 top-2.5 text-slate-light" size={16} />
+              <input
+                type="text"
+                disabled={!!editingRecord}
+                value={memberSearch}
+                onChange={(e) => { 
+                  setMemberSearch(e.target.value); 
+                  setShowMemberDropdown(true); 
+                }}
+                placeholder="Search member profile index..."
+                className="w-full pl-10 pr-4 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-sm font-semibold text-slate-secondary focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+            </div>
+            
             {showMemberDropdown && suggestedMembers.length > 0 && !editingRecord && (
-              <ul className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-gray-50">
+              <ul className="absolute left-0 right-0 mt-1 bg-white border border-slate-light/10 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-slate-light/5">
                 {suggestedMembers.map((m) => {
                   const isBlocked = m.compliance?.isBlocked;
                   const complianceStatus = m.compliance?.status;
@@ -240,20 +256,20 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
                         setSelectedMember(m);
                         setShowMemberDropdown(false);
                       }}
-                      className={`p-2.5 text-xs flex justify-between items-center transition-colors cursor-pointer ${
+                      className={`p-3 text-xs flex justify-between items-center transition-colors cursor-pointer ${
                         isBlocked 
                           ? "bg-rose-50/70 text-rose-800 hover:bg-rose-100/80" 
                           : complianceStatus === "WARNING_LAST_SLOT"
                             ? "bg-amber-50/60 text-amber-900 hover:bg-amber-100/70"
-                            : "hover:bg-slate-50 text-gray-700"
+                            : "hover:bg-canvas-dominant text-slate-secondary"
                       }`}
                     >
                       <div>
-                        <span className={`font-bold block ${isBlocked ? "line-through text-rose-900" : ""}`}>{m.name}</span>
-                        <span className="text-gray-400 font-mono text-2xs">📞 {m.phone_number || "No Contact Profile"}</span>
+                        <span className={`font-bold block text-sm ${isBlocked ? "line-through text-rose-900/60" : "text-slate-secondary"}`}>{m.name}</span>
+                        <span className="text-slate-light font-data text-[10px]">📞 {m.phone_number || "No Contact Profile"}</span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded-md text-2xs font-extrabold tracking-wide uppercase ${
-                        isBlocked ? "bg-rose-200 text-rose-900" : "bg-emerald-50 text-emerald-700"
+                      <span className={`px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase ${
+                        isBlocked ? "bg-rose-100 text-rose-700" : "bg-sage-primary/10 text-sage-primary"
                       }`}>
                         {complianceStatus === "EXPIRED" ? "Expired (Blocked)" : complianceStatus === "LIMIT_EXCEEDED" ? "Limit Full" : m.plan_name}
                       </span>
@@ -266,23 +282,23 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
 
           {/* DYNAMIC MEMBER INFO OVERLAY DISPLAY CARD */}
           {showMemberInfoCard && (
-            <div className={`p-3 rounded-xl border text-xs space-y-1 ${
+            <div className={`p-4 rounded-xl border text-xs space-y-1.5 transition-all ${
               borrowMetrics.complianceStatus === "LIMIT_EXCEEDED" || borrowMetrics.isExpired
-                ? "bg-rose-50 border-rose-200 text-rose-900" 
+                ? "bg-rose-50/50 border-rose-100 text-rose-950" 
                 : borrowMetrics.complianceStatus === "WARNING_LAST_SLOT"
-                  ? "bg-amber-50 border-amber-200 text-amber-900"
-                  : "bg-teal-50/50 border-teal-100 text-teal-950"
+                  ? "bg-amber-50/50 border-amber-100 text-amber-950"
+                  : "bg-sage-primary/5 border-sage-primary/10 text-slate-secondary"
             }`}>
-              <div className="font-bold flex justify-between">
-                <span>Current Plan Allocation Load:</span>
-                <span>{borrowMetrics.currentBorrows} / {borrowMetrics.maxAllowed} Assets Held</span>
+              <div className="font-bold flex justify-between items-center">
+                <span className="text-slate-light uppercase text-[9px] tracking-wider">Plan Load Allocation:</span>
+                <span className="font-black text-xs">{borrowMetrics.currentBorrows} / {borrowMetrics.maxAllowed} Assets Held</span>
               </div>
-              <p className="text-2xs opacity-90 font-medium">
-                {borrowMetrics.complianceMessage || `✓ Profile active. Selected member context loaded for due configuration.`}
+              <p className="text-[11px] text-slate-light font-medium leading-relaxed">
+                {borrowMetrics.complianceMessage || `✓ Active operational context verified. Authorized for custom parameters.`}
               </p>
               {maxAllowedDate && (
-                <p className="text-3xs text-rose-700 pt-0.5 font-bold uppercase tracking-wider">
-                  📅 Membership Expiration Limit: {maxAllowedDate}
+                <p className="text-[9px] text-rose-600 font-data font-bold uppercase tracking-widest pt-1 border-t border-slate-light/5">
+                  📅 Plan Expiration Boundary: {maxAllowedDate}
                 </p>
               )}
             </div>
@@ -290,20 +306,24 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
 
           {/* 2. BOOK LOOKUP INPUT SECTION */}
           <div className="relative">
-            <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">Book Name</label>
-            <input
-              type="text"
-              disabled={!!editingRecord}
-              value={bookSearch}
-              onChange={(e) => { 
-                setBookSearch(e.target.value); 
-                setShowBookDropdown(true); 
-              }}
-              placeholder="Search book name or author name..."
-              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 disabled:opacity-60 disabled:cursor-not-allowed"
-            />
+            <label className="text-[10px] font-black text-slate-light uppercase tracking-wider block mb-1.5">Book Asset Index</label>
+            <div className="relative">
+              <BookOpen className="absolute left-3.5 top-2.5 text-slate-light" size={16} />
+              <input
+                type="text"
+                disabled={!!editingRecord}
+                value={bookSearch}
+                onChange={(e) => { 
+                  setBookSearch(e.target.value); 
+                  setShowBookDropdown(true); 
+                }}
+                placeholder="Search catalog by system title or author..."
+                className="w-full pl-10 pr-4 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-sm font-semibold text-slate-secondary focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+            </div>
+            
             {showBookDropdown && suggestedBooks.length > 0 && !editingRecord && (
-              <ul className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-gray-50">
+              <ul className="absolute left-0 right-0 mt-1 bg-white border border-slate-light/10 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-slate-light/5">
                 {suggestedBooks.map((b) => {
                   const outOfStock = b.compliance?.isBlocked || b.available_copies <= 0;
                   return (
@@ -318,16 +338,16 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
                         setSelectedBook(b);
                         setShowBookDropdown(false);
                       }}
-                      className={`p-2.5 text-xs flex justify-between items-center cursor-pointer transition-colors ${
-                        outOfStock ? "bg-rose-50/80 text-rose-800 hover:bg-rose-100/70" : "hover:bg-slate-50 text-gray-700"
+                      className={`p-3 text-xs flex justify-between items-center cursor-pointer transition-colors ${
+                        outOfStock ? "bg-rose-50/80 text-rose-800 hover:bg-rose-100/70" : "hover:bg-canvas-dominant text-slate-secondary"
                       }`}
                     >
                       <div>
-                        <span className="font-bold block">📖 {b.title}</span>
-                        <span className="text-gray-400 text-2xs block">Author: {b.author}</span>
+                        <span className="font-bold text-sm text-slate-secondary block">📖 {b.title}</span>
+                        <span className="text-slate-light text-[10px] block mt-0.5 font-medium">Author: {b.author}</span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded-md text-2xs font-bold ${
-                        outOfStock ? "bg-rose-200 text-rose-900" : "bg-slate-100 text-slate-700"
+                      <span className={`px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider uppercase ${
+                        outOfStock ? "bg-rose-100 text-rose-700" : "bg-slate-100 text-slate-600"
                       }`}>
                         {outOfStock ? "Out of Stock" : `Copies: ${b.available_copies}`}
                       </span>
@@ -341,11 +361,14 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
           {/* DYNAMIC SELECTED BOOK INFORMATION DISPLAY BLOCK */}
           {selectedBook && bookSearch.trim() === selectedBook.title && (
             <div className={`p-3 rounded-xl border text-xs flex justify-between items-center ${
-              selectedBook.available_copies <= 0 ? "bg-rose-50 border-rose-200 text-rose-950" : "bg-slate-50 border-gray-200 text-gray-800"
+              selectedBook.available_copies <= 0 ? "bg-rose-50/50 border-rose-100 text-rose-950" : "bg-canvas-dominant border-slate-light/10 text-slate-secondary"
             }`}>
-              <div>
-                <h4 className="font-bold text-gray-900">📚 Selected Asset Profile</h4>
-                <p className="text-2xs text-gray-500 font-medium w-50 truncate">{selectedBook.title} {selectedBook.author && `— By ${selectedBook.author}`}</p>
+              <div className="flex gap-2.5 items-center">
+                <HelpCircle size={14} className="text-slate-light" />
+                <div>
+                  <h4 className="font-bold text-slate-secondary text-xs">Target Media Profile Anchored</h4>
+                  <p className="text-[11px] text-slate-light font-medium w-64 truncate mt-0.5">{selectedBook.title} {selectedBook.author && `— By ${selectedBook.author}`}</p>
+                </div>
               </div>
             </div>
           )}
@@ -353,41 +376,53 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
           {/* 3. CALENDAR WORK PERIOD SETTINGS */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">Borrow Date</label>
-              <input 
-                type="date" 
-                readOnly 
-                value={editingRecord ? formatToISODate(editingRecord.borrowedDate) : getTodayString()} 
-                className="w-full px-3 py-2 bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-500 outline-hidden focus:ring-0 select-none" 
-              />
+              <label className="text-[10px] font-black text-slate-light uppercase tracking-wider block mb-1.5">Borrow Signature</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-2.5 text-slate-light/70" size={15} />
+                <input 
+                  type="date" 
+                  readOnly 
+                  value={editingRecord ? formatToISODate(editingRecord.borrowedDate) : getTodayString()} 
+                  className="w-full pl-9 pr-3 py-2 bg-slate-light/5 border border-slate-light/10 rounded-xl text-sm font-data font-bold text-slate-light outline-hidden select-none" 
+                />
+              </div>
             </div>
             <div>
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wide block mb-1">Target Due Deadline</label>
-              <input
-                type="date"
-                value={cleanDueDate}
-                min={minAllowedDate}
-                max={maxAllowedDate || undefined}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-hidden focus:bg-white focus:ring-2 focus:ring-teal-100 cursor-pointer"
-              />
+              <label className="text-[10px] font-black text-slate-light uppercase tracking-wider block mb-1.5">Return Due Deadline</label>
+              <div className="relative">
+                <Calendar className="absolute left-3 top-2.5 text-slate-light" size={15} />
+                <input
+                  type="date"
+                  value={cleanDueDate}
+                  min={minAllowedDate}
+                  max={maxAllowedDate || undefined}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-sm font-data font-bold text-slate-secondary outline-hidden focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all cursor-pointer"
+                />
+              </div>
               {maxAllowedDate && (
-                <span className="text-[10px] text-rose-600 font-medium block mt-1 pl-1">
-                  * Limit tied to plan expiration ({maxAllowedDate})
+                <span className="text-[9px] text-rose-600 font-bold block mt-1 pl-1 uppercase tracking-wide">
+                  * Tied to membership boundaries
                 </span>
               )}
             </div>
           </div>
 
           {/* 4. MODAL ACTION BUTTONS TERMINAL */}
-          <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
-            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">Cancel</button>
+          <div className="pt-4 flex justify-end gap-3 border-t border-slate-light/10">
+            <button 
+              type="button" 
+              onClick={onClose} 
+              className="px-4 py-2 text-xs font-black uppercase tracking-wider text-slate-light hover:text-slate-secondary transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={isSubmissionBlocked}
-              className="px-4 py-2 text-sm font-semibold text-white bg-teal-600 hover:bg-teal-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed shadow-sm rounded-xl transition-all cursor-pointer"
+              className="px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white bg-sage-primary hover:bg-sage-primary/90 disabled:bg-slate-light/10 disabled:text-slate-light/50 disabled:cursor-not-allowed shadow-xs rounded-xl transition-all cursor-pointer"
             >
-              {editingRecord ? "Save Record Changes" : "Confirm Asset Issue"}
+              {editingRecord ? "Save Parameters" : "Confirm Issue"}
             </button>
           </div>
         </form>

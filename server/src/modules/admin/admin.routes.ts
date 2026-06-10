@@ -1,20 +1,40 @@
 import { Router } from 'express';
 import validate from '../../middlewares/validate.js';
-import { addUserValidation, updateUserValidation, deleteUserValidation } from './admin.validation.js';
+import { 
+  addUserValidation, 
+  updateUserValidation, 
+  deleteUserValidation,
+  addLibrarianValidation,
+  updateLibrarianValidation,
+  deleteLibrarianValidation
+} from './admin.validation.js';
 import { AdminController } from '../admin/admin.controller.js';
-// import { protect, restrictTo } from '../middlewares/authMiddleware'; 
-// ^ Add your custom RBAC middlewares here to ensure only ADMIN tokens bypass this route!
+import auth from "../../middlewares/auth.js";
+
 
 const router = Router();
 const controller = new AdminController();
 
-// Endpoints for readers
-router.get('/readers', controller.getReaders);
-router.post('/add-user', validate(addUserValidation), controller.addUser);
-router.patch('/user/:user_id', validate(updateUserValidation), controller.updateUser);
-router.delete('/user/:user_id', validate(deleteUserValidation), controller.deleteUser);
+// ==========================================
+// 👥 ENDPOINTS FOR READERS (USERS)
+// ==========================================
+router.get('/readers', auth, controller.getReaders);
+router.post('/add-user', auth, validate(addUserValidation), controller.addUser);
+router.patch('/user/:user_id', auth, validate(updateUserValidation), controller.updateUser);
+router.delete('/user/:user_id', auth, validate(deleteUserValidation), controller.deleteUser);
 
-//Endpoints for librarins
-router.get('/librarians', controller.getLibrarians);
+// ==========================================
+// 🛠️ ENDPOINTS FOR LIBRARIANS
+// ==========================================
+router.get('/librarians', auth, controller.getLibrarians);
+
+// 💡 NEW: Provision a fresh administrative node
+router.post('/add-librarian', auth, validate(addLibrarianValidation), controller.addLibrarian);
+
+// 💡 NEW: Modify existing librarian operational profiles via user_id
+router.patch('/librarian/:user_id', auth, validate(updateLibrarianValidation), controller.updateLibrarian);
+
+// 💡 NEW: Hard-purge a librarian profile from the cluster matrix
+router.delete('/librarian/:user_id', auth, validate(deleteLibrarianValidation), controller.deleteLibrarian);
 
 export default router;

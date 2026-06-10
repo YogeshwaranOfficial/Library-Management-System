@@ -16,6 +16,7 @@ import { AdminLayout } from "../features/admin/components/AdminLayout";
 import { AdminPanel } from "../features/admin/pages/AdminPanel";
 import { ManageUsers } from "../features/admin/components/ManageUsers";
 import { ManageLibrarians } from "../features/admin/components/ManageLibrarians";
+import { ManagePlan } from "../features/membershipPlans/pages/ManagePlan";
 
 export const AppRoutes = () => {
   return (
@@ -33,6 +34,7 @@ export const AppRoutes = () => {
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/members" element={<MembersPage />} />
+             <Route path="/plans" element={<ManagePlan />} />
             <Route path="/books" element={<BooksPage />} />
             <Route path="/categories" element={<ManageCategories />} />
             <Route path="/transactions" element={<TransactionsPage />} />

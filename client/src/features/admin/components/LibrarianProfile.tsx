@@ -32,10 +32,13 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({ profile, onB
       return response.data;
     },
     onSuccess: () => {
-      toast.success("Librarian security profile wiped from core systems.");
-      queryClient.invalidateQueries({ queryKey: ["adminLibrariansMasterFeed"] });
+      toast.success("Librarian profile deleted successfully.");
+      
+      // 💡 FIXED: Matches the exact tracking feed array cache tag key used in ManageLibrarians
+      queryClient.invalidateQueries({ queryKey: ["adminUsersMasterFeed"] }); 
+      
       setIsDeleteModalOpen(false);
-      onBack(); // Step back to Hub Dashboard grid safely
+      onBack(); 
     },
     onError: () => {
       toast.error("Failed to cleanly flush operator entry.");
@@ -65,7 +68,7 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({ profile, onB
               System Node: Active
             </span>
             
-            {/* 💡 FLOATING ACTION MANAGEMENT SYSTEM PORTAL BUTTONS */}
+            {/* FLOATING ACTION MANAGEMENT SYSTEM PORTAL BUTTONS */}
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setIsEditModalOpen(true)}
@@ -136,7 +139,9 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({ profile, onB
       </div>
 
       {/* OVERLAY LAYERS MODAL PORTALS CONTAINER */}
+      {/* 💡 FIXED: Key binding ensures pristine input components mount when switching open states */}
       <LibrarianModal 
+        key={isEditModalOpen ? `edit-${profile.user_id}` : "closed"}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         librarianToEdit={profile}

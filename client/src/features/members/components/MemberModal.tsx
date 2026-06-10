@@ -69,106 +69,121 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
   const hasNoAvailableUsers = users.length === 0;
 
   return (
-    <div className="fixed inset-0 bg-slate-secondary/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-light/10 animate-zoom-in font-sans">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-amber-100 animate-zoom-in">
         
-        {/* Modal Branding Header - Unified to Sage Accent */}
-        <div className="bg-sage-primary p-5 text-white flex justify-between items-center">
-          <h3 className="font-bold text-base tracking-tight">{editingMember ? "Renew Membership Plan" : "Add New Member"}</h3>
-          <button onClick={onClose} className="text-white/80 hover:text-white transition-colors cursor-pointer text-sm font-bold">✕</button>
+        {/* Modal Branding Header - Clean Light Structured Banner */}
+        <div className="bg-slate-50/80 border-b border-slate-100 p-5 text-slate-900 flex justify-between items-center">
+          <h3 className="text-sm font-bold tracking-tight">{editingMember ? "Renew Membership Plan" : "Add New Member"}</h3>
+          <button 
+            onClick={onClose} 
+            className="text-slate-400 hover:text-slate-900 transition-colors cursor-pointer text-base font-bold p-1.5 hover:bg-slate-100 rounded-lg"
+          >
+            ✕
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4 text-slate-secondary">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5 text-slate-700">
           
           {/* Form Control: User Selection Selector dropdown */}
           <div>
-            <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide block mb-1.5">
               Select Library Reader Account
             </label>
             <select
               {...register("userId")}
               disabled={!!editingMember || hasNoAvailableUsers}
-              className={`w-full px-3.5 py-2 border rounded-xl text-sm font-semibold outline-hidden transition-all focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary disabled:opacity-60 ${
+              className={`w-full px-4 py-3 border rounded-xl text-sm font-semibold outline-none transition-all ${
                 hasNoAvailableUsers && !editingMember
-                  ? "bg-utility-crimson/10 border-utility-crimson/20 text-utility-crimson font-bold" 
-                  : "bg-canvas-dominant border-slate-light/10 text-slate-secondary"
-              }`}
+                  ? "bg-rose-50 border-rose-200 text-rose-700 font-bold" 
+                  : "bg-slate-50 border-slate-200 text-slate-800 focus:bg-white focus:border-slate-400"
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               {editingMember ? (
                 <option value="">Current Member Locked</option>
               ) : hasNoAvailableUsers ? (
-                <option value="">⚠️ No new users available to register</option>
+                <option value="">No options remaining to register</option>
               ) : (
                 <>
                   <option value="">Choose User Profile...</option>
                   {users.map(u => (
                     <option key={u.id} value={u.id}>
-                      {u.name}
+                      {u.name.toUpperCase()}
                     </option>
                   ))}
                 </>
               )}
             </select>
-            {errors.userId && <p className="text-xs text-utility-crimson mt-1.5 font-bold font-data">{errors.userId.message}</p>}
+            {errors.userId && <p className="text-xs text-rose-700 mt-1.5 font-bold">{errors.userId.message}</p>}
           </div>
 
           {/* Form Control Block Grid Row (Read Only Meta Profiles) */}
-          <div className="grid grid-cols-2 gap-4 font-data">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5 font-sans">Email Address</label>
-              <input type="text" {...register("email")} readOnly className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-sm text-slate-light font-semibold outline-hidden focus:ring-0 cursor-not-allowed select-all" />
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide block mb-1.5">Email Address</label>
+              <input 
+                type="text" 
+                {...register("email")} 
+                readOnly 
+                className="w-full px-4 py-3 bg-slate-100/70 border border-slate-200 rounded-xl text-sm text-slate-600 font-semibold outline-none cursor-not-allowed select-all" 
+              />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5 font-sans">Phone Number</label>
-              <input type="text" {...register("phoneNumber")} readOnly className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-sm text-slate-light font-semibold outline-hidden focus:ring-0 cursor-not-allowed select-all" />
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide block mb-1.5">Phone Number</label>
+              <input 
+                type="text" 
+                {...register("phoneNumber")} 
+                readOnly 
+                className="w-full px-4 py-3 bg-slate-100/70 border border-slate-200 rounded-xl text-sm text-slate-600 font-semibold outline-none cursor-not-allowed select-all" 
+              />
             </div>
           </div>
 
           {/* Form Control: Membership tier select index */}
           <div>
-            <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Choose Membership Plan</label>
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide block mb-1.5">Choose Membership Plan</label>
             <select
               {...register("membershipPlanId")}
-              className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold outline-hidden transition-all focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary cursor-pointer"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-sm font-semibold outline-none transition-all focus:bg-white focus:border-slate-400 cursor-pointer"
             >
-              <option value="">All Membership Plan</option>
+              <option value="">Select a plan...</option>
               {plans.map(p => (
-                <option key={p.membership_plan_id} value={p.membership_plan_id} className="font-data">
-                  {p.plan_name} ({p.duration_days} Days)
+                <option key={p.membership_plan_id} value={p.membership_plan_id}>
+                  {p.plan_name.toUpperCase()} ({p.duration_days} DAYS)
                 </option>
               ))}
             </select>
-            {errors.membershipPlanId && <p className="text-xs text-utility-crimson mt-1.5 font-bold font-data">{errors.membershipPlanId.message}</p>}
+            {errors.membershipPlanId && <p className="text-xs text-rose-700 mt-1.5 font-bold">{errors.membershipPlanId.message}</p>}
           </div>
 
           {/* Form Control: Continuous Activation Verification parameters */}
           {editingMember && (
-            <div className="flex items-center justify-between p-3.5 bg-sage-primary/10 border border-sage-primary/20 rounded-xl">
-              <div className="pr-2">
-                <span className="text-xs font-bold text-sage-primary block">Re-activate / Membership Continuity Toggle</span>
-                <span className="text-[11px] text-slate-light font-medium mt-0.5 block">Updating values shifts account validation cycles to today's parameters.</span>
+            <div className="flex items-center justify-between p-4 bg-amber-50/40 border border-amber-200/60 rounded-xl">
+              <div className="pr-4">
+                <span className="text-sm font-bold text-slate-800 block">Membership Continuity Toggle</span>
+                <span className="text-xs text-slate-400 font-medium mt-0.5 block">Updating values shifts account validation cycles to today's parameters.</span>
               </div>
               <input 
                 type="checkbox" 
                 {...register("isActive")} 
-                className="w-4 h-4 text-sage-primary border-slate-light/30 rounded-xs focus:ring-sage-primary focus:ring-offset-0 cursor-pointer accent-sage-primary scale-110" 
+                className="w-5 h-5 text-slate-900 border-slate-300 bg-white rounded-lg focus:ring-0 cursor-pointer accent-slate-900 transition-all" 
               />
             </div>
           )}
 
           {/* Action Footer Frame */}
-          <div className="pt-4 flex justify-end gap-3 border-t border-slate-light/10">
+          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 text-xs font-bold tracking-wide">
             <button 
               type="button" 
               onClick={onClose} 
-              className="px-4 py-2 text-sm font-bold text-slate-light hover:text-slate-secondary transition-colors cursor-pointer"
+              className="px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl transition-all hover:bg-slate-100 cursor-pointer"
             >
               Cancel
             </button>
             <button 
               type="submit" 
               disabled={hasNoAvailableUsers && !editingMember}
-              className="px-5 py-2 text-sm font-bold text-white bg-sage-primary hover:bg-sage-primary/90 disabled:bg-slate-light/20 disabled:text-slate-light/50 disabled:cursor-not-allowed shadow-xs rounded-xl transition-all cursor-pointer"
+              className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-amber-50 rounded-xl transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer shadow-sm"
             >
               {editingMember ? "Update Changes" : "Create Member"}
             </button>

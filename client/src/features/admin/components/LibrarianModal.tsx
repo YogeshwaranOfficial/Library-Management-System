@@ -30,32 +30,23 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({ isOpen, onClose,
   const queryClient = useQueryClient();
   const isEditMode = !!librarianToEdit;
 
-  // 💡 INITIAL STATES (Derived safely from props)
-  const [name, setName] = useState(librarianToEdit?.name || "");
+ const [name, setName] = useState(librarianToEdit?.name || "");
   const [gmail, setGmail] = useState(librarianToEdit?.gmail || "");
-  const [password, setPassword] = useState(librarianToEdit?.password || "");
+  const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState(librarianToEdit?.phone_number || "");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // 💡 CLEAN FIX: handleResetAndClose now safely manages state resets directly
   const handleResetAndClose = () => {
-    if (!isEditMode) {
-      setName("");
-      setGmail("");
-      setPassword("");
-      setPhoneNumber("");
-    } else {
-      // Revert fields back to original prop values if the admin cancels editing
-      setName(librarianToEdit?.name || "");
-      setGmail(librarianToEdit?.gmail || "");
-      setPassword(librarianToEdit?.password || "");
-      setPhoneNumber(librarianToEdit?.phone_number || "");
-    }
+    setName("");
+    setGmail("");
+    setPassword("");
+    setPhoneNumber("");
     setErrors({});
     onClose();
   };
   
-  // MUTATION HANDLER
+  // Mutation Handler
+// Mutation Handler inside LibrarianModal.tsx
   const librarianMutation = useMutation({
     mutationFn: async (payload: Record<string, string>) => {
       if (isEditMode) {
@@ -69,10 +60,13 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({ isOpen, onClose,
     onSuccess: () => {
       toast.success(
         isEditMode 
-          ? "Officer metrics updated successfully." 
-          : "New administrative terminal clearance provisioned."
+          ? "Librarian details updated successfully." 
+          : "New librarian added successfully"
       );
-      queryClient.invalidateQueries({ queryKey: ["adminLibrariansMasterFeed"] });
+      
+      // 💡 FIXED: This now matches your exact queryKey prefix to force an automatic background re-fetch!
+      queryClient.invalidateQueries({ queryKey: ["adminUsersMasterFeed"] }); 
+      
       handleResetAndClose();
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
@@ -114,12 +108,19 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({ isOpen, onClose,
     e.preventDefault();
     if (!validateForm()) return;
 
-    const payload: Record<string, string> = {
-      name: name.trim(),
-      gmail: gmail.trim().toLowerCase(),
-      phone_number: phoneNumber,
-      role: "LIBRARIAN",
-    };
+    // 💡 FIXED: Conditionally builds payload so 'role' is omitted in edit mode to satisfy .strict() Zod rules
+    const payload: Record<string, string> = isEditMode 
+      ? {
+          name: name.trim(),
+          gmail: gmail.trim().toLowerCase(),
+          phone_number: phoneNumber,
+        }
+      : {
+          name: name.trim(),
+          gmail: gmail.trim().toLowerCase(),
+          phone_number: phoneNumber,
+          role: "LIBRARIAN",
+        };
 
     if (password) payload.password = password;
 
@@ -186,7 +187,7 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({ isOpen, onClose,
             {errors.gmail && <p className="text-[11px] text-utility-crimson font-medium mt-1">{errors.gmail}</p>}
           </div>
 
-          {/* Plain Text Password Field */}
+          {/* Password Field */}
           <div className="space-y-1">
             <label className="text-[10px] font-bold text-slate-light uppercase tracking-wider block">
               {isEditMode ? "Change Security Password (Leave blank to preserve current)" : "Terminal Assignment Password"}
@@ -225,13 +226,13 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({ isOpen, onClose,
             {errors.phoneNumber && <p className="text-[11px] text-utility-crimson font-medium mt-1">{errors.phoneNumber}</p>}
           </div>
 
-          {/* Automated System Configuration Alert Badge */}
+          {/* Configuration Alert Badge */}
           <div className="bg-amber-500/5 p-3 rounded-xl border border-amber-500/10 flex items-center gap-2.5 text-xs font-bold text-amber-600 select-none">
             <ShieldAlert size={16} />
             <span>Enforced Authority Level : LIBRARIAN</span>
           </div>
 
-          {/* Trigger Actions Button Row */}
+          {/* Action Buttons */}
           <div className="flex gap-2.5 pt-2">
             <button
               type="button"
@@ -245,7 +246,7 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({ isOpen, onClose,
               disabled={librarianMutation.isPending}
               className="flex-1 py-2.5 bg-slate-secondary hover:bg-slate-secondary/90 disabled:bg-slate-light/20 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer flex items-center justify-center"
             >
-              {librarianMutation.isPending ? "Syncing..." : isEditMode ? "Apply Modifies" : "Authorize Node"}
+              {librarianMutation.isPending ? "Syncing..." : isEditMode ? "Apply Changes" : "Authorize Node"}
             </button>
           </div>
 
