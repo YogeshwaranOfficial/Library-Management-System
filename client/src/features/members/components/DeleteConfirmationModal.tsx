@@ -9,32 +9,40 @@ export const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, memberName
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-secondary/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 border border-slate-light/10 animate-zoom-in text-slate-secondary">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
+      {/* Container: Changed to an off-white/ivory-tint base with a soft linen-amber border */}
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 border border-amber-100/80 animate-zoom-in">
         <div className="text-center">
-          <span className="text-3xl text-utility-crimson block mb-2">⚠️</span>
-          <h3 className="text-base font-bold text-slate-secondary tracking-tight">Confirm Member Deletion</h3>
-          <p className="text-xs text-slate-light mt-2.5 leading-relaxed font-medium">
-            Are you sure you want to delete the library member record for <strong className="text-slate-secondary font-bold">{memberName}</strong>?
+          {/* Header: Shifted from text-sm to text-base, using a deeper, slate-ink tone */}
+          <h3 className="text-base font-bold text-slate-900 tracking-tight">Confirm Member Deletion</h3>
+          
+          {/* Main Paragraph: Softened slightly to slate-600 for optimal readability */}
+          <p className="text-sm text-slate-600 mt-4 leading-relaxed">
+            Are you sure you want to delete the library member record for <strong className="text-slate-900 font-bold">{memberName}</strong>?
           </p>
-          <p className="text-[11px] text-utility-crimson font-semibold mt-3 bg-utility-crimson/10 border border-utility-crimson/10 p-2.5 rounded-xl leading-normal">
-            Notice: This action removes the library member profile tier assignment only. The underlying system user account credentials will not be deleted.
-          </p>
+          
+          {/* Callout Block: Shifted to a premium cream/rose warning surface with refined typography rules */}
+          <div className="text-xs text-rose-900 font-medium mt-5 bg-rose-50/60 border border-rose-100 p-4 rounded-xl text-left leading-relaxed">
+            <span className="font-bold uppercase tracking-wider block mb-1 text-rose-950 text-[11px]">Notice:</span>
+            This action removes the library member profile tier assignment only. The underlying system user account credentials will not be deleted.
+          </div>
         </div>
         
-        {/* Modal Action Footers */}
-        <div className="mt-5 flex justify-end gap-2 pt-4 border-t border-slate-light/10 text-xs font-bold">
+        {/* Modal Action Footers - Clear Call to Action */}
+        <div className="mt-6 flex justify-end gap-3 pt-5 border-t border-slate-100 text-xs font-bold tracking-wide">
+          {/* Cancel Button: Crisp off-white tactile styling */}
           <button 
             type="button" 
             onClick={onClose} 
-            className="px-3.5 py-2 text-slate-light hover:text-slate-secondary transition-colors cursor-pointer"
+            className="px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl transition-all hover:bg-slate-100 cursor-pointer"
           >
-            Abort
+            Cancel
           </button>
+          {/* Action Button: High contrast, dark editorial signature ink button */}
           <button 
             type="button" 
             onClick={onConfirm} 
-            className="px-4 py-2 text-white bg-utility-crimson hover:bg-utility-crimson/90 rounded-xl shadow-xs transition-all cursor-pointer"
+            className="px-4 py-3 bg-slate-900 hover:bg-slate-800 text-amber-50 rounded-xl transition-all cursor-pointer shadow-sm"
           >
             Confirm Deletion
           </button>

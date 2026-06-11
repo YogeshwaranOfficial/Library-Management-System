@@ -6,6 +6,9 @@ import type { BookCategory, BookInventoryItem } from "../../../types/books";
 import { axiosClient } from "../../../api/axiosClient";
 import { toast } from "sonner";
 
+// Editorial Visual Assets
+import { Sparkles, BookOpen, User, Layers, Hash, X } from "lucide-react";
+
 interface ScoredLine {
   originalText: string;
   translatedText: string;
@@ -84,7 +87,7 @@ export const BookModal = ({ isOpen, onClose, onSubmit, categories, editingBook }
           setOcrAlternatives(payload.alternativeLines);
         }
 
-        // AUTOFILL EXECUTION: Hydrates form controllers with pristine Gemini data properties directly
+        // AUTOFILL EXECUTION: Hydrates form controllers directly
         setValue("title", payload.title || "");
         setValue("author", payload.author || "");
 
@@ -114,83 +117,156 @@ export const BookModal = ({ isOpen, onClose, onSubmit, categories, editingBook }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-secondary/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans text-slate-secondary">
-      <div className={`bg-white rounded-2xl shadow-2xl overflow-hidden border border-slate-light/10 flex flex-col md:flex-row max-h-[90vh] transition-all duration-300 ${ocrAlternatives.length > 0 ? "w-full max-w-4xl" : "w-full max-w-md"}`}>
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans text-slate-700 text-left">
+      <div className={`bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200/60 flex flex-col md:flex-row max-h-[90vh] transition-all duration-300 animate-zoom-in ${ocrAlternatives.length > 0 ? "w-full max-w-4xl" : "w-full max-w-lg"}`}>
         
         {/* LEFT COMPONENT: Primary Form Input Layout */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b border-slate-light/10">
-            <h3 className="font-bold text-base text-slate-secondary tracking-tight">{editingBook ? "Modify Details" : "Add New Book"}</h3>
-            <button onClick={handleCloseModal} className="text-slate-light hover:text-slate-secondary transition-colors cursor-pointer text-sm font-bold">✕</button>
+        <div className="flex-1 overflow-y-auto flex flex-col">
+          
+          {/* Modal Branding Header - Clean Dark Structured Banner */}
+          <div className="bg-slate-900 p-5 text-white flex justify-between items-center shrink-0">
+            <h3 className="font-bold text-xl uppercase tracking-wider">
+              {editingBook ? "Modify Details" : "Add New Book"}
+            </h3>
+            <button 
+              type="button"
+              onClick={handleCloseModal} 
+              className="text-slate-400 hover:text-white transition-colors cursor-pointer p-1.5 hover:bg-white/10 rounded-lg"
+            >
+              <X size={16} />
+            </button>
           </div>
 
-          {!editingBook && (
-            <div className="p-4 bg-sage-primary/5 border border-dashed border-sage-primary/30 rounded-xl space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="text-[10px] font-bold text-sage-primary uppercase tracking-wide">🔮 Intelligent OCR Engine</label>
-                <span className="text-[10px] font-mono font-bold bg-sage-primary/10 text-sage-primary px-2 py-0.5 rounded-md">Scans: {scanCounter}/10</span>
+          <div className="p-6 space-y-5 flex-1">
+            {!editingBook && (
+              <div className="p-4 bg-amber-50/40 border border-dashed border-amber-200 rounded-xl space-y-2.5">
+                <div className="flex justify-between items-center">
+                  <label className="text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles size={12} className="text-amber-600" /> Intelligent OCR Engine
+                  </label>
+                  <span className="text-[10px] font-mono font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md">
+                    Scans: {scanCounter}/10
+                  </span>
+                </div>
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleAIScanUpload} 
+                  disabled={isScanning || scanCounter >= 10}
+                  className="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 transition-all cursor-pointer"
+                />
               </div>
-              <input 
-                type="file" accept="image/*" onChange={handleAIScanUpload} disabled={isScanning || scanCounter >= 10}
-                className="block w-full text-xs text-slate-light file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-sage-primary file:text-white hover:file:bg-sage-primary/90 transition-all cursor-pointer"
-              />
-            </div>
-          )}
+            )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Book Title</label>
-              <input type="text" {...register("title")} className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold focus:bg-white outline-hidden focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all" />
-              {errors.title && <p className="text-xs text-utility-crimson font-medium mt-1">{errors.title.message}</p>}
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Author Name</label>
-              <input type="text" {...register("author")} className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold focus:bg-white outline-hidden focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all" />
-              {errors.author && <p className="text-xs text-utility-crimson font-medium mt-1">{errors.author.message}</p>}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Copies</label>
-                <input type="number" {...register("totalCopies", { valueAsNumber: true })} className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-bold font-data outline-hidden focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all" />
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                  <BookOpen size={12} /> Book Title
+                </label>
+                <input 
+                  type="text" 
+                  {...register("title")} 
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-900 rounded-xl placeholder:text-slate-400 outline-hidden focus:bg-white focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all" 
+                />
+                {errors.title && <p className="text-xs text-rose-700 font-bold mt-1.5">{errors.title.message}</p>}
               </div>
-              <div>
-                <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Category</label>
-                <select {...register("categoryId")} className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold outline-hidden cursor-pointer focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all">
-                  <option value="">Select Category</option>
-                  {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                </select>
-              </div>
-            </div>
 
-            <div className="pt-4 flex justify-end gap-2 border-t border-slate-light/10 text-xs font-bold">
-              <button type="button" onClick={handleCloseModal} className="px-4 py-2 text-slate-light hover:text-slate-secondary transition-colors cursor-pointer">Cancel</button>
-              <button type="submit" disabled={isScanning} className="px-5 py-2.5 text-white bg-sage-primary hover:bg-sage-primary/90 transition-all shadow-xs rounded-xl disabled:bg-slate-light/20 disabled:text-slate-light/50 disabled:cursor-not-allowed cursor-pointer">
-                {editingBook ? "Update Details" : "Create Book Entry"}
-              </button>
-            </div>
-          </form>
+              <div>
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                  <User size={12} /> Author Name
+                </label>
+                <input 
+                  type="text" 
+                  {...register("author")} 
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-900 rounded-xl placeholder:text-slate-400 outline-hidden focus:bg-white focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all" 
+                />
+                {errors.author && <p className="text-xs text-rose-700 font-bold mt-1.5">{errors.author.message}</p>}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                    <Hash size={12} /> Copies
+                  </label>
+                  <input 
+                    type="number" 
+                    {...register("totalCopies", { valueAsNumber: true })} 
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-xs sm:text-sm font-bold text-slate-900 rounded-xl outline-hidden focus:bg-white focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all" 
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                    <Layers size={12} /> Category
+                  </label>
+                  <div className="relative">
+                    <select 
+                      {...register("categoryId")} 
+                      className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 rounded-xl outline-hidden cursor-pointer focus:bg-white focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all appearance-none"
+                    >
+                      <option value="">Select Category</option>
+                      {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Footer Frame */}
+              <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 text-xs font-bold tracking-wide">
+                <button 
+                  type="button" 
+                  onClick={handleCloseModal} 
+                  className="px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl transition-all hover:bg-slate-100 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={isScanning} 
+                  className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-amber-50 rounded-xl transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer shadow-xs whitespace-nowrap"
+                >
+                  {editingBook ? "Update Details" : "Create Book Entry"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
 
         {/* RIGHT COMPONENT: Interactive Diagnostic Mapping Helper Column */}
         {!editingBook && ocrAlternatives.length > 0 && (
-          <div className="w-full md:w-80 bg-canvas-dominant border-t md:border-t-0 md:border-l border-slate-light/10 p-5 overflow-y-auto max-h-[40vh] md:max-h-full flex flex-col">
-            <h4 className="text-xs font-bold text-slate-secondary uppercase tracking-wider mb-1">🔮 OCR Raw Layout Fragments</h4>
-            <p className="text-[11px] text-slate-light mb-4 leading-normal font-medium">If the AI missed a specific structural block, click a tag location element to force-overwrite values:</p>
+          <div className="w-full md:w-80 bg-slate-50/50 border-t md:border-t-0 md:border-l border-slate-200 p-5 overflow-y-auto max-h-[35vh] md:max-h-full flex flex-col shrink-0">
+            <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 mb-1">
+              <Sparkles size={12} className="text-amber-500" /> OCR Layout Fragments
+            </h4>
+            <p className="text-xs text-slate-500 mb-4 leading-relaxed font-medium">
+              Select an isolated segment directly to re-map data properties down into the text inputs:
+            </p>
             
             <div className="space-y-3 flex-1">
               {ocrAlternatives.map((item, idx) => {
                 return (
-                  <div key={idx} className="p-3 rounded-xl border border-slate-light/10 bg-white text-slate-secondary text-xs leading-snug shadow-3xs transition-all hover:translate-x-0.5">
-                    <div className="font-bold font-data tracking-tight text-slate-secondary">{item.translatedText}</div>
+                  <div key={idx} className="p-3 rounded-xl border border-slate-200/70 bg-white shadow-xs transition-all">
+                    <div className="font-bold text-slate-900 text-xs tracking-tight">{item.translatedText}</div>
                     {item.originalText !== item.translatedText && (
-                      <div className="text-[10px] text-slate-light opacity-80 italic mt-1 font-data">Original OCR: "{item.originalText}"</div>
+                      <div className="text-[10px] text-slate-400 italic mt-1 font-medium">
+                        Raw: "{item.originalText}"
+                      </div>
                     )}
                     
-                    <div className="mt-2.5 flex gap-1.5 pt-2 border-t border-slate-light/5">
-                      <button type="button" onClick={() => setValue("title", item.translatedText)} className="px-2 py-0.5 bg-canvas-dominant hover:bg-sage-primary/10 hover:text-sage-primary rounded text-[9px] font-bold uppercase tracking-wider border border-slate-light/10 transition-colors cursor-pointer">+ Title</button>
-                      <button type="button" onClick={() => setValue("author", item.translatedText)} className="px-2 py-0.5 bg-canvas-dominant hover:bg-sage-primary/10 hover:text-sage-primary rounded text-[9px] font-bold uppercase tracking-wider border border-slate-light/10 transition-colors cursor-pointer">+ Author</button>
+                    <div className="mt-3 flex gap-2 pt-2 border-t border-slate-100">
+                      <button 
+                        type="button" 
+                        onClick={() => setValue("title", item.translatedText)} 
+                        className="px-2.5 py-1 bg-slate-50 hover:bg-amber-50 hover:text-amber-700 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-slate-200 transition-colors cursor-pointer"
+                      >
+                        + Title
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => setValue("author", item.translatedText)} 
+                        className="px-2.5 py-1 bg-slate-50 hover:bg-amber-50 hover:text-amber-700 rounded-lg text-[10px] font-bold uppercase tracking-wider border border-slate-200 transition-colors cursor-pointer"
+                      >
+                        + Author
+                      </button>
                     </div>
                   </div>
                 );

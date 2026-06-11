@@ -1,10 +1,11 @@
 import swaggerJSDoc from "swagger-jsdoc";
 import swaggerDefinition from "./swagger.definition.js";
+import path from "path";
 
 const options: swaggerJSDoc.Options = {
   definition: swaggerDefinition,
   apis: [
-    "./src/modules/**/*.ts", // Scans all TS files in your modules for annotations
+    path.join(process.cwd(), "src/modules/**/*.ts"),
   ],
 };
 

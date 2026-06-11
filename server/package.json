@@ -7,10 +7,10 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "test:integration": "cross-env NODE_ENV=test tsx src/tests/runTests.ts",
-    "test:unit": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.unit.config.ts",
-    "test:coverage": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.config.ts --runInBand"
-  },
+    "test:integration": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.integration.config.ts",
+    "test:coverage": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.integration.config.ts --coverage",
+    "test:unit": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --config=jest.unit.config.ts"
+    },
   "keywords": [],
   "author": "",
   "license": "ISC",

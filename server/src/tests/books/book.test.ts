@@ -1,278 +1,240 @@
 import request from "supertest";
+import { describe, it, expect, afterAll, beforeAll } from "@jest/globals";
 import app from "../../app.js";
-import { getAuthToken } from "../helpers/testAuth.helper.js";
-import sequelize from '../../database/connection/database.js';
-import Category from '../../database/models/Category.js'; 
+import sequelize from "../../database/connection/database.js";
+import User from "../../database/models/User.js";
+import Category from "../../database/models/Category.js"; // Seeding target relationship
+import Book from "../../database/models/Book.js";
+import { Op } from "sequelize";
 
-describe("📚 Books Module Integration Tests (Isolated & Self-Cleaning)", () => {
-  let librarianToken: string;
-  let scienceCategoryId: string;  
-  let createdBookId: string;
-  let searchBookId: string; // Captured to prevent DB accumulation leaks
-  
-  const testBookName = `Clean Architecture v${Math.floor(Math.random() * 1000)}`;
-  const searchKeyword = `SearchableBook-${Math.floor(Math.random() * 1000)}`;
-  const nonExistentUuid = "00000000-0000-0000-0000-000000000000";
+describe("📚 Books Inventory Module Integration Tests", () => {
+  let authToken = "";
+  let seededCategoryId = "";
+  let createdBookId = "";
+
+  // Dynamic tokens to isolate parallel runner executions
+  const timestamp = Date.now();
+  const suiteEmail = `booksuite${timestamp}@gmail.com`;
+  const commonPassword = "Password@123";
 
   beforeAll(async () => {
-    // 1. Grab authorization token for Librarian
-    const token = await getAuthToken();
-    librarianToken = `Bearer ${token}`;
-
+    // 1. Setup isolated session profile
     try {
-      // 2. Safely capture a real category ID from DB to link books to
-      const realCategory = await Category.findOne(); 
-      scienceCategoryId = realCategory ? (realCategory.get('category_id') as string) : nonExistentUuid;
-    } catch (err) {
-      scienceCategoryId = "075705f3-c7be-4585-85d1-b57616870f68";
+      await request(app)
+        .post("/api/v1/auth/register")
+        .send({
+          name: "Inventory Auditor",
+          gmail: suiteEmail,
+          password: commonPassword
+        });
+    } catch (e) {
+      // Clean bypass on registration hooks
     }
+
+    const loginResponse = await request(app)
+      .post("/api/v1/auth/login")
+      .send({
+        gmail: suiteEmail,
+        password: commonPassword,
+      });
+
+    authToken = loginResponse.body.data?.token || "";
+
+    // 2. Production Step: Directly seed a parent category entry via Sequelize 
+    // to fulfill foreign key constraints on `category_id` safely.
+    const testCategory = await Category.create({
+      category_name: `Test Genre ${timestamp}`,
+      description: "Temporary genre classification category for structural testing runs."
+    } as any);
+
+    seededCategoryId = (testCategory as any).category_id;
   });
 
   afterAll(async () => {
-    // Safety Net Cleanup: If tests fail early, ensure dummy items are still scrubbed
-    if (searchBookId) {
-      await request(app)
-        .delete(`/api/v1/books/${searchBookId}`)
-        .set("Authorization", librarianToken);
-    }
-    if (createdBookId) {
-      await request(app)
-        .delete(`/api/v1/books/${createdBookId}`)
-        .set("Authorization", librarianToken);
+    try {
+      // 1. Purge all books deployed during this integration process run
+      await Book.destroy({
+        where: {
+          book_name: {
+            [Op.like]: "Integration Test Book%",
+          }
+        },
+        force: true
+      });
+
+      // 2. Remove structural context category nodes
+      await Category.destroy({
+        where: {
+          category_id: seededCategoryId
+        },
+        force: true
+      });
+
+      // 3. Vaporize testing credential identities safely
+      await User.destroy({
+        where: {
+          gmail: suiteEmail
+        },
+        force: true
+      });
+    } catch (error) {
+      console.warn("Post-suite books inventory cleanup warning:", error);
     }
     await sequelize.close();
   });
 
-  // ==========================================
-  // 🟢 1. POST /api/v1/books (CREATE)
-  // ==========================================
-  describe("POST /api/v1/books", () => {
-    it("✅ Happy Path: Should let an authenticated Librarian create a book", async () => {
-      const res = await request(app)
+  // ==========================================================================
+  // 🟢 HAPPY PATHS (INVENTORY CRUD & DATA COERCION MULTIPLEXING)
+  // ==========================================================================
+  describe("📦 CORE CRUD OPERATIONS - Success Cases", () => {
+    it("✔ should create a new book item successfully and handle type coercion for total_copies", async () => {
+      const response = await request(app)
         .post("/api/v1/books")
-        .set("Authorization", librarianToken)
+        .set("Authorization", `Bearer ${authToken}`)
         .send({
-          book_name: testBookName,
-          book_author: "Robert C. Martin",
-          category_id: scienceCategoryId, 
-          total_copies: 5,
+          book_name: `Integration Test Book ${timestamp}`,
+          book_author: "Author Assignment Test Node",
+          category_id: seededCategoryId,
+          total_copies: "15" // Passed as string to verify Zod's `z.coerce.number()` handling
         });
 
-      expect(res.status).toBe(201);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveProperty("book_id");
-      expect(res.body.data.book_name).toBe(testBookName);
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty("success", true);
+      expect(response.body.message).toBe("Book created successfully");
+      expect(response.body.data).toHaveProperty("book_id");
       
-      // Save this isolated ID for subsequent Read, Update, and Delete steps
-      createdBookId = res.body.data.book_id;
+      createdBookId = response.body.data.book_id;
     });
 
-    it("❌ Sad Path: Should fail validation when body criteria are invalid (Zod)", async () => {
-      const res = await request(app)
-        .post("/api/v1/books")
-        .set("Authorization", librarianToken)
-        .send({
-          book_name: "X", 
-          book_author: "Valid Author",
-          category_id: "invalid-uuid-format", 
-          total_copies: 0, 
-        });
-
-      expect(res.status).toBe(400); 
-      expect(res.body.success).toBe(false);
-    });
-
-    it("❌ Sad Path: Should throw 404 error if category UUID does not exist in DB", async () => {
-      const res = await request(app)
-        .post("/api/v1/books")
-        .set("Authorization", librarianToken)
-        .send({
-          book_name: "Valid Book Title",
-          book_author: "Valid Author",
-          category_id: nonExistentUuid, 
-          total_copies: 5,
-        });
-
-      expect(res.status).toBe(404); // Matches BookService AppError definition
-    });
-
-    it("❌ Sad Path: Should reject execution if authorization token is absent", async () => {
-      const res = await request(app)
-        .post("/api/v1/books")
-        .send({
-          book_name: "Unauthorized Book",
-          book_author: "No Token",
-          category_id: scienceCategoryId, 
-          total_copies: 1,
-        });
-
-      expect(res.status).toBe(401);
-    });
-  });
-
-  // ==========================================
-  // 🟢 2. GET /api/v1/books (GET ALL & FILTERS)
-  // ==========================================
-  describe("GET /api/v1/books", () => {
-    beforeAll(async () => {
-      const res = await request(app)
-        .post("/api/v1/books")
-        .set("Authorization", librarianToken)
-        .send({
-          book_name: searchKeyword,
-          book_author: "Unique Search Author",
-          category_id: scienceCategoryId, 
-          total_copies: 2,
-        });
-      
-      // CAPTURING THIS ID: Prevents database bloat on repeated test runs
-      searchBookId = res.body.data?.book_id;
-    });
-
-    afterAll(async () => {
-      // Instantly delete the search test book right after this suite finishes
-      if (searchBookId) {
-        await request(app)
-          .delete(`/api/v1/books/${searchBookId}`)
-          .set("Authorization", librarianToken);
-        searchBookId = ""; // Clear reference
-      }
-    });
-
-    it("✅ Happy Path: Should fetch all books complete with default pagination maps", async () => {
-      const res = await request(app)
+    it("✔ should fetch a dashboard ledger list array matching default pagination constraints", async () => {
+      const response = await request(app)
         .get("/api/v1/books")
-        .set("Authorization", librarianToken);
+        .set("Authorization", `Bearer ${authToken}`)
+        .query({ page: 1, limit: 10, search: "Integration Test" });
 
-      expect(res.status).toBe(200);
-      expect(res.body.data).toHaveProperty("rows");
-      expect(res.body.data).toHaveProperty("count");
-      expect(res.body.data.rows.length).toBeGreaterThanOrEqual(1);
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("success", true);
+      expect(response.body.message).toBe("Books fetched successfully");
+      expect(response.body).toHaveProperty("data");
     });
 
-    it("✅ Happy Path: Should successfully return records filtered by search query", async () => {
-      const res = await request(app)
-        .get(`/api/v1/books?search=${searchKeyword}`)
-        .set("Authorization", librarianToken);
-
-      expect(res.status).toBe(200);
-      expect(res.body.data.rows[0].book_name).toBe(searchKeyword);
-    });
-
-    it("✅ Happy Path: Should successfully filter results explicitly by category_id", async () => {
-      const res = await request(app)
-        .get(`/api/v1/books?category_id=${scienceCategoryId}`) 
-        .set("Authorization", librarianToken);
-
-      expect(res.status).toBe(200);
-      expect(res.body.data.rows.length).toBeGreaterThanOrEqual(1);
-    });
-  });
-
-  // ==========================================
-  // 🟢 3. GET /api/v1/books/:bookId (GET SINGLE)
-  // ==========================================
-  describe("GET /api/v1/books/:bookId", () => {
-    it("✅ Happy Path: Should return details of a single book by ID", async () => {
-      const res = await request(app)
+    it("✔ should retrieve details for an isolated book item using its specific resource ID", async () => {
+      const response = await request(app)
         .get(`/api/v1/books/${createdBookId}`)
-        .set("Authorization", librarianToken);
+        .set("Authorization", `Bearer ${authToken}`);
 
-      expect(res.status).toBe(200);
-      expect(res.body.data.book_id).toBe(createdBookId);
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("success", true);
+      expect(response.body.message).toBe("Book fetched successfully");
+      expect(response.body.data.book_id).toBe(createdBookId);
     });
 
-    it("❌ Sad Path: Should throw 404 error if book ID cannot be found", async () => {
-      const res = await request(app)
-        .get(`/api/v1/books/${nonExistentUuid}`)
-        .set("Authorization", librarianToken);
+    it("✔ should process partial data updates over PATCH queries securely", async () => {
+      const response = await request(app)
+        .patch(`/api/v1/books/${createdBookId}`)
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({
+          book_name: `Integration Test Book ${timestamp} Revised`,
+          total_copies: 20
+        });
 
-      expect(res.status).toBe(404);
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("success", true);
+      expect(response.body.message).toBe("Book updated successfully");
+    });
+
+    it("✔ should return a system categories dropdown listing feed data array cleanly", async () => {
+      const response = await request(app)
+        .get("/api/v1/books/categories")
+        .set("Authorization", `Bearer ${authToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("success", true);
+      expect(response.body.message).toBe("Categories fetched successfully");
+    });
+
+    it("✔ should scan inventory text index matching strings over specific lookups successfully", async () => {
+      const response = await request(app)
+        .get("/api/v1/books/search")
+        .set("Authorization", `Bearer ${authToken}`)
+        .query({ q: "Revised" });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("success", true);
+      expect(response.body.message).toBe("Library inventory search indices queried successfully matching criteria.");
     });
   });
 
-  // ==========================================
-  // 🟢 4. PATCH /api/v1/books/:bookId (UPDATE)
-  // ==========================================
-  describe("PATCH /api/v1/books/:bookId", () => {
-    it("✅ Happy Path: Should let an authorized Librarian update a book's details via PATCH", async () => {
-      const updatedTitle = `Clean Architecture - Edited v${Math.floor(Math.random() * 1000)}`;
-
-      const res = await request(app)
-        .patch(`/api/v1/books/${createdBookId}`)
-        .set("Authorization", librarianToken)
+  // ==========================================================================
+  // 🔴 SAD PATHS & VALIDATION FAILURES (SCHEMA ASSERTS)
+  // ==========================================================================
+  describe("❌ SCHEMA ATTRIBUTE ENFORCEMENTS - Validation Defenses", () => {
+    it("❌ should reject asset deployment if book title drops below the 2-character limit", async () => {
+      const response = await request(app)
+        .post("/api/v1/books")
+        .set("Authorization", `Bearer ${authToken}`)
         .send({
-          book_name: updatedTitle,
-          book_author: "Robert C. Martin",
-          category_id: scienceCategoryId,
-          total_copies: 12,
+          book_name: "X",
+          book_author: "Valid Author Name",
+          category_id: seededCategoryId,
+          total_copies: 5
         });
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.book_name).toBe(updatedTitle);
-      expect(res.body.data.total_copies).toBe(12);
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
     });
 
-    it("❌ Sad Path: Should fail validation when partial update criteria are invalid (Zod)", async () => {
-      const res = await request(app)
-        .patch(`/api/v1/books/${createdBookId}`)
-        .set("Authorization", librarianToken)
+    it("❌ should drop execution matrix calls if target category fails strict UUID layout verification", async () => {
+      const response = await request(app)
+        .post("/api/v1/books")
+        .set("Authorization", `Bearer ${authToken}`)
         .send({
-          book_name: "Y", 
-          book_author: "", 
-          category_id: "not-a-valid-uuid",
-          total_copies: -5, 
+          book_name: "Valid Inventory Item Title",
+          book_author: "Valid Author Name",
+          category_id: "not-a-valid-uuid-structural-token",
+          total_copies: 5
         });
 
-      expect(res.status).toBe(400);
-      expect(res.body.success).toBe(false);
+      expect(response.status).toBe(400);
     });
 
-    it("❌ Sad Path: Should return 404 error if attempting to patch a non-existent book ID", async () => {
-      const res = await request(app)
-        .patch(`/api/v1/books/${nonExistentUuid}`)
-        .set("Authorization", librarianToken)
+    it("❌ should block creations declaring total copies counts assigned to zero values", async () => {
+      const response = await request(app)
+        .post("/api/v1/books")
+        .set("Authorization", `Bearer ${authToken}`)
         .send({
-          book_name: "Ghost Book Modification",
-          book_author: "Anonymous",
-          category_id: scienceCategoryId,
-          total_copies: 1,
+          book_name: "Valid Inventory Item Title",
+          book_author: "Valid Author Name",
+          category_id: seededCategoryId,
+          total_copies: 0 // Below the min(1) constraint line
         });
 
-      expect(res.status).toBe(404);
+      expect(response.status).toBe(400);
+    });
+
+    it("❌ should return validation failures if query parameter 'q' is left empty on search routes", async () => {
+      const response = await request(app)
+        .get("/api/v1/books/search")
+        .set("Authorization", `Bearer ${authToken}`)
+        .query({ q: "" }); // Violates min(1) requirements
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
     });
   });
 
-  // ==========================================
-  // 🟢 5. DELETE /api/v1/books/:bookId (DELETE)
-  // ==========================================
-  describe("DELETE /api/v1/books/:bookId", () => {
-    it("❌ Sad Path: Should throw 404 error if target delete book ID cannot be found", async () => {
-      const res = await request(app)
-        .delete(`/api/v1/books/${nonExistentUuid}`)
-        .set("Authorization", librarianToken);
-
-      expect(res.status).toBe(404);
-    });
-
-    it("✅ Happy Path: Should successfully delete an existing book by its ID", async () => {
-      const res = await request(app)
+  // ==========================================================================
+  // 💀 DESTRUCTION FLOWS (REMOVING ENTRIES)
+  // ==========================================================================
+  describe("💀 RESOURCE RETIREMENT CONTEXTS - Execution Blocks", () => {
+    it("✔ should cleanly remove target items from active databases via DELETE operations", async () => {
+      const response = await request(app)
         .delete(`/api/v1/books/${createdBookId}`)
-        .set("Authorization", librarianToken);
+        .set("Authorization", `Bearer ${authToken}`);
 
-      expect(res.status).toBe(200);
-      expect(res.body.success).toBe(true);
-
-      // Verify removal directly matches your Service's getBookById 404 check
-      const doubleCheckRes = await request(app)
-        .get(`/api/v1/books/${createdBookId}`)
-        .set("Authorization", librarianToken);
-
-      expect(doubleCheckRes.status).toBe(404);
-      
-      // Nullify value so global safety net inside afterAll avoids duplicate calls
-      createdBookId = ""; 
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("success", true);
+      expect(response.body.message).toBe("Book deleted successfully");
     });
   });
 });

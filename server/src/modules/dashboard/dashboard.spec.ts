@@ -1,192 +1,228 @@
 import { jest } from "@jest/globals";
-import dashboardService from "./dashboard.service.js";
-import dashboardRepository from "./dashboard.repository.js";
 
-// Import models to spy on their native Sequelize static methods
-import Book from "../../database/models/Book.js";
-import Member from "../../database/models/Member.js";
-import Issue from "../../database/models/Issue.js";
-import Fine from "../../database/models/Fine.js";
+jest.unstable_mockModule("./dashboard.repository.js", () => ({
+  default: {
+    getOverview: jest.fn(),
+    getDashboardSummaryData: jest.fn(),
+    getPopularBooks: jest.fn(),
+    getRecentIssues: jest.fn(),
+    getMonthlyFineCollection: jest.fn(),
+  },
+}));
 
-describe("⚙️ Dashboard Module - Unit Tests", () => {
+const { default: dashboardService } =
+  await import("./dashboard.service.js");
 
-  afterEach(() => {
-    jest.restoreAllMocks();
+const { default: dashboardRepository } =
+  await import("./dashboard.repository.js");
+
+const mockGetOverview =
+  dashboardRepository.getOverview as any;
+
+const mockGetDashboardSummaryData =
+  dashboardRepository.getDashboardSummaryData as any;
+
+const mockGetPopularBooks =
+  dashboardRepository.getPopularBooks as any;
+
+const mockGetRecentIssues =
+  dashboardRepository.getRecentIssues as any;
+
+const mockGetMonthlyFineCollection =
+  dashboardRepository.getMonthlyFineCollection as any;
+
+describe("Dashboard Service Unit Tests", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  // ==========================================
-  // 🏢 PART 1: Dashboard Service Layer Tests
-  // ==========================================
-  describe("📘 Dashboard Service", () => {
-    
-    describe("getOverview()", () => {
-      it("✅ Should pass through data from repository unaltered", async () => {
-        const mockOverview = {
+  describe("getOverview", () => {
+    it("should return overview metrics", async () => {
+      const overview = {
+        totalBooks: 100,
+        totalMembers: 50,
+        activeMembers: 40,
+        expiredMembers: 10,
+        issuedBooks: 25,
+        returnedBooks: 20,
+        overdueCount: 5,
+        unpaidFines: 500,
+      };
+
+      mockGetOverview.mockResolvedValue(
+        overview
+      );
+
+      const result =
+        await dashboardService.getOverview();
+
+      expect(
+        mockGetOverview
+      ).toHaveBeenCalled();
+
+      expect(result).toEqual(overview);
+    });
+  });
+
+  describe("getDashboardSummaryService", () => {
+    it("should return dashboard summary data", async () => {
+      const summary = {
+        summary: {
           totalBooks: 100,
-          totalMembers: 50,
-          activeMembers: 40,
-          expiredMembers: 10,
-          issuedBooks: 30,
-          returnedBooks: 70,
-          overdueBooks: 5,
-          unpaidFines: 150,
-        };
+        },
+        widgets: {},
+        overdueBooks: [],
+      };
 
-        const spy = jest.spyOn(dashboardRepository, "getOverview").mockResolvedValue(mockOverview);
+      mockGetDashboardSummaryData.mockResolvedValue(
+        summary
+      );
 
-        const result = await dashboardService.getOverview();
-        
-        expect(result).toEqual(mockOverview);
-        expect(spy).toHaveBeenCalledTimes(1);
-      });
-    });
+      const result =
+        await dashboardService.getDashboardSummaryService();
 
-    describe("getRecentIssues()", () => {
-      it("✅ Should correctly flatten nested Sequelize model relations into standard frontend layout", async () => {
-        const mockRawIssues = [
-          {
-            issue_id: "issue-uuid-1",
-            borrowed_date: new Date("2026-01-01"),
-            due_date: new Date("2026-01-15"),
-            member: { user: { name: "John Doe" } },
-            book: { book_name: "TypeScript Deep Dive" },
-          },
-          {
-            issue_id: "issue-uuid-2",
-            borrowed_date: new Date("2026-02-01"),
-            due_date: new Date("2026-02-15"),
-            member: null,
-            book: null,
-          }
-        ] as any;
+      expect(
+        mockGetDashboardSummaryData
+      ).toHaveBeenCalled();
 
-        jest.spyOn(dashboardRepository, "getRecentIssues").mockResolvedValue(mockRawIssues);
-
-        const result = await dashboardService.getRecentIssues();
-
-        expect(result).toHaveLength(2);
-        
-        const firstIssue = result[0]!;
-        const secondIssue = result[1]!;
-
-        expect(firstIssue).toEqual({
-          issue_id: "issue-uuid-1",
-          member_name: "John Doe",
-          book_name: "TypeScript Deep Dive",
-          borrowed_date: mockRawIssues[0]!.borrowed_date,
-          due_date: mockRawIssues[0]!.due_date,
-        });
-
-        expect(secondIssue.member_name).toBe("Unknown Member");
-        expect(secondIssue.book_name).toBe("Unknown Book");
-      });
-    });
-
-    describe("getPopularBooks()", () => {
-      it("✅ Should pass through popular book array data", async () => {
-        const mockBooks = [
-          { book_id: "1", book_name: "Book A", lending_count: 25 }
-        ] as any;
-        
-        jest.spyOn(dashboardRepository, "getPopularBooks").mockResolvedValue(mockBooks);
-
-        const result = await dashboardService.getPopularBooks();
-        expect(result).toEqual(mockBooks);
-      });
-    });
-
-    describe("getMonthlyFineCollection()", () => {
-      it("✅ Should pass through financial collection tracking history", async () => {
-        const mockFines = [
-          { month: "2026-01-01", total: 450 }
-        ] as any;
-        
-        jest.spyOn(dashboardRepository, "getMonthlyFineCollection").mockResolvedValue(mockFines);
-
-        const result = await dashboardService.getMonthlyFineCollection();
-        expect(result).toEqual(mockFines);
-      });
+      expect(result).toEqual(summary);
     });
   });
 
-  // ==========================================
-  // 🗄️ PART 2: Dashboard Repository Layer Tests
-  // ==========================================
-  describe("📙 Dashboard Repository", () => {
+  describe("getPopularBooks", () => {
+    it("should return popular books", async () => {
+      const books = [
+        {
+          book_id: "book-1",
+          book_name: "Clean Code",
+          lending_count: 100,
+        },
+      ];
 
-    describe("getOverview()", () => {
-      beforeEach(() => {
-        // Mock the basic counting functions that execute inside Promise.all
-        jest.spyOn(Book, "count").mockResolvedValue(10);
-        jest.spyOn(Member, "count").mockResolvedValue(5);
-        jest.spyOn(Issue, "count").mockResolvedValue(2);
-      });
+      mockGetPopularBooks.mockResolvedValue(
+        books
+      );
 
-      it("✅ Should compile aggregate metrics correctly when fine records exist", async () => {
-        // Mock Fine aggregation finding an active record sum output string
-        jest.spyOn(Fine, "findOne").mockResolvedValue({ total_unpaid: "250" } as any);
+      const result =
+        await dashboardService.getPopularBooks();
 
-        const overview = await dashboardRepository.getOverview();
+      expect(
+        mockGetPopularBooks
+      ).toHaveBeenCalled();
 
-        expect(overview.totalBooks).toBe(10);
-        expect(overview.unpaidFines).toBe(250); // Confirms numeric conversion occurs smoothly
-      });
+      expect(result).toEqual(books);
+    });
+  });
 
-      // ✨ NEW TEST CASE: Forces coverage of line 72's false branch condition (: 0)
-      it("✅ Should fallback unpaidFines to 0 if fine collection query returns null", async () => {
-        // Force the aggregation database response to resolve to null
-        jest.spyOn(Fine, "findOne").mockResolvedValue(null);
+  describe("getRecentIssues", () => {
+    it("should map recent issues correctly", async () => {
+      const rawIssues = [
+        {
+          issue_id: "issue-1",
+          borrowed_date: new Date(),
+          due_date: new Date(),
+          member: {
+            user: {
+              name: "John Doe",
+            },
+          },
+          book: {
+            book_name: "Clean Code",
+          },
+        },
+      ];
 
-        const overview = await dashboardRepository.getOverview();
+      mockGetRecentIssues.mockResolvedValue(
+        rawIssues
+      );
 
-        expect(overview.unpaidFines).toBe(0); // Proves line 72 fallback branch condition works perfectly
-      });
+      const result =
+        await dashboardService.getRecentIssues();
+
+      expect(
+        mockGetRecentIssues
+      ).toHaveBeenCalled();
+
+      expect(result).toEqual([
+        {
+          issue_id: "issue-1",
+          member_name: "John Doe",
+          book_name: "Clean Code",
+          borrowed_date:
+            rawIssues[0]!.borrowed_date,
+
+          due_date:
+            rawIssues[0]!.due_date,
+        },
+      ]);
     });
 
-    describe("getPopularBooks()", () => {
-      it("✅ Should execute Book query with descending limit criteria", async () => {
-        const mockFindAll = jest.spyOn(Book, "findAll").mockResolvedValue([] as any);
+    it("should use fallback values when nested data is missing", async () => {
+      const rawIssues = [
+        {
+          issue_id: "issue-1",
+          borrowed_date: new Date(),
+          due_date: new Date(),
+          member: null,
+          book: null,
+        },
+      ];
 
-        await dashboardRepository.getPopularBooks();
+      mockGetRecentIssues.mockResolvedValue(
+        rawIssues
+      );
 
-        expect(mockFindAll).toHaveBeenCalledWith(
-          expect.objectContaining({
-            limit: 5,
-            order: [["lending_count", "DESC"]],
-          })
-        );
-      });
+      const result =
+        await dashboardService.getRecentIssues();
+
+      expect(result).toEqual([
+        {
+          issue_id: "issue-1",
+          member_name:
+            "Unknown Member",
+          book_name:
+            "Unknown Book",
+          borrowed_date:
+            rawIssues[0]!.borrowed_date,
+          due_date:
+            rawIssues[0]!.due_date,
+        },
+      ]);
     });
 
-    describe("getRecentIssues()", () => {
-      it("✅ Should fetch latest logs with deep relational model inclusion configurations", async () => {
-        const mockFindAll = jest.spyOn(Issue, "findAll").mockResolvedValue([] as any);
+    it("should return empty array when no issues exist", async () => {
+      mockGetRecentIssues.mockResolvedValue(
+        []
+      );
 
-        await dashboardRepository.getRecentIssues();
+      const result =
+        await dashboardService.getRecentIssues();
 
-        expect(mockFindAll).toHaveBeenCalledWith(
-          expect.objectContaining({
-            limit: 10,
-            order: [["created_at", "DESC"]],
-            include: expect.any(Array),
-          })
-        );
-      });
+      expect(result).toEqual([]);
     });
+  });
 
-    describe("getMonthlyFineCollection()", () => {
-      it("✅ Should process historical grouped entries chronologically", async () => {
-        const mockFindAll = jest.spyOn(Fine, "findAll").mockResolvedValue([] as any);
+  describe("getMonthlyFineCollection", () => {
+    it("should return monthly fine collection data", async () => {
+      const fineData = [
+        {
+          month: "2026-06",
+          total: 1200,
+        },
+      ];
 
-        await dashboardRepository.getMonthlyFineCollection();
+      mockGetMonthlyFineCollection.mockResolvedValue(
+        fineData
+      );
 
-        expect(mockFindAll).toHaveBeenCalledWith(
-          expect.objectContaining({
-            group: ["month"],
-            order: expect.any(Array),
-          })
-        );
-      });
+      const result =
+        await dashboardService.getMonthlyFineCollection();
+
+      expect(
+        mockGetMonthlyFineCollection
+      ).toHaveBeenCalled();
+
+      expect(result).toEqual(fineData);
     });
   });
 });

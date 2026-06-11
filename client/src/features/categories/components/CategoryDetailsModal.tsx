@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import type { CategoryMetrics } from "../types/category.types";
 
+// Editorial Visual Assets
+import { Layers, BookOpen, BarChart3, Calendar, Edit3, Trash2, X } from "lucide-react";
+
 interface CategoryDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -53,94 +56,123 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center overflow-y-auto font-sans">
-      <div className="fixed inset-0 bg-slate-950/20 backdrop-blur-sm" onClick={onClose} />
-      
-      <div className="relative z-10 w-full max-w-lg bg-white rounded-2xl p-6 border border-slate-200 shadow-2xl m-4">
-        {/* Header */}
-        <div className="flex justify-between items-start border-b border-slate-100 pb-4 mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 font-sans text-slate-700 text-left">
+      <div className="bg-white w-full max-w-xl rounded-2xl border border-slate-200 shadow-2xl overflow-hidden animate-scale-up">
+        
+        {/* Header section - Clean Dark Structured Banner */}
+        <div className="bg-slate-900 px-8 py-5 border-b border-slate-100 flex justify-between items-center">
           <div>
-            <span className="text-[10px] font-mono font-bold tracking-widest text-slate-500 uppercase bg-slate-100 px-2 py-0.5 rounded-md">
-              {readableId}
-            </span>
-            <h3 className="text-lg font-bold text-slate-950 mt-2">Category Information</h3>
+            <h3 className="text-xl font-bold text-white tracking-tight">Category Details</h3>
+            <p className="text-xs text-slate-400 font-mono font-bold tracking-wider mt-1 uppercase">
+              ID: {readableId}
+            </p>          
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-800 transition-colors cursor-pointer text-lg font-light">✕</button>
+          <button 
+            type="button"
+            onClick={onClose} 
+            className="text-slate-400 hover:bg-white/10 hover:rounded-lg transition-colors p-1 cursor-pointer"
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        {/* Content Details Block */}
-        <div className="space-y-5">
+        {/* Detailed Metadata Layout */}
+        <div className="p-8 space-y-5 text-base">
           <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Category Name</label>
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+              <Layers size={14} /> Category Name
+            </label>
             {isEditing ? (
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <input
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-sage-primary/20 focus:border-sage-primary outline-none transition-all"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-900 rounded-xl placeholder:text-slate-400 outline-hidden focus:bg-white focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all"
                 />
-                {localError && <p className="text-[10px] font-bold text-rose-600 px-1">{localError}</p>}
+                {localError && <p className="text-xs text-rose-700 font-bold mt-1.5 px-1">{localError}</p>}
               </div>
             ) : (
-              <p className="text-sm font-semibold text-slate-800 bg-slate-50 px-4 py-3 rounded-xl border border-slate-100">
+              <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900">
                 {category.category_name}
-              </p>
+              </div>
             )}
           </div>
 
+          {/* Stats Row layout */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Total Owned Books</span>
-              <span className="text-2xl font-black text-slate-900 font-mono tracking-tight">{category.booksCount}</span>
+            <div className="p-4 bg-amber-50/40 border border-amber-100 rounded-xl text-center">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
+                <BookOpen size={12} /> Total Owned Books
+              </span>
+              <span className="text-xl font-mono font-bold text-slate-900 mt-1 block">
+                {category.booksCount}
+              </span>
             </div>
-            <div className="p-4 bg-sage-primary/5 rounded-xl border border-sage-primary/10">
-              <span className="text-[10px] font-bold text-sage-primary/70 uppercase tracking-widest block mb-1">Total Borrows</span>
-              <span className="text-2xl font-black text-sage-primary font-mono tracking-tight">{category.lendingCount}</span>
+            
+            <div className="p-4 bg-amber-50/40 border border-amber-100 rounded-xl text-center">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
+                <BarChart3 size={12} /> Total Borrows
+              </span>
+              <span className="text-xl font-mono font-bold text-slate-900 mt-1 block">
+                {category.lendingCount}
+              </span>
             </div>
           </div>
 
-          <div className="pt-2 text-xs text-slate-500 font-medium">
-            <p>Created on: <span className="font-mono text-slate-700">{new Date(category.created_at).toLocaleDateString()}</span></p>
+          {/* Registry Date layout */}
+          <div>
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+              <Calendar size={14} /> System Registry Date
+            </label>
+            <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 text-sm font-semibold">
+              {new Date(category.created_at).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric"
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Footer Actions Panel */}
-        <div className="mt-8 flex justify-between items-center pt-4 border-t border-slate-100">
+        {/* Action Panel Footer */}
+        <div className="px-8 py-5 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end text-sm font-bold uppercase tracking-wider">
           <button
+            type="button"
             disabled={isMutating}
             onClick={() => onDeleteCategory(category)}
-            className="px-5 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 text-xs font-bold rounded-xl transition-all cursor-pointer"
+            className="mr-auto px-5 py-3 bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Delete Category
+            <Trash2 size={16} /> Delete Category
           </button>
 
-          <div className="flex gap-2">
-            {isEditing ? (
-              <>
-                <button
-                  onClick={() => { setIsEditing(false); setEditName(category.category_name); setLocalError(""); }}
-                  className="px-5 py-2.5 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold rounded-xl cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  disabled={isMutating}
-                  onClick={handleSaveEdit}
-                  className="px-5 py-2.5 bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-50 text-xs font-bold rounded-xl cursor-pointer"
-                >
-                  Save Changes
-                </button>
-              </>
-            ) : (
+          {isEditing ? (
+            <>
               <button
-                onClick={() => setIsEditing(true)}
-                className="px-5 py-2.5 bg-slate-100 text-slate-800 hover:bg-slate-200 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                type="button"
+                onClick={() => { setIsEditing(false); setEditName(category.category_name); setLocalError(""); }}
+                className="px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl transition-all hover:bg-slate-100 cursor-pointer"
               >
-                Modify Name
+                Cancel
               </button>
-            )}
-          </div>
+              <button
+                type="button"
+                disabled={isMutating}
+                onClick={handleSaveEdit}
+                className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save Changes
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Edit3 size={16} /> Modify Name
+            </button>
+          )}
         </div>
       </div>
     </div>

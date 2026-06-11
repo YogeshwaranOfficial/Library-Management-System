@@ -2,14 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import categoriesService from "./categories.service.js";
 
 class CategoriesController {
-  /**
-   * GET /categories/metrics
-   * Responds with the complete aggregated category tracking metrics feed
-   */
- /**
-   * GET /categories/metrics
-   * Responds with a paginated, searchable, and sortable aggregated category metrics grid
-   */
+  
   async getCategoriesWithMetrics(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       // 📥 Safely parse and fall back on sensible pagination defaults

@@ -1,11 +1,16 @@
+import { useState } from "react";
 import type { BookInventoryItem } from "../../../types/books";
+import { DeleteBookModal } from "./DeleteBookModal";
+
+// Editorial Visual Assets
+import { BookOpen, User, Layers, Calendar, Archive, BookmarkCheck, BarChart3, Edit3, Trash2, X } from "lucide-react";
 
 interface BookDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   book: BookInventoryItem | null;
   onEditTrigger: () => void;
-  onDeleteTrigger: () => void;
+  onDeleteTrigger: () => void; // Restored the original prop name here
 }
 
 export const BookDetailModal = ({
@@ -13,8 +18,11 @@ export const BookDetailModal = ({
   onClose,
   book,
   onEditTrigger,
-  onDeleteTrigger,
+  onDeleteTrigger, // Restored here
 }: BookDetailModalProps) => {
+  // Internal state tracking to switch over to the confirmation display layer
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
   if (!isOpen || !book) return null;
 
   // Format the ISO database timestamp into a human-readable calendar date
@@ -26,81 +34,128 @@ export const BookDetailModal = ({
     minute: "2-digit",
   });
 
+  const handleConfirmDeletion = () => {
+    setIsDeleteOpen(false); // Close the local delete confirmation modal state
+    onClose();             // Close the core details framework drawer
+    onDeleteTrigger();     // Execute the original deletion action from BooksPage.tsx
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-secondary/40 backdrop-blur-xs p-4 font-sans text-slate-secondary">
-      <div className="bg-white w-full max-w-lg rounded-2xl border border-slate-light/10 shadow-xl overflow-hidden animate-scale-up">
-        
-        {/* Header section */}
-        <div className="bg-canvas-dominant/80 px-6 py-4 border-b border-slate-light/10 flex justify-between items-center">
-          <div>
-            <h3 className="text-base font-bold text-slate-secondary tracking-tight">Book Details</h3>
-            <p className="text-[10px] text-slate-light font-bold font-data tracking-wider mt-0.5 uppercase">
-              ID: BOOK-{book.id ? String(book.id).slice(-4).toUpperCase() : "0000"}
-            </p>          
-          </div>
-          <button 
-            onClick={onClose} 
-            className="text-slate-light hover:text-slate-secondary transition-colors text-sm font-bold cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Detailed Metadata Grid */}
-        <div className="p-6 space-y-4 text-sm">
-          <div>
-            <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Book Name</label>
-            <div className="px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl font-semibold text-slate-secondary">{book.title}</div>
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 font-sans text-slate-700 text-left">
+        <div className="bg-white w-full max-w-xl rounded-2xl border border-slate-200 shadow-2xl overflow-hidden animate-scale-up">
+          
+          {/* Header section */}
+          <div className="bg-slate-900 px-8 py-5 border-b border-slate-100 flex justify-between items-center">
+            <div>
+              <h3 className="text-xl font-bold text-white tracking-tight">Book Details</h3>
+              <p className="text-xs text-slate-400 font-mono font-bold tracking-wider mt-1 uppercase">
+                ID: BOOK-{book.id ? String(book.id).slice(-4).toUpperCase() : "0000"}
+              </p>          
+            </div>
+            <button 
+              type="button"
+              onClick={onClose} 
+              className="text-slate-400 hover:bg-slate-100 hover:rounded-lg transition-colors p-1 cursor-pointer"
+            >
+              <X size={20} />
+            </button>
           </div>
 
-          <div>
-            <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Author / Creator</label>
-            <div className="px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-slate-secondary font-medium">{book.author}</div>
+          {/* Detailed Metadata Grid */}
+          <div className="p-8 space-y-5 text-base">
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <BookOpen size={14} /> Book Name
+              </label>
+              <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900">
+                {book.title}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <User size={14} /> Author / Creator
+              </label>
+              <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800">
+                {book.author}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                  <Layers size={14} /> Category Classification
+                </label>
+                <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 truncate">
+                  {book.categoryName}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                  <Calendar size={14} /> Shelf Registry Date
+                </label>
+                <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 text-sm font-semibold truncate">
+                  {shelfEntryDate}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3 bg-amber-50/40 border border-amber-100 p-4 rounded-xl text-center">
+              <div>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
+                  <Archive size={12} /> Total Owned
+                </span>
+                <span className="text-xl font-mono font-bold text-slate-900 mt-1 block">
+                  {book.totalCopies}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
+                  <BookmarkCheck size={12} /> On Shelf
+                </span>
+                <span className="text-xl font-mono font-bold text-emerald-700 mt-1 block">
+                  {book.availableCopies}
+                </span>
+              </div>
+              <div>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
+                  <BarChart3 size={12} /> Lending Count
+                </span>
+                <span className="text-xl font-mono font-bold text-slate-900 mt-1 block">
+                  {book.lendingCount}×
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Category Classification</label>
-              <div className="px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-slate-secondary font-medium truncate">{book.categoryName}</div>
-            </div>
-            <div>
-              <label className="text-xs font-bold text-slate-light uppercase tracking-wider block mb-1.5">Shelf Registry Date</label>
-              <div className="px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-slate-light text-xs font-bold font-data truncate">{shelfEntryDate}</div>
-            </div>
+          {/* Action Panel Footer */}
+          <div className="px-8 py-5 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end text-sm font-bold uppercase tracking-wider">
+            <button
+              type="button"
+              onClick={() => setIsDeleteOpen(true)} // Toggles our local state to open the confirm window
+              className="px-5 py-3 bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <Trash2 size={16} /> Remove Book
+            </button>
+            <button
+              type="button"
+              onClick={() => { onClose(); onEditTrigger(); }}
+              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Edit3 size={16} /> Edit Book
+            </button>
           </div>
-
-          <div className="grid grid-cols-3 gap-3 bg-sage-primary/5 border border-sage-primary/10 p-3.5 rounded-xl text-center">
-            <div>
-              <span className="block text-[10px] font-bold text-slate-light uppercase tracking-wider">Total Owned</span>
-              <span className="text-base font-bold text-slate-secondary font-data mt-0.5 block">{book.totalCopies}</span>
-            </div>
-            <div>
-              <span className="block text-[10px] font-bold text-slate-light uppercase tracking-wider">On Shelf</span>
-              <span className="text-base font-bold text-sage-primary font-data mt-0.5 block">{book.availableCopies}</span>
-            </div>
-            <div>
-              <span className="block text-[10px] font-bold text-slate-light uppercase tracking-wider">Lending Count</span>
-              <span className="text-base font-bold text-slate-secondary font-data mt-0.5 block">{book.lendingCount}×</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Panel Footer */}
-        <div className="px-6 py-4 bg-canvas-dominant border-t border-slate-light/10 flex gap-2 justify-end text-xs font-bold">
-          <button
-            onClick={() => { onClose(); onDeleteTrigger(); }}
-            className="px-4 py-2 bg-utility-crimson/10 text-utility-crimson border border-utility-crimson/10 hover:bg-utility-crimson/20 rounded-xl transition-colors cursor-pointer"
-          >
-            Remove Book
-          </button>
-          <button
-            onClick={() => { onClose(); onEditTrigger(); }}
-            className="px-5 py-2.5 bg-sage-primary hover:bg-sage-primary/90 text-white rounded-xl shadow-xs transition-all cursor-pointer"
-          >
-            Edit Book
-          </button>
         </div>
       </div>
-    </div>
+
+      {/* Embedded inline confirmation screen */}
+      <DeleteBookModal 
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={handleConfirmDeletion}
+        bookTitle={book.title}
+      />
+    </>
   );
 };

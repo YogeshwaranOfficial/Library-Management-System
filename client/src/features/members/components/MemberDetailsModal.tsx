@@ -44,78 +44,79 @@ export const MemberDetailsModal: React.FC<MemberDetailsModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-secondary/40 p-4 backdrop-blur-xs font-sans">
-        <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl transition-all overflow-hidden border border-slate-light/10 flex flex-col max-h-[90vh]">
+      {/* High contrast bright layout backdrops with light frosting filters */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs font-sans">
+        <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl transition-all overflow-hidden border border-amber-100 flex flex-col max-h-[90vh]">
           
-          {/* Header Grid Framework */}
-          <div className="flex items-center justify-between border-b border-slate-light/10 p-5 bg-canvas-dominant/60">
-            <h3 className="text-base font-bold text-slate-secondary tracking-tight">
-              {showRenewalScreen ? "✨ Renew Membership Plan" : "📇 Member Profile"}
+          {/* Header Grid Framework - Clean Bright Banner */}
+          <div className="flex items-center justify-between border-b border-slate-100 p-5 bg-slate-900">
+            <h3 className="text-xl font-bold text-white tracking-tight">
+              {showRenewalScreen ? "Renew Membership Plan" : "Member Details"}
             </h3>
             <button 
               onClick={() => { setShowRenewalScreen(false); onClose(); }}
-              className="text-slate-light hover:text-slate-secondary transition-colors text-sm font-bold cursor-pointer p-1"
+              className="text-slate-400 hover:text-slate-900 transition-colors text-base font-bold cursor-pointer p-1.5 hover:bg-slate-100 rounded-lg"
             >
               ✕
             </button>
           </div>
 
           {/* Content Box Switcher Container */}
-          <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-secondary">
+          <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-700">
             {!showRenewalScreen ? (
               /* SCREEN A: DETAILED ACCOUNT OVERVIEW INFO CARD */
               <div className="space-y-6">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <h4 className="text-xl font-extrabold text-slate-secondary tracking-tight">{member.name}</h4>
-                    <p className="text-xs text-slate-light font-bold font-data mt-1 tracking-wide">
-                      Member ID: #MEMBER-{member.id ? member.id.split("-").pop()?.slice(-4).toUpperCase() : "0000"}
+                    <h4 className="text-xl font-bold text-slate-900 tracking-tight">{member.name}</h4>
+                    <p className="text-xs text-slate-400 font-bold mt-1 tracking-wide uppercase">
+                      ID: REGISTER-{member.id ? member.id.split("-").pop()?.slice(-4).toUpperCase() : "0000"}
                     </p>
                   </div>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider ${
+                  <span className={`self-start sm:self-auto inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide ${
                     member.isActive 
-                      ? "bg-sage-primary/10 text-sage-primary border border-sage-primary/20" 
-                      : "bg-utility-crimson/10 text-utility-crimson border border-utility-crimson/20"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                      : "bg-rose-50 text-rose-700 border border-rose-200"
                   }`}>
                     {member.isActive ? "Plan: Active" : "Plan: Expired"}
                   </span>
                 </div>
 
-                <hr className="border-slate-light/10" />
+                <hr className="border-slate-100" />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6 text-sm font-data">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6 text-sm">
                   <div>
-                    <span className="block text-xs font-bold text-slate-light uppercase tracking-wider font-sans">Email Address</span>
-                    <span className="font-semibold text-slate-secondary mt-1 block select-all">{member.email}</span>
+                    <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">Email Address</span>
+                    <span className="font-semibold text-slate-900 mt-1 block select-all text-base">{member.email}</span>
                   </div>
                   <div>
-                    <span className="block text-xs font-bold text-slate-light uppercase tracking-wider font-sans">Phone Number</span>
-                    <span className="font-semibold text-slate-secondary mt-1 block select-all">{member.phoneNumber || "No Verified Phone"}</span>
+                    <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">Phone Number</span>
+                    <span className="font-semibold text-slate-900 mt-1 block select-all text-base">{member.phoneNumber || "No Verified Phone"}</span>
                   </div>
                   <div>
-                    <span className="block text-xs font-bold text-slate-light uppercase tracking-wider font-sans">Current Active Plan</span>
+                    <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">Current Active Plan</span>
                     <div className="mt-1.5">
-                      <span className="inline-block px-2.5 py-0.5 rounded-md text-xs font-bold bg-sage-primary/10 text-sage-primary border border-sage-primary/20 font-sans tracking-wide">
+                      <span className="inline-block px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/40">
                         {member.membershipPlanName}
                       </span>
                     </div>
                   </div>
                   <div>
-                    <span className="block text-xs font-bold text-slate-light uppercase tracking-wider font-sans">Plan Expiry Date</span>
-                    <span className="font-bold text-slate-secondary mt-1 block">
+                    <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">Plan Expiry Date</span>
+                    <span className="font-bold text-slate-900 mt-1 block text-base">
                       {member.expiryDate}
                     </span>
                   </div>
                 </div>
 
                 {/* Operations Layout Interface */}
-                <div className="pt-4 border-t border-slate-light/10 flex justify-between items-center gap-3">
+                <div className="pt-5 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setIsDeleteOpen(true)}
-                    className="px-3 py-2 text-xs font-bold text-utility-crimson hover:bg-utility-crimson/10 rounded-xl transition-all cursor-pointer"
+                    className="px-4 py-2.5 text-xs font-bold text-rose-700 uppercase tracking-wide hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-xl transition-all cursor-pointer text-left sm:text-center"
                   >
-                    🗑️ Delete Account
+                    Delete Account
                   </button>
                   
                   <button
@@ -124,39 +125,39 @@ export const MemberDetailsModal: React.FC<MemberDetailsModalProps> = ({
                       setSelectedPlanId(member.membershipPlanId);
                       setShowRenewalScreen(true);
                     }}
-                    className="px-4 py-2.5 bg-sage-primary hover:bg-sage-primary/90 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+                    className="px-5 py-3.5 bg-slate-900 hover:bg-slate-800 text-amber-50 text-sm font-bold rounded-xl transition-all cursor-pointer shadow-sm text-center"
                   >
-                    🔄 Renew Membership Plan
+                    Renew Membership Plan
                   </button>
                 </div>
               </div>
             ) : (
               /* SCREEN B: DYNAMIC RENEWAL INPUT SCREEN */
-              <form onSubmit={handleRenewSubmit} className="space-y-5">
-                <div className="p-4 bg-sage-primary/10 border border-sage-primary/20 rounded-xl text-xs text-slate-secondary font-semibold leading-relaxed">
-                  ℹ️ You are renewing the subscription plan for <b className="text-sage-primary font-bold">{member.name}</b>. 
-                  Submitting this update logs the start date as <b className="font-data">Today</b> and automatically assigns the corresponding contract validation cycles.
+              <form onSubmit={handleRenewSubmit} className="space-y-6">
+                <div className="p-4 bg-amber-50/60 border border-amber-200/60 rounded-xl text-sm text-slate-600 font-medium leading-relaxed">
+                  You are renewing the subscription plan for <span className="text-slate-900 font-bold">{member.name}</span>. 
+                  Submitting this update logs the start date as <span className="text-slate-900 font-bold">Today</span> and automatically assigns the corresponding contract validation cycles.
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-xs font-bold text-slate-light uppercase tracking-wider">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide">
                     Select Membership Plan
                   </label>
                   <select
                     required
                     value={selectedPlanId}
                     onChange={(e) => setSelectedPlanId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold outline-hidden cursor-pointer focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-sm font-semibold outline-none cursor-pointer focus:bg-white focus:border-slate-400 transition-all"
                   >
-                    <option value="">All Membership Plans</option>
+                    <option value="" className="text-slate-400">Select an option...</option>
                     {plans.map((p: MembershipPlan & { plan_name?: string }) => {
                       const planData = (p as unknown) as Record<string, unknown>;
                       const fallbackId = planData.membership_plan_id || planData.id;
                       const fallbackName = planData.plan_name || planData.name || "Unnamed Tier";
                       
                       return (
-                        <option key={String(fallbackId)} value={String(fallbackId)} className="font-data">
-                          {String(fallbackName)}
+                        <option key={String(fallbackId)} value={String(fallbackId)}>
+                          {String(fallbackName).toUpperCase()}
                         </option>
                       );
                     })}
@@ -164,20 +165,20 @@ export const MemberDetailsModal: React.FC<MemberDetailsModalProps> = ({
                 </div>
 
                 {/* Renewal Control Actions */}
-                <div className="pt-4 border-t border-slate-light/10 flex justify-end gap-2 text-xs font-bold">
+                <div className="pt-5 border-t border-slate-100 flex justify-end gap-3 text-xs font-bold tracking-wide">
                   <button
                     type="button"
                     onClick={() => setShowRenewalScreen(false)}
-                    className="px-4 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl transition-all hover:bg-slate-light/5 cursor-pointer"
+                    className="px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl transition-all hover:bg-slate-100 cursor-pointer"
                   >
                     Back to Profile
                   </button>
                   <button
                     type="submit"
                     disabled={isRenewing || !selectedPlanId}
-                    className="px-5 py-2.5 bg-sage-primary hover:bg-sage-primary/90 text-white rounded-xl transition-all disabled:bg-slate-light/20 disabled:text-slate-light/50 disabled:cursor-not-allowed cursor-pointer"
+                    className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-amber-50 rounded-xl transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer shadow-sm"
                   >
-                    {isRenewing ? "Activating..." : "🚀 Activate New Plan"}
+                    {isRenewing ? "Activating..." : "Activate New Plan"}
                   </button>
                 </div>
               </form>

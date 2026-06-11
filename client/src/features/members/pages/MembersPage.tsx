@@ -8,6 +8,7 @@ import type { LibraryMember, MembershipPlan, SystemUser } from "../../../types/m
 import type { MemberFormValues } from "../schemas/memberSchema";
 import { toast } from "sonner";
 import { useAuthStore } from "../../../store/authStore";
+import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 
 export const MembersPage = () => {
   const queryClient = useQueryClient();
@@ -25,7 +26,7 @@ export const MembersPage = () => {
 
   const token = useAuthStore((state) => state.token);
 
-  // 💡 CORE QUERY ENGINE (Hooks searching & filtering strings directly to API limits)
+  // Core background querying pipeline mapping directly to server indices
   const { data: membersPayload, isLoading } = useQuery<{ total: number; data: LibraryMember[] }>({
     queryKey: ["membersListFeed", token, currentPage, searchTerm, tierFilter, statusFilter],
     queryFn: async () => {
@@ -69,7 +70,7 @@ export const MembersPage = () => {
     enabled: !!token,
   });
 
-  // Pull plan structural list catalogs for the dropdown selectors
+  // Pull plan catalogs for layout dropdown filtering selectors
   const { data: plans = [] } = useQuery<MembershipPlan[]>({
     queryKey: ["membershipPlansFeed", token],
     queryFn: async () => {
@@ -79,7 +80,7 @@ export const MembersPage = () => {
     enabled: !!token,
   });
 
-  // Fetching System Users to fill the profile dropdown target selectors
+  // Fetching profiles to load form modal registration selectors
   const { data: users = [] } = useQuery<SystemUser[]>({
     queryKey: ["eligibleUsersList", token], 
     queryFn: async () => {
@@ -89,7 +90,7 @@ export const MembersPage = () => {
     enabled: !!token,
   });
 
-  // Create or Update Membership Master Pipeline Mutation
+  // Create or Update Member Pipeline Mutation
   const saveMemberMutation = useMutation({
     mutationFn: async (payload: MemberFormValues) => {
       const processedPayload = {
@@ -115,15 +116,12 @@ export const MembersPage = () => {
       let serverErrorMessage = "Database schema validation failed on submission updates.";
       if (error instanceof AxiosError) {
         serverErrorMessage = error.response?.data?.message || serverErrorMessage;
-        console.error("Validation Breakdown Details:", error.response?.data);
-      } else {
-        console.error("An unexpected system error occurred:", error);
       }
       toast.error(serverErrorMessage);
     }
   });
 
-  // RENEW SUBMISSION MUTATION (From the row info cards details panel directly)
+  // Renew details card mutation mapping updates safely
   const renewMutation = useMutation({
     mutationFn: async ({ memberId, planId }: { memberId: string; planId: string }) => {
       return await axiosClient.patch(`/members/${memberId}`, {
@@ -132,7 +130,7 @@ export const MembersPage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
-      toast.success("💥 Membership activated successfully!");
+      toast.success("Membership activated successfully!");
       setIsDetailsOpen(false);
       setSelectedMember(null);
     },
@@ -145,7 +143,7 @@ export const MembersPage = () => {
     }
   });
 
-  // DELETE ACCOUNT PROFILES CLEARANCE MUTATION
+  // Delete account profile dataset logs mutation
   const deleteMutation = useMutation({
     mutationFn: async (memberId: string) => {
       return await axiosClient.delete(`/members/${memberId}`);
@@ -172,38 +170,43 @@ export const MembersPage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in bg-canvas-dominant font-sans text-slate-secondary">
-      {/* Page Core Header Block */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-light/10 shadow-xs">
+    <div className="space-y-6 animate-fade-in bg-transparent font-sans text-xs sm:text-sm text-slate-700 pb-12">
+      
+      {/* Page Core Header Block - Spacious Layout Ivory Card */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200/60 shadow-xs">
         <div>
-          <h2 className="text-xl font-bold text-slate-secondary tracking-tight">Library Members Registry</h2>
-          <p className="text-xs text-slate-light mt-0.5">Click any record row to manage tier tracking, view info cards, or extend membership renewals.</p>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Members Management Desk</h2>
+          <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
+            Click any record row to manage tier tracking, view info cards, or extend membership renewals.
+          </p>
         </div>
         <button
           onClick={() => { setSelectedMember(null); setIsFormOpen(true); }}
-          className="px-4 py-2.5 bg-sage-primary hover:bg-sage-primary/90 text-white text-sm font-bold rounded-xl shadow-xs transition-all whitespace-nowrap cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all whitespace-nowrap cursor-pointer shadow-xs self-stretch sm:self-auto justify-center"
         >
-          ➕ Add New Member
+          <Plus size={14} />
+          <span>Add New Member</span>
         </button>
       </div>
 
-      {/* Control Utility Toolbar Filters Line */}
-      <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-xl border border-slate-light/10 shadow-2xs">
-        <div className="relative flex-1">
+      {/* Control Utility Filter Toolbar Line */}
+      <div className="flex flex-col md:flex-row gap-4 bg-white p-5 rounded-2xl border border-slate-200/60 shadow-xs">
+        <div className="relative flex-1 w-full">
           <input
             type="text"
-            placeholder="🔎 Search by member name..."
+            placeholder="Search by member name..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden transition-all font-data"
+            className="w-full pl-11 pr-4 py-2 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl text-xs sm:text-sm font-medium placeholder:text-slate-400 focus:bg-white focus:border-slate-900 outline-hidden focus:ring-4 focus:ring-slate-900/5 transition-all"
           />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
         </div>
 
-        <div className="grid grid-cols-2 sm:flex gap-3">
+        <div className="grid grid-cols-2 sm:flex gap-3 w-full md:w-auto">
           <select
             value={tierFilter}
             onChange={(e) => { setTierFilter(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden cursor-pointer font-sans font-semibold"
+            className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider outline-hidden focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 focus:bg-white cursor-pointer"
           >
             <option value="">All Membership Plans</option>
             {plans.map((p) => (
@@ -216,43 +219,45 @@ export const MembersPage = () => {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="px-3 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden cursor-pointer font-sans font-semibold"
+            className="px-4 py-2 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider outline-hidden focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 focus:bg-white cursor-pointer"
           >
-            <option value="">Status</option>
+            <option value="">All Statuses</option>
             <option value="ACTIVE">Active Plan</option>
             <option value="EXPIRED">Expired Plan</option>
           </select>
 
           <button
             onClick={handleClearFilters}
-            className="px-4 py-2 bg-utility-crimson/10 hover:bg-utility-crimson/20 text-utility-crimson text-xs font-bold rounded-xl transition-all cursor-pointer col-span-2 sm:col-auto whitespace-nowrap"
+            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer col-span-2 sm:col-auto whitespace-nowrap"
           >
-            Clear Filters
+            Reset
           </button>
         </div>
       </div>
 
-      {/* Master Content Ledger Grid */}
+      {/* Master Content Ledger Grid Table */}
       {isLoading ? (
-        <div className="text-center py-20 text-xs text-slate-light font-bold uppercase tracking-wider animate-pulse">Syncing Library Membership Database...</div>
+        <div className="text-center py-24 text-xs text-slate-400 font-bold uppercase tracking-widest animate-pulse">
+          Syncing Library Membership Database...
+        </div>
       ) : (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-light/10 shadow-xs overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-light/10 text-xs font-bold text-slate-light uppercase bg-canvas-dominant/60 tracking-wider font-sans">
-                    <th className="py-4 px-5">Member Name</th>
-                    <th className="py-4 px-5">Contact Details</th>
-                    <th className="py-4 px-5">Current Plan</th>
-                    <th className="py-4 px-5">Plan Expiry Date</th>
-                    <th className="py-4 px-5网页 center text-center">Status</th>
+                  <tr className="border-b border-slate-100 text-[10px] sm:text-xs font-bold text-slate-400 uppercase bg-slate-50/50 tracking-wider">
+                    <th className="py-4 px-6">Member Name</th>
+                    <th className="py-4 px-6">Contact Details</th>
+                    <th className="py-4 px-6">Current Plan</th>
+                    <th className="py-4 px-6">Plan Expiry Date</th>
+                    <th className="py-4 px-6 text-center">Status</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm divide-y divide-slate-light/10 text-slate-secondary font-data">
+                <tbody className="text-xs sm:text-sm divide-y divide-slate-100 text-slate-700">
                   {memberList.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-sm text-slate-light font-medium font-sans">
+                      <td colSpan={5} className="py-20 text-center text-xs text-slate-500 font-medium">
                         No active matching subscriber accounts found on server indexing.
                       </td>
                     </tr>
@@ -261,28 +266,28 @@ export const MembersPage = () => {
                       <tr 
                         key={member.id} 
                         onClick={() => { setSelectedMember(member); setIsDetailsOpen(true); }}
-                        className="hover:bg-sage-primary/5 transition-colors cursor-pointer group select-none"
+                        className="hover:bg-slate-50 transition-colors cursor-pointer group select-none"
                       >
-                        <td className="py-4 px-5 font-bold text-slate-secondary group-hover:text-sage-primary transition-colors font-sans">
+                        <td className="py-4 px-6 font-bold text-slate-900 transition-colors">
                           {member.name}
                         </td>
-                        <td className="py-4 px-5">
-                          <div className="font-semibold text-slate-secondary">{member.email}</div>
-                          <div className="text-xs text-slate-light mt-0.5 font-medium">{member.phoneNumber || "No Phone Contact"}</div>
+                        <td className="py-4 px-6">
+                          <div className="font-semibold text-slate-800">{member.email}</div>
+                          <div className="text-[11px] sm:text-xs text-slate-400 mt-0.5 font-medium">{member.phoneNumber || "No Phone Contact"}</div>
                         </td>
-                        <td className="py-4 px-5 font-sans">
-                          <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-canvas-dominant text-slate-secondary border border-slate-light/10 tracking-wide">
+                        <td className="py-4 px-6">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] sm:text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/40">
                             {member.membershipPlanName}
                           </span>
                         </td>
-                        <td className="py-4 px-5 font-semibold text-slate-light">
+                        <td className="py-4 px-6 font-semibold text-slate-500">
                           {member.expiryDate}
                         </td>
-                        <td className="py-4 px-5 text-center font-sans">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-extrabold tracking-wide uppercase ${
+                        <td className="py-4 px-6 text-center">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs font-bold border ${
                             member.isActive 
-                              ? "bg-sage-primary/10 text-sage-primary border border-sage-primary/20" 
-                              : "bg-utility-crimson/10 text-utility-crimson border border-utility-crimson/20"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                              : "bg-rose-50 text-rose-700 border-rose-200"
                           }`}>
                             {member.isActive ? "Active" : "Expired"}
                           </span>
@@ -293,34 +298,36 @@ export const MembersPage = () => {
                 </tbody>
               </table>
             </div>
-          </div>
 
-          {/* SERVER PAGINATION NAVIGATION FOOTER */}
-          <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-light/10 shadow-2xs">
-            <span className="text-xs text-slate-light font-semibold font-sans">
-              Showing Page <b className="text-slate-secondary font-data">{currentPage}</b> of <b className="text-slate-secondary font-data">{totalPages}</b> ({totalItems} Members Found)
-            </span>
-            <div className="flex gap-2 font-sans">
-              <button
-                disabled={currentPage === 1 || totalPages <= 1}
-                onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.max(prev - 1, 1)); }}
-                className="px-3 py-1.5 bg-canvas-dominant text-slate-secondary border border-slate-light/10 rounded-lg text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-light/5 transition-all cursor-pointer"
-              >
-                ◀ Previous
-              </button>
-              <button
-                disabled={currentPage === totalPages || totalPages <= 1}
-                onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.min(prev + 1, totalPages)); }}
-                className="px-3 py-1.5 bg-canvas-dominant text-slate-secondary border border-slate-light/10 rounded-lg text-xs font-bold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-light/5 transition-all cursor-pointer"
-              >
-                Next ▶
-              </button>
+            {/* Pagination Navigation Footer Deck */}
+            <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+              <span>
+                 Page {currentPage} / {totalPages} <span className="text-slate-300 mx-2">|</span> Total {totalItems} Members
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={currentPage === 1 || totalPages <= 1}
+                  onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.max(prev - 1, 1)); }}
+                  className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages || totalPages <= 1}
+                  onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.min(prev + 1, totalPages)); }}
+                  className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Popup Form Modal Layer */}
+      {/* Popup Form Modals Layers */}
       <MemberModal
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}

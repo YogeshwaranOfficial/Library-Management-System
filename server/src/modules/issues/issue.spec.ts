@@ -1,313 +1,945 @@
-// import { jest } from "@jest/globals";
-// import httpStatus from "http-status-codes";
+import { jest } from "@jest/globals";
 
-// // Import the actual models and repository so jest.spyOn can track types automatically
-// import Member from "../../database/models/Member.js";
-// import Book from "../../database/models/Book.js";
-// import Fine from "../../database/models/Fine.js";
-// import Issue from "../../database/models/Issue.js";
-// import issueRepository from "./issue.repository.js";
+jest.unstable_mockModule("./issue.repository.js", () => ({
+  default: {
+    getAllIssuesDetailed: jest.fn(),
+    getMemberAllowanceData: jest.fn(),
+    getActiveIssue: jest.fn(),
+    createIssue: jest.fn(),
+    findIssueById: jest.fn(),
+    returnBook: jest.fn(),
+    updateIssue: jest.fn(),
+    getMemberIssues: jest.fn(),
+    deleteIssueById: jest.fn(),
+    deleteManyIssues: jest.fn(),
+  },
+}));
 
-// import issueService from "./issue.service.js";
-// import AppError from "../../utils/AppError.js";
+jest.unstable_mockModule("../../database/models/Member.js", () => ({
+  default: {
+    findByPk: jest.fn(),
+  },
+}));
 
-// describe("⚙️ Issues Module - Unit Tests (Service Layer)", () => {
-  
-//   beforeEach(() => {
-//     jest.restoreAllMocks();
-//     jest.clearAllMocks();
-//   });
+jest.unstable_mockModule("../../database/models/Book.js", () => ({
+  default: {
+    findByPk: jest.fn(),
+  },
+}));
 
-//   // ==========================================
-//   // 📘 1. borrowBook() Scenarios
-//   // ==========================================
-//   describe("borrowBook", () => {
-//     const memberId = "member-uuid-1111";
-//     const bookId = "book-uuid-2222";
+jest.unstable_mockModule("../../database/models/Fine.js", () => ({
+  default: {
+    findOne: jest.fn(),
+    create: jest.fn(),
+    destroy: jest.fn(),
+  },
+}));
 
-//     it("❌ Should throw 404 error if member is not found", async () => {
-//       jest.spyOn(Member, "findByPk").mockResolvedValue(null);
+jest.unstable_mockModule("../../database/models/Issue.js", () => ({
+  default: {
+    count: jest.fn(),
+    findAll: jest.fn(),
+    update: jest.fn(),
+  },
+}));
 
-//       await expect(issueService.borrowBook(memberId, bookId)).rejects.toThrow(
-//         new AppError("Member not found", httpStatus.NOT_FOUND)
-//       );
-//     });
+jest.unstable_mockModule(
+  "../../database/models/MembershipPlan.js",
+  () => ({
+    default: {},
+  })
+);
 
-//     it("❌ Should throw 400 error if membership status is not ACTIVE", async () => {
-//       jest.spyOn(Member, "findByPk").mockResolvedValue({
-//         member_id: memberId,
-//         membership_status: "EXPIRED",
-//       } as any);
+jest.unstable_mockModule("../../database/index.js", () => ({
+  sequelize: {
+    transaction: jest.fn(),
+  },
+}));
 
-//       await expect(issueService.borrowBook(memberId, bookId)).rejects.toThrow(
-//         new AppError("Membership is not active", httpStatus.BAD_REQUEST)
-//       );
-//     });
+const { default: issueService } =
+  await import("./issue.service.js");
 
-//     it("❌ Should throw 400 error if no membership plan is attached to the member", async () => {
-//       jest.spyOn(Member, "findByPk").mockResolvedValue({
-//         member_id: memberId,
-//         membership_status: "ACTIVE",
-//         membership_plan: null,
-//       } as any);
+const { default: issueRepository } =
+  await import("./issue.repository.js");
 
-//       await expect(issueService.borrowBook(memberId, bookId)).rejects.toThrow(
-//         new AppError("No membership plan associated with this account", httpStatus.BAD_REQUEST)
-//       );
-//     });
+const { default: Member } =
+  await import("../../database/models/Member.js");
 
-//     it("❌ Should throw 400 error if member has reached their active borrow plan limits", async () => {
-//       jest.spyOn(Member, "findByPk").mockResolvedValue({
-//         member_id: memberId,
-//         membership_status: "ACTIVE",
-//         membership_plan: { max_books: 3, plan_name: "Gold" },
-//       } as any);
-//       jest.spyOn(Issue, "count").mockResolvedValue(3);
+const { default: Book } =
+  await import("../../database/models/Book.js");
 
-//       await expect(issueService.borrowBook(memberId, bookId)).rejects.toThrow(
-//         /Borrow limit reached. Your Gold plan only allows up to 3 books/
-//       );
-//     });
+const { default: Fine } =
+  await import("../../database/models/Fine.js");
 
-//     it("❌ Should use 'Current' as a fallback plan name when the plan has no explicit name assigned", async () => {
-//       jest.spyOn(Member, "findByPk").mockResolvedValue({
-//         member_id: memberId,
-//         membership_status: "ACTIVE",
-//         membership_plan: { max_books: 2, plan_name: "" }, 
-//       } as any);
-//       jest.spyOn(Issue, "count").mockResolvedValue(2);
+const { default: Issue } =
+  await import("../../database/models/Issue.js");
 
-//       await expect(issueService.borrowBook(memberId, bookId)).rejects.toThrow(
-//         /Your Current plan only allows up to 2 books/
-//       );
-//     });
+const { sequelize } =
+  await import("../../database/index.js");
 
-//     it("❌ Should throw 404 error if targeted book cannot be found", async () => {
-//       jest.spyOn(Member, "findByPk").mockResolvedValue({
-//         member_id: memberId,
-//         membership_status: "ACTIVE",
-//         membership_plan: { max_books: 5, plan_name: "Platinum" },
-//       } as any);
-//       jest.spyOn(Issue, "count").mockResolvedValue(1);
-//       jest.spyOn(Book, "findByPk").mockResolvedValue(null);
+const mockIssueRepository =
+  issueRepository as any;
 
-//       await expect(issueService.borrowBook(memberId, bookId)).rejects.toThrow(
-//         new AppError("Book not found", httpStatus.NOT_FOUND)
-//       );
-//     });
+const mockMember =
+  Member as any;
 
-//     it("❌ Should throw 400 error if book has 0 available copies left", async () => {
-//       jest.spyOn(Member, "findByPk").mockResolvedValue({
-//         member_id: memberId,
-//         membership_status: "ACTIVE",
-//         membership_plan: { max_books: 5, plan_name: "Platinum" },
-//       } as any);
-//       jest.spyOn(Issue, "count").mockResolvedValue(1);
-//       jest.spyOn(Book, "findByPk").mockResolvedValue({ book_id: bookId, available_copies: 0 } as any);
+const mockBook =
+  Book as any;
 
-//       await expect(issueService.borrowBook(memberId, bookId)).rejects.toThrow(
-//         new AppError("Book unavailable", httpStatus.BAD_REQUEST)
-//       );
-//     });
+const mockFine =
+  Fine as any;
 
-//     it("❌ Should throw 400 error if member is already borrowing an unreturned copy of this exact book", async () => {
-//       jest.spyOn(Member, "findByPk").mockResolvedValue({
-//         member_id: memberId,
-//         membership_status: "ACTIVE",
-//         membership_plan: { max_books: 5 },
-//       } as any);
-//       jest.spyOn(Issue, "count").mockResolvedValue(1);
-//       jest.spyOn(Book, "findByPk").mockResolvedValue({ book_id: bookId, available_copies: 5 } as any);
-//       jest.spyOn(issueRepository, "getActiveIssue").mockResolvedValue({ issue_id: "existing-issue" } as any);
+const mockIssue =
+  Issue as any;
 
-//       await expect(issueService.borrowBook(memberId, bookId)).rejects.toThrow(
-//         new AppError("Book already borrowed and not returned yet", httpStatus.BAD_REQUEST)
-//       );
-//     });
+const mockSequelize =
+  sequelize as any;
 
-//     it("✅ Should successfully issue a book, decrement copies, and increment lending count", async () => {
-//       jest.spyOn(Member, "findByPk").mockResolvedValue({
-//         member_id: memberId,
-//         membership_status: "ACTIVE",
-//         membership_plan: { max_books: 5 },
-//       } as any);
-//       jest.spyOn(Issue, "count").mockResolvedValue(0);
-//       jest.spyOn(Book, "findByPk").mockResolvedValue({ 
-//         book_id: bookId, 
-//         available_copies: 10,
-//         lending_count: 2 
-//       } as any);
-//       jest.spyOn(issueRepository, "getActiveIssue").mockResolvedValue(null);
-      
-//       const createdIssuePayload = { issue_id: "new-issue-123", member_id: memberId, book_id: bookId };
-//       jest.spyOn(issueRepository, "createIssue").mockResolvedValue(createdIssuePayload as any);
-//       const bookUpdateSpy = jest.spyOn(Book, "update").mockResolvedValue([1]);
+describe("IssueService Unit Tests", () => {
+  const mockTransaction = {
+    LOCK: {
+      UPDATE: "UPDATE",
+    },
+  };
 
-//       const result = await issueService.borrowBook(memberId, bookId);
+  beforeEach(() => {
+    jest.clearAllMocks();
 
-//       expect(issueRepository.createIssue).toHaveBeenCalledWith(
-//         expect.objectContaining({ member_id: memberId, book_id: bookId })
-//       );
-//       expect(bookUpdateSpy).toHaveBeenCalledWith(
-//         { available_copies: 9, lending_count: 3 },
-//         { where: { book_id: bookId } }
-//       );
-//       expect(result).toEqual(createdIssuePayload);
-//     });
-//   });
+    mockSequelize.transaction.mockImplementation(
+      async (callback: any) =>
+        callback(mockTransaction)
+    );
+  });
 
-//   // ==========================================
-//   // 📘 2. returnBook() Scenarios
-//   // ==========================================
-//   describe("returnBook", () => {
-//     const issueId = "issue-uuid-9999";
-//     const bookId = "book-uuid-2222";
+  // ====================================================
+  // getAllIssuesFeed
+  // ====================================================
 
-//     it("❌ Should throw 404 error if issue record does not exist", async () => {
-//       jest.spyOn(issueRepository, "findIssueById").mockResolvedValue(null);
+  describe("getAllIssuesFeed", () => {
+    it("should return mapped issue feed", async () => {
+      mockIssueRepository
+        .getAllIssuesDetailed
+        .mockResolvedValue([
+          {
+            issue_id: "issue-1",
+            member_id: "member-1",
+            book_id: "book-1",
+            borrowed_date: "2026-01-01",
+            due_date: "2099-01-10",
+            returned_date: null,
+            issue_status: "BORROWED",
+            member: {
+              user: {
+                name: "John Doe",
+                gmail: "john@gmail.com",
+                phone_number: "9999999999",
+              },
+            },
+            book: {
+              book_name: "Clean Code",
+              book_author: "Robert Martin",
+            },
+          },
+        ]);
 
-//       await expect(issueService.returnBook(issueId)).rejects.toThrow(
-//         new AppError("Issue record not found", httpStatus.NOT_FOUND)
-//       );
-//     });
+      mockFine.findOne.mockResolvedValue({
+        fine_amount: 100,
+        paid_status: false,
+      });
 
-//     it("❌ Should throw 400 error if book has already been marked as returned", async () => {
-//       jest.spyOn(issueRepository, "findIssueById").mockResolvedValue({
-//         issue_id: issueId,
-//         returned_date: new Date(),
-//       } as any);
+      const result =
+        await issueService.getAllIssuesFeed();
 
-//       await expect(issueService.returnBook(issueId)).rejects.toThrow(
-//         new AppError("Book already returned", httpStatus.BAD_REQUEST)
-//       );
-//     });
+      expect(result).toHaveLength(1);
 
-//     it("✅ Should return the book on-time without applying fine fees", async () => {
-//       const futureDueDate = new Date();
-//       futureDueDate.setDate(futureDueDate.getDate() + 5);
+      expect(result[0]).toMatchObject({
+        id: "issue-1",
+        memberName: "John Doe",
+        bookTitle: "Clean Code",
+        fineAmount: 100,
+      });
+    });
 
-//       jest.spyOn(issueRepository, "findIssueById").mockResolvedValue({
-//         issue_id: issueId,
-//         book_id: bookId,
-//         due_date: futureDueDate,
-//         returned_date: null,
-//       } as any);
-//       jest.spyOn(issueRepository, "returnBook").mockResolvedValue({ issue_id: issueId, returned_date: new Date() } as any);
-//       jest.spyOn(Book, "findByPk").mockResolvedValue({ book_id: bookId, available_copies: 2 } as any);
-//       const bookUpdateSpy = jest.spyOn(Book, "update").mockResolvedValue([1]);
-      
-//       const fineFindOrCreateSpy = jest.spyOn(Fine, "findOrCreate").mockResolvedValue([{} as any, true]);
+    it("should use fallback values", async () => {
+      mockIssueRepository
+        .getAllIssuesDetailed
+        .mockResolvedValue([
+          {
+            issue_id: "issue-1",
+            issue_status: "BORROWED",
+            due_date: "2099-01-01",
+          },
+        ]);
 
-//       const result = await issueService.returnBook(issueId);
+      mockFine.findOne.mockResolvedValue(null);
 
-//       expect(bookUpdateSpy).toHaveBeenCalledWith(
-//         { available_copies: 3 },
-//         { where: { book_id: bookId } }
-//       );
-//       expect(fineFindOrCreateSpy).not.toHaveBeenCalled();
-//       expect(result).toHaveProperty("issue_id", issueId);
-//     });
+      const result =
+        await issueService.getAllIssuesFeed();
 
-//     it("✅ Should safely record return info even if the book record was removed from the system completely", async () => {
-//       const futureDueDate = new Date();
-//       futureDueDate.setDate(futureDueDate.getDate() + 5);
+      expect(
+        result[0]?.memberName
+      ).toBe("Unknown Member");
 
-//       jest.spyOn(issueRepository, "findIssueById").mockResolvedValue({
-//         issue_id: issueId,
-//         book_id: bookId,
-//         due_date: futureDueDate,
-//         returned_date: null,
-//       } as any);
-//       jest.spyOn(issueRepository, "returnBook").mockResolvedValue({ issue_id: issueId, returned_date: new Date() } as any);
-      
-//       jest.spyOn(Book, "findByPk").mockResolvedValue(null);
-//       const bookUpdateSpy = jest.spyOn(Book, "update").mockResolvedValue([0]);
+      expect(
+        result[0]?.bookTitle
+      ).toBe("Unknown Book");
 
-//       const result = await issueService.returnBook(issueId);
+      expect(
+        result[0]?.fineAmount
+      ).toBe(0);
+    });
+  });
 
-//       expect(bookUpdateSpy).not.toHaveBeenCalled();
-//       expect(result).toHaveProperty("issue_id", issueId);
-//     });
+  // ====================================================
+  // getMemberAllowanceMetrics
+  // ====================================================
 
-//     it("⚠️ Should generate a cash fine record when returned after the due_date limit", async () => {
-//       jest.useFakeTimers();
-//       const now = new Date('2026-01-05T12:00:00Z');
-//       jest.setSystemTime(now);
+  describe("getMemberAllowanceMetrics", () => {
+    it("should return allowance metrics", async () => {
+      mockIssueRepository
+        .getMemberAllowanceData
+        .mockResolvedValue({
+          activeBorrowsCount: 2,
+          memberProfile: {
+            membership_plan: {
+              max_books_allowed: 5,
+            },
+          },
+        });
 
-//       const pastDueDate = new Date('2026-01-02T12:00:00Z'); 
+      const result =
+        await issueService.getMemberAllowanceMetrics(
+          "member-1"
+        );
 
-//       jest.spyOn(issueRepository, "findIssueById").mockResolvedValue({
-//         issue_id: issueId,
-//         book_id: bookId,
-//         due_date: pastDueDate,
-//         returned_date: null,
-//       } as any);
-      
-//       jest.spyOn(issueRepository, "returnBook").mockResolvedValue({ issue_id: issueId, returned_date: now } as any);
-//       jest.spyOn(Book, "findByPk").mockResolvedValue({ book_id: bookId, available_copies: 2 } as any);
-//       jest.spyOn(Book, "update").mockResolvedValue([1]);
-      
-//       const fineFindOrCreateSpy = jest.spyOn(Fine, "findOrCreate").mockResolvedValue([{} as any, true]);
+      expect(result).toEqual({
+        currentBorrows: 2,
+        maxAllowed: 5,
+      });
+    });
 
-//       await issueService.returnBook(issueId);
+    it("should throw when member not found", async () => {
+      mockIssueRepository
+        .getMemberAllowanceData
+        .mockResolvedValue({
+          activeBorrowsCount: 0,
+          memberProfile: null,
+        });
 
-//       expect(fineFindOrCreateSpy).toHaveBeenCalledWith({
-//         where: { issue_id: issueId },
-//         defaults: {
-//           issue_id: issueId,
-//           delayed_days: 3,
-//           fine_amount: 30,
-//           paid_status: false,
-//         },
-//       });
+      await expect(
+        issueService.getMemberAllowanceMetrics(
+          "member-1"
+        )
+      ).rejects.toMatchObject({
+        message:
+          "Member record data not found",
+      });
+    });
+  });
 
-//       jest.useRealTimers();
-//     });
+  // ====================================================
+  // borrowBook
+  // ====================================================
 
-//     // ✨ NEW TEST CASE FOR LINES 126-132: Handles pre-existing fine updates
-//     it("⚠️ Should update or handle an existing fine record if fine is already initialized", async () => {
-//       jest.useFakeTimers();
-//       const now = new Date('2026-01-05T12:00:00Z');
-//       jest.setSystemTime(now);
+  describe("borrowBook", () => {
+    const payload = {
+      memberId: "member-1",
+      bookId: "book-1",
+      dueDate: "2099-01-10",
+    };
 
-//       const pastDueDate = new Date('2026-01-02T12:00:00Z'); 
+    it("should borrow book successfully", async () => {
+      const decrement = jest.fn();
+      const increment = jest.fn();
 
-//       jest.spyOn(issueRepository, "findIssueById").mockResolvedValue({
-//         issue_id: issueId,
-//         book_id: bookId,
-//         due_date: pastDueDate,
-//         returned_date: null,
-//       } as any);
-      
-//       jest.spyOn(issueRepository, "returnBook").mockResolvedValue({ issue_id: issueId, returned_date: now } as any);
-//       jest.spyOn(Book, "findByPk").mockResolvedValue({ book_id: bookId, available_copies: 2 } as any);
-//       jest.spyOn(Book, "update").mockResolvedValue([1]);
-      
-//       // Mock fine to return created = false (Fine already exists in database)
-//      const mockExistingFine = { 
-//   update: jest.fn<() => Promise<any>>().mockResolvedValue({}) 
-// };
-//       jest.spyOn(Fine, "findOrCreate").mockResolvedValue([mockExistingFine as any, false]);
+      mockMember.findByPk.mockResolvedValue({
+        membership_status: "ACTIVE",
+        membership_plan: {
+          max_books_allowed: 5,
+          plan_name: "Premium",
+        },
+      });
 
-//       await issueService.returnBook(issueId);
+      mockIssue.count.mockResolvedValue(0);
 
-//       expect(Fine.findOrCreate).toHaveBeenCalled();
-//       jest.useRealTimers();
-//     });
-//   });
+      mockBook.findByPk.mockResolvedValue({
+        available_copies: 10,
+        decrement,
+        increment,
+      });
 
-//   // ==========================================
-//   // 📘 3. getMemberIssues() Scenarios
-//   // ==========================================
-//   describe("getMemberIssues", () => {
-//     it("✅ Should safely call repository mapping to compile issue lists", async () => {
-//       const sampleIssues = [{ issue_id: "1" }, { issue_id: "2" }];
-//       jest.spyOn(issueRepository, "getMemberIssues").mockResolvedValue(sampleIssues as any);
+      mockIssueRepository
+        .getActiveIssue
+        .mockResolvedValue(null);
 
-//       const result = await issueService.getMemberIssues("member-123");
+      mockIssueRepository
+        .createIssue
+        .mockResolvedValue({
+          issue_id: "issue-1",
+        });
 
-//       expect(issueRepository.getMemberIssues).toHaveBeenCalledWith("member-123");
-//       expect(result).toEqual(sampleIssues);
-//     });
-//   });
-// });
+      const result =
+        await issueService.borrowBook(
+          payload
+        );
+
+      expect(
+        mockIssueRepository.createIssue
+      ).toHaveBeenCalled();
+
+      expect(decrement)
+        .toHaveBeenCalled();
+
+      expect(increment)
+        .toHaveBeenCalled();
+
+      expect(result.issue_id)
+        .toBe("issue-1");
+    });
+
+    it("should throw when member not found", async () => {
+      mockMember.findByPk.mockResolvedValue(
+        null
+      );
+
+      await expect(
+        issueService.borrowBook(payload)
+      ).rejects.toMatchObject({
+        message: "Member not found",
+      });
+    });
+
+    it("should throw when membership inactive", async () => {
+      mockMember.findByPk.mockResolvedValue({
+        membership_status: "EXPIRED",
+      });
+
+      await expect(
+        issueService.borrowBook(payload)
+      ).rejects.toMatchObject({
+        message:
+          "Membership is not active",
+      });
+    });
+
+    it("should throw when plan missing", async () => {
+      mockMember.findByPk.mockResolvedValue({
+        membership_status: "ACTIVE",
+        membership_plan: null,
+      });
+
+      await expect(
+        issueService.borrowBook(payload)
+      ).rejects.toMatchObject({
+        message:
+          "No membership plan associated with this account",
+      });
+    });
+
+    it("should throw when borrow limit reached", async () => {
+      mockMember.findByPk.mockResolvedValue({
+        membership_status: "ACTIVE",
+        membership_plan: {
+          max_books_allowed: 2,
+          plan_name: "Basic",
+        },
+      });
+
+      mockIssue.count.mockResolvedValue(2);
+
+      await expect(
+        issueService.borrowBook(payload)
+      ).rejects.toMatchObject({
+        message:
+          expect.stringContaining(
+            "Borrow limit reached"
+          ),
+      });
+    });
+
+    it("should throw when book not found", async () => {
+      mockMember.findByPk.mockResolvedValue({
+        membership_status: "ACTIVE",
+        membership_plan: {
+          max_books_allowed: 5,
+        },
+      });
+
+      mockIssue.count.mockResolvedValue(0);
+
+      mockBook.findByPk.mockResolvedValue(
+        null
+      );
+
+      await expect(
+        issueService.borrowBook(payload)
+      ).rejects.toMatchObject({
+        message: "Book not found",
+      });
+    });
+
+    it("should throw when no copies available", async () => {
+      mockMember.findByPk.mockResolvedValue({
+        membership_status: "ACTIVE",
+        membership_plan: {
+          max_books_allowed: 5,
+        },
+      });
+
+      mockIssue.count.mockResolvedValue(0);
+
+      mockBook.findByPk.mockResolvedValue({
+        available_copies: 0,
+      });
+
+      await expect(
+        issueService.borrowBook(payload)
+      ).rejects.toMatchObject({
+        message:
+          "Book unavailable in current inventory slots",
+      });
+    });
+
+    it("should throw when already borrowed", async () => {
+      mockMember.findByPk.mockResolvedValue({
+        membership_status: "ACTIVE",
+        membership_plan: {
+          max_books_allowed: 5,
+        },
+      });
+
+      mockIssue.count.mockResolvedValue(0);
+
+      mockBook.findByPk.mockResolvedValue({
+        available_copies: 5,
+      });
+
+      mockIssueRepository
+        .getActiveIssue
+        .mockResolvedValue({
+          issue_id: "existing",
+        });
+
+      await expect(
+        issueService.borrowBook(payload)
+      ).rejects.toMatchObject({
+        message:
+          "Book already borrowed and not returned yet",
+      });
+    });
+  });
+
+describe("borrowBook", () => {
+  const payload = {
+    memberId: "member-1",
+    bookId: "book-1",
+    dueDate: "2099-01-20",
+  };
+
+  const plan = {
+    plan_name: "Premium",
+    max_books_allowed: 5,
+  };
+
+  const member = {
+    member_id: "member-1",
+    membership_status: "ACTIVE",
+    membership_plan: plan,
+  };
+
+  const book = {
+    book_id: "book-1",
+    available_copies: 10,
+    decrement: jest.fn(),
+    increment: jest.fn(),
+  };
+
+  beforeEach(() => {
+    mockSequelize.transaction.mockImplementation(
+      async (callback: any) =>
+        callback(mockTransaction)
+    );
+  });
+
+  it("should borrow book successfully", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      member
+    );
+
+    mockIssue.count.mockResolvedValue(1);
+
+    mockBook.findByPk.mockResolvedValue(
+      book
+    );
+
+    mockIssueRepository.getActiveIssue.mockResolvedValue(
+      null
+    );
+
+    const createdIssue = {
+      issue_id: "issue-1",
+    };
+
+    mockIssueRepository.createIssue.mockResolvedValue(
+      createdIssue
+    );
+
+    const result =
+      await issueService.borrowBook(
+        payload
+      );
+
+    expect(
+      mockIssueRepository.createIssue
+    ).toHaveBeenCalled();
+
+    expect(
+      book.decrement
+    ).toHaveBeenCalledWith(
+      "available_copies",
+      expect.any(Object)
+    );
+
+    expect(
+      book.increment
+    ).toHaveBeenCalledWith(
+      "lending_count",
+      expect.any(Object)
+    );
+
+    expect(result).toEqual(
+      createdIssue
+    );
+  });
+
+  it("should throw when member not found", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      null
+    );
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message: "Member not found",
+    });
+  });
+
+  it("should throw when membership inactive", async () => {
+    mockMember.findByPk.mockResolvedValue({
+      ...member,
+      membership_status: "EXPIRED",
+    });
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message:
+        "Membership is not active",
+    });
+  });
+
+  it("should throw when no plan attached", async () => {
+    mockMember.findByPk.mockResolvedValue({
+      ...member,
+      membership_plan: null,
+    });
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message:
+        "No membership plan associated with this account",
+    });
+  });
+
+  it("should throw when borrow limit reached", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      member
+    );
+
+    mockIssue.count.mockResolvedValue(5);
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message:
+        "Borrow limit reached. Your Premium plan only allows up to 5 books out at a time.",
+    });
+  });
+
+  it("should throw when book not found", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      member
+    );
+
+    mockIssue.count.mockResolvedValue(0);
+
+    mockBook.findByPk.mockResolvedValue(
+      null
+    );
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message: "Book not found",
+    });
+  });
+
+  it("should throw when no copies available", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      member
+    );
+
+    mockIssue.count.mockResolvedValue(0);
+
+    mockBook.findByPk.mockResolvedValue({
+      ...book,
+      available_copies: 0,
+    });
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message:
+        "Book unavailable in current inventory slots",
+    });
+  });
+
+  it("should throw when already borrowed", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      member
+    );
+
+    mockIssue.count.mockResolvedValue(0);
+
+    mockBook.findByPk.mockResolvedValue(
+      book
+    );
+
+    mockIssueRepository.getActiveIssue.mockResolvedValue(
+      {
+        issue_id: "existing",
+      }
+    );
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message:
+        "Book already borrowed and not returned yet",
+    });
+  });
+});
+
+describe("getMemberIssues", () => {
+  it("should return member issues", async () => {
+    const issues = [
+      {
+        issue_id: "issue-1",
+      },
+    ];
+
+    mockIssueRepository.getMemberIssues.mockResolvedValue(
+      issues
+    );
+
+    const result =
+      await issueService.getMemberIssues(
+        "member-1"
+      );
+
+    expect(
+      mockIssueRepository.getMemberIssues
+    ).toHaveBeenCalledWith(
+      "member-1"
+    );
+
+    expect(result).toEqual(
+      issues
+    );
+  });
+});
+
+
+describe("updateIssueParameters", () => {
+  it("should throw when issue not found", async () => {
+    mockIssueRepository.findIssueById.mockResolvedValue(null);
+
+    await expect(
+      issueService.updateIssueParameters(
+        "issue-1",
+        {}
+      )
+    ).rejects.toMatchObject({
+      message:
+        "Issue asset context instance not found",
+    });
+  });
+
+  it("should update active issue successfully", async () => {
+    const futureDate = new Date(
+      Date.now() + 86400000
+    );
+
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      member_id: "member-1",
+      book_id: "book-1",
+      borrowed_date: new Date(),
+      due_date: futureDate,
+      issue_status: "BORROWED",
+    });
+
+    mockIssueRepository.updateIssue.mockResolvedValue({
+      issue_id: "issue-1",
+    });
+
+    const result =
+      await issueService.updateIssueParameters(
+        "issue-1",
+        {
+          dueDate:
+            futureDate.toISOString(),
+        }
+      );
+
+    expect(
+      mockIssueRepository.updateIssue
+    ).toHaveBeenCalled();
+
+    expect(result).toEqual({
+      issue_id: "issue-1",
+    });
+  });
+
+  it("should reject editing returned issue without status override", async () => {
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      issue_status: "RETURNED",
+      member_id: "member-1",
+      book_id: "book-1",
+      borrowed_date: new Date(),
+      due_date: new Date(),
+    });
+
+    await expect(
+      issueService.updateIssueParameters(
+        "issue-1",
+        {
+          dueDate: "2026-01-10",
+        }
+      )
+    ).rejects.toMatchObject({
+      message:
+        "Cannot change data parameters of a closed transactional history log.",
+    });
+  });
+
+  it("should restore returned issue back to borrowed", async () => {
+    const book = {
+      available_copies: 5,
+      decrement: jest.fn(),
+    };
+
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      issue_status: "RETURNED",
+      member_id: "member-1",
+      book_id: "book-1",
+      borrowed_date: new Date(),
+      due_date: new Date(),
+    });
+
+    mockBook.findByPk.mockResolvedValue(
+      book
+    );
+
+    mockFine.findOne.mockResolvedValue({
+      update: jest.fn(),
+    });
+
+    mockIssueRepository.updateIssue.mockResolvedValue({
+      issue_id: "issue-1",
+      issue_status: "BORROWED",
+    });
+
+    const result =
+      await issueService.updateIssueParameters(
+        "issue-1",
+        {
+          status: "BORROWED",
+        }
+      );
+
+    expect(
+      book.decrement
+    ).toHaveBeenCalled();
+
+    expect(
+      mockIssueRepository.updateIssue
+    ).toHaveBeenCalled();
+
+    expect(result).toEqual({
+      issue_id: "issue-1",
+      issue_status: "BORROWED",
+    });
+  });
+
+  it("should throw when restoring and book unavailable", async () => {
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      issue_status: "RETURNED",
+      member_id: "member-1",
+      book_id: "book-1",
+      borrowed_date: new Date(),
+      due_date: new Date(),
+    });
+
+    mockBook.findByPk.mockResolvedValue({
+      available_copies: 0,
+    });
+
+    await expect(
+      issueService.updateIssueParameters(
+        "issue-1",
+        {
+          status: "BORROWED",
+        }
+      )
+    ).rejects.toMatchObject({
+      message:
+        "Cannot undo! This book's shelf slot is fully allocated right now.",
+    });
+  });
+});
+
+describe("deleteSingleIssue", () => {
+  it("should delete active issue and restore inventory", async () => {
+    const book = {
+      increment: jest.fn(),
+    };
+
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      book_id: "book-1",
+      returned_date: null,
+    });
+
+    mockBook.findByPk.mockResolvedValue(
+      book
+    );
+
+    mockIssueRepository.deleteIssueById.mockResolvedValue(
+      1
+    );
+
+    const result =
+      await issueService.deleteSingleIssue(
+        "issue-1"
+      );
+
+    expect(
+      book.increment
+    ).toHaveBeenCalled();
+
+    expect(
+      mockFine.destroy
+    ).toHaveBeenCalled();
+
+    expect(
+      mockIssueRepository.deleteIssueById
+    ).toHaveBeenCalledWith(
+      "issue-1",
+      expect.any(Object)
+    );
+
+    expect(result).toBe(1);
+  });
+
+  it("should delete returned issue without inventory update", async () => {
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      book_id: "book-1",
+      returned_date: new Date(),
+    });
+
+    mockIssueRepository.deleteIssueById.mockResolvedValue(
+      1
+    );
+
+    await issueService.deleteSingleIssue(
+      "issue-1"
+    );
+
+    expect(
+      mockBook.findByPk
+    ).not.toHaveBeenCalled();
+
+    expect(
+      mockIssueRepository.deleteIssueById
+    ).toHaveBeenCalled();
+  });
+
+  it("should throw when issue not found", async () => {
+    mockIssueRepository.findIssueById.mockResolvedValue(
+      null
+    );
+
+    await expect(
+      issueService.deleteSingleIssue(
+        "issue-1"
+      )
+    ).rejects.toMatchObject({
+      message:
+        "Issue log element not found",
+    });
+  });
+});
+
+describe("clearAllReturnedHistory", () => {
+  it("should return 0 when no returned issues exist", async () => {
+    mockIssue.findAll.mockResolvedValue([]);
+
+    const result =
+      await issueService.clearAllReturnedHistory();
+
+    expect(result).toBe(0);
+
+    expect(
+      mockIssueRepository.deleteManyIssues
+    ).not.toHaveBeenCalled();
+  });
+
+  it("should clear returned history successfully", async () => {
+    mockIssue.findAll.mockResolvedValue([
+      {
+        issue_id: "issue-1",
+      },
+      {
+        issue_id: "issue-2",
+      },
+    ]);
+
+    mockIssueRepository.deleteManyIssues.mockResolvedValue(
+      2
+    );
+
+    const result =
+      await issueService.clearAllReturnedHistory();
+
+    expect(
+      mockFine.destroy
+    ).toHaveBeenCalled();
+
+    expect(
+      mockIssueRepository.deleteManyIssues
+    ).toHaveBeenCalledWith(
+      ["issue-1", "issue-2"],
+      expect.any(Object)
+    );
+
+    expect(result).toBe(2);
+  });
+});
+
+})

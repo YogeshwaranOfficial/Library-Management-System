@@ -39,7 +39,7 @@ export const loginUserController =
       sendResponse(res, {
       success: true, 
       statusCode: 200,
-      message: "User login failed",
+      message: "User logged in duccessfully",
       data: result,
     });
     }

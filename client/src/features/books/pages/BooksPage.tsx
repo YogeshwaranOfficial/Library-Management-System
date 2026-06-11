@@ -8,6 +8,9 @@ import type { BookInventoryItem, BookCategory } from "../../../types/books";
 import type { BookFormValues } from "../schemas/bookSchema";
 import { toast } from "sonner";
 
+// Editorial Icon Elements
+import { Search, Plus, RotateCcw, Award, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+
 export const BooksPage = () => {
   const queryClient = useQueryClient();
 
@@ -167,36 +170,43 @@ export const BooksPage = () => {
   });
 
   return (
-    <div className="space-y-6 animate-fade-in font-sans text-slate-secondary">
+    <div className="space-y-6 animate-fade-in pb-12 text-left bg-[#fafafa] min-h-screen font-sans text-xs sm:text-sm text-slate-700">
       
       {/* Action Title Jumbotron Header block */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-light/10 shadow-xs">
+      <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-secondary tracking-tight">Library Books Catalog</h2>
-          <p className="text-xs text-slate-light mt-0.5 font-medium">View, evaluate, and trace total volume distribution limits across the facility.</p>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Books Management Desk</h2>
+          <p className="text-xs text-slate-500 mt-1 font-medium leading-relaxed">
+            View, evaluate, and trace total volume distribution limits across the facility.
+          </p>
         </div>
         <button
+          type="button"
           onClick={() => { setSelectedBook(null); setIsFormOpen(true); }}
-          className="px-4 py-2.5 bg-sage-primary hover:bg-sage-primary/90 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider bg-slate-900 hover:bg-slate-800 text-white rounded-xl transition-all cursor-pointer self-stretch sm:self-auto justify-center shadow-xs"
         >
-          📚 Add New Book
+          <Plus size={14} /> Add New Book
         </button>
       </div>
 
       {/* Query Filter Navigation Controls Line */}
-      <div className="flex flex-col md:flex-row gap-3 bg-white p-4 rounded-xl border border-slate-light/10 items-center justify-between">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full md:w-4/5">
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/60 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative w-full md:flex-1">
           <input
             type="text"
-            placeholder="🔎 Search by book title or author name..."
+            placeholder="Search by book title or author name..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="sm:col-span-2 px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold focus:bg-white outline-hidden focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all"
+            className="w-full pl-11 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-400 outline-hidden focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 focus:bg-white transition-all"
           />
+          <Search size={16} className="text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+        </div>
+
+        <div className="w-full md:w-64 relative">
           <select
             value={categoryFilter}
             onChange={(e) => handleCategoryChange(e.target.value)}
-            className="px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold focus:bg-white outline-hidden focus:ring-4 focus:ring-sage-primary/10 transition-all cursor-pointer"
+            className="w-full pl-4 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-700 appearance-none outline-hidden focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 focus:bg-white cursor-pointer"
           >
             <option value="">All Categories</option>
             {categories.map((cat) => (
@@ -207,95 +217,107 @@ export const BooksPage = () => {
 
         {/* Clear Filter Control Button */}
         <button
+          type="button"
           onClick={handleClearAllFilters}
-          className="px-4 py-2 bg-utility-crimson/10 hover:bg-utility-crimson/20 text-utility-crimson text-xs font-bold rounded-xl transition-all cursor-pointer col-span-2 sm:col-auto whitespace-nowrap"
+          className="w-full md:w-auto px-4 py-2 text-xs font-bold uppercase tracking-wider bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shrink-0 border border-rose-100/40"
         >
-          Clear Filters
+          <RotateCcw size={14} /> Reset
         </button>
       </div>
 
       {/* Ledger Grid Framework View */}
       {isLoading ? (
-        <div className="text-center py-20 text-xs text-slate-light font-bold font-data animate-pulse">Syncing Active Media Ledger Records...</div>
+        <div className="text-center py-24 text-xs font-bold uppercase tracking-widest text-slate-400 animate-pulse">
+          Syncing Active Media Ledger Records...
+        </div>
       ) : (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-light/10 shadow-xs overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-light/10 text-xs font-bold text-slate-light uppercase bg-canvas-dominant/60">
-                    <th className="py-3.5 px-4 font-bold tracking-wider">Book Title & Creator Index</th>
-                    <th className="py-3.5 px-4 font-bold tracking-wider">Category</th>
-                    <th className="py-3.5 px-4 text-center font-bold tracking-wider">Total Volumes</th>
-                    <th className="py-3.5 px-4 text-center font-bold tracking-wider">Shelf Availability</th>
-                    <th className="py-3.5 px-4 text-center font-bold tracking-wider">Book Lending Count</th>
+                  <tr className="border-b border-slate-100 text-[10px] sm:text-xs font-bold text-slate-400 uppercase bg-slate-50/50 tracking-wider">
+                    <th className="py-4 px-6">Book Title & Creator Index</th>
+                    <th className="py-4 px-6">Category</th>
+                    <th className="py-4 px-6 text-center">Total Volumes</th>
+                    <th className="py-4 px-6 text-center">Shelf Availability</th>
+                    <th className="py-4 px-6 text-right">Book Lending Count</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm divide-y divide-slate-light/5 text-slate-secondary">
+                <tbody className="text-xs sm:text-sm divide-y divide-slate-100 text-slate-700">
                   {parsedBooks.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-10 text-xs text-slate-light font-medium italic">No book matches found in the ledger indexes.</td>
+                      <td colSpan={5} className="text-center py-20 text-xs text-slate-500 font-medium">
+                        Operational Clear View. Zero matching volume records found inside database indexes.
+                      </td>
                     </tr>
                   ) : (
                     parsedBooks.map((book) => (
                       <tr 
                         key={book.id} 
                         onClick={() => { setSelectedBook(book); setIsDetailOpen(true); }}
-                        className="hover:bg-canvas-dominant/60 transition-colors cursor-pointer select-none"
+                        className="hover:bg-slate-50 transition-colors cursor-pointer select-none group"
                       >
-                        <td className="py-3.5 px-4 font-semibold text-slate-secondary">
-                          <div className="truncate max-w-xs">{book.title}</div>
-                          <div className="text-xs text-slate-light font-medium mt-0.5">By {book.author}</div>
+                        <td className="py-4 px-6 text-slate-900">
+                          <div className="truncate max-w-xs font-bold text-slate-900">{book.title}</div>
+                          <div className="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">By {book.author}</div>
                         </td>
-                        <td className="py-3.5 px-4">
-                          <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-sage-primary/10 text-sage-primary border border-sage-primary/10">
+                        <td className="py-4 px-6">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-[11px] sm:text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/40">
+                            <Award size={12} className="text-amber-500" />
                             {book.categoryName}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-center font-data font-bold">{book.totalCopies}</td>
-                        <td className="py-3.5 px-4 text-center">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-data font-bold border ${
+                        <td className="py-4 px-6 text-center font-mono font-bold text-slate-900">{book.totalCopies}</td>
+                        <td className="py-4 px-6 text-center">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[11px] sm:text-xs font-mono font-bold border ${
                             book.availableCopies > 0 
-                              ? "bg-sage-primary/10 text-sage-primary border-sage-primary/10" 
-                              : "bg-utility-crimson/10 text-utility-crimson border-utility-crimson/10"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                              : "bg-rose-50 text-rose-700 border-rose-200"
                           }`}>
                             {book.availableCopies} left
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-center font-data font-semibold text-slate-light">{book.lendingCount} times</td>
+                        <td className="py-4 px-6 font-medium text-slate-500 text-right">
+                          <div className="flex items-center justify-end gap-1.5 font-bold text-slate-700 text-xs sm:text-sm">
+                            <BookOpen size={12} className="text-slate-400" />
+                            <span>{book.lendingCount} times</span>
+                          </div>
+                        </td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
             </div>
-          </div>
 
-          {/* RELIABLE PAGINATION FOOTER ROW CONTROLS */}
-          {totalPages > 0 && (
-            <div className="flex items-center justify-between bg-white px-5 py-4 rounded-xl border border-slate-light/10 shadow-xs">
-              <div className="text-xs text-slate-light font-bold font-data">
-                Showing Page {currentPage} of{" "}
-                {totalPages} ({totalDatabaseRecords} Books Found)
+            {/* RELIABLE PAGINATION FOOTER ROW CONTROLS */}
+            {totalPages > 0 && (
+              <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+                <span>
+                  Page {currentPage} / {totalPages} <span className="text-slate-300 mx-2">|</span> Total {totalDatabaseRecords} Books
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(1, p - 1)); }}
+                    className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(totalPages, p + 1)); }}
+                    className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2 font-data text-xs font-bold">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(1, p - 1)); }}
-                  className="px-3 py-1.5 border border-slate-light/10 rounded-xl bg-canvas-dominant text-slate-secondary hover:bg-slate-light/5 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                >
-                  ◀ Previous
-                </button>
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(totalPages, p + 1)); }}
-                  className="px-4 py-1.5 border border-slate-light/10 rounded-xl bg-canvas-dominant text-slate-secondary hover:bg-slate-light/5 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                >
-                  Next ▶
-                </button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 

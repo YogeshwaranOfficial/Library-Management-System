@@ -20,7 +20,7 @@ export const UnpaidFineAlertModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-fade-in">
+    <div className="fixed inset-0 z-55 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 font-sans text-xs sm:text-sm text-slate-700 text-left animate-fade-in">
       <div className="bg-white w-full max-w-md rounded-2xl border border-rose-100 shadow-2xl overflow-hidden animate-zoom-in">
         
         {/* Warning Alert Banner Header */}
@@ -29,61 +29,63 @@ export const UnpaidFineAlertModal = ({
             <ShieldAlert className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-gray-900">Return Blocked: Unpaid Fine</h3>
-            <p className="text-2xs text-rose-700 font-semibold mt-0.5 uppercase tracking-wider">
-              Financial Validation Constraint
+            <h3 className="text-base font-bold text-slate-900">Return Blocked: Pending Balance</h3>
+            <p className="text-[11px] text-rose-700 font-bold mt-0.5 uppercase tracking-wide">
+              Financial Validation Exception Bound
             </p>
           </div>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-4 text-xs leading-relaxed text-gray-600">
-          <p>
-            The circulation ledger cannot accept this book return because an outstanding fine sequence is active on the borrower's account profile.
+        <div className="p-6 space-y-4 text-xs leading-relaxed text-slate-700 font-medium">
+          <p className="text-slate-500">
+            The library core system cannot authorize this inventory shelf check-in sequence because an unpaid fine liability matches this active operation.
           </p>
 
           {/* Audit Summary Container */}
-          <div className="bg-slate-50 border border-gray-200 rounded-xl p-3.5 space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Account Holder:</span>
-              <span className="font-bold text-gray-900">{memberName}</span>
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400 uppercase text-[11px] tracking-wide font-bold">Account Holder:</span>
+              <span className="font-bold text-slate-900">{memberName}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Asset Context:</span>
-              <span className="font-bold text-gray-900 max-w-50 truncate">{bookTitle}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400 uppercase text-[11px] tracking-wide font-bold">Asset Volume:</span>
+              <span className="font-bold text-slate-900 max-w-48 truncate">{bookTitle}</span>
             </div>
-            <div className="h-px bg-gray-200 my-1" />
+            <div className="h-px bg-slate-200 my-1.5" />
             <div className="flex justify-between items-center pt-0.5">
-              <span className="text-rose-700 font-bold flex items-center gap-1">
-                <AlertTriangle className="w-3.5 h-3.5" /> Pending Balance:
+              <span className="text-rose-700 font-bold uppercase text-[11px] tracking-wide flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5" /> Overdue Debt:
               </span>
-              <span className="text-base font-black font-mono text-gray-950">
-                ₹{fineAmount && fineAmount > 0 ? `${fineAmount}.00` : "Calculated at Desk"}
+              <span className="text-base font-bold font-mono text-slate-900">
+                {fineAmount && fineAmount > 0 ? `₹${fineAmount}.00` : "Calculated at Desk"}
               </span>
             </div>
           </div>
 
-          <p className="text-3xs text-gray-400 italic bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-            Note: Institutional policy dictates that cash registration updates must clear through the banking ledger before updating live warehouse stock allocation parameters.
+          <p className="text-[11px] text-slate-500 italic bg-slate-50 p-3 rounded-xl border border-slate-200 leading-normal">
+            Policy Rule: Outstanding debt liabilities must clear through the cash registration counter desk before restoring book items back into system catalog slots.
           </p>
         </div>
 
         {/* Action Controls Footer */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-2.5 justify-end">
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex gap-2 justify-end">
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+            className="px-4 py-2 bg-white text-slate-500 border border-slate-200 hover:text-slate-900 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
           >
             Dismiss Alert
           </button>
           
           {onNavigateToFines && (
             <button
+              type="button"
               onClick={() => {
                 onClose();
                 onNavigateToFines();
               }}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
             >
               Collect Fine Counter <ArrowRight className="w-3 h-3" />
             </button>

@@ -2,6 +2,21 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
 import { motion } from "framer-motion";
 
+// Lucide Icons with balanced stroke weight for high legibility
+import { 
+  LayoutDashboard, 
+  Users, 
+  CreditCard, 
+  BookOpen, 
+  Tags, 
+  RefreshCw, 
+  BookCheck, 
+  Receipt, 
+  LogOut, 
+  Library,
+  User 
+} from "lucide-react";
+
 export const DashboardLayout = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
@@ -12,83 +27,105 @@ export const DashboardLayout = () => {
   };
 
   const navItems = [
-    { name: "Dashboard", path: "/dashboard", icon: "📊" },
-    { name: "Manage Members", path: "/members", icon: "👥" },
-    { name: "Manage Books", path: "/books", icon: "📚" },
-    { name: "Manage Categories", path: "/categories", icon: "💳" },
-    { name: "Borrow & Return Desk", path: "/transactions", icon: "🔄" },
-    { name: "Returned Books", path: "/returnedbooks", icon: "💳" },
-    { name: "Fines & Payments", path: "/fines", icon: "💳" },
+    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard, color: "text-blue-600" },
+    { name: "Manage Members", path: "/members", icon: Users, color: "text-teal-600" },
+    { name: "Manage Plans", path: "/plans", icon: CreditCard, color: "text-indigo-600" },
+    { name: "Manage Books", path: "/books", icon: BookOpen, color: "text-amber-700" },
+    { name: "Manage Categories", path: "/categories", icon: Tags, color: "text-purple-600" },
+    { name: "Borrow & Return Desk", path: "/transactions", icon: RefreshCw, color: "text-emerald-600" },
+    { name: "Returned Books", path: "/returnedbooks", icon: BookCheck, color: "text-sky-600" },
+    { name: "Fines & Payments", path: "/fines", icon: Receipt, color: "text-orange-600" },
   ];
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-canvas-dominant font-sans text-slate-secondary">
-      {/* Sidebar Navigation - Styled with 30% Secondary Slate & Subtle Cream Borders */}
-      <aside className="w-64 bg-white border-r border-slate-light/10 flex flex-col justify-between">
-        <div className="p-4">
-          <div className="flex items-center gap-2 px-2 py-3 border-b border-slate-light/10 mb-4">
-            {/* Logo Badge utilizing 10% Sage Green Accent */}
-            <div className="w-8 h-8 bg-sage-primary rounded-lg flex items-center justify-center text-white font-bold font-sans">
-              L
+    <div className="flex h-screen w-screen overflow-hidden bg-amber-50/40 font-sans text-slate-800 antialiased selection:bg-amber-200">
+      
+      {/* Sidebar Navigation - Warm Archival Minimalist Layout (Expanded Accessibility width) */}
+      <aside className="w-72 bg-white border-r border-amber-100 flex flex-col justify-between relative z-20 shadow-xs shrink-0">
+        <div className="p-6">
+          <div className="flex items-center gap-3.5 py-3 border-b border-slate-100 mb-6">
+            
+            {/* Elegant Institutional Identity Icon */}
+            <div className="w-10 h-10 bg-slate-900 text-amber-100 rounded-lg flex items-center justify-center shadow-xs shrink-0">
+              <Library size={20} className="stroke-[2.2]" />
             </div>
-            <span className="font-bold text-lg text-slate-secondary tracking-tight">LMS</span>
+            
+            <div className="flex flex-col">
+              <span className="font-bold text-base tracking-tight text-slate-900 leading-tight">LMS</span>
+              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">Librarian Portal</span>
+            </div>
           </div>
-          <nav className="space-y-1">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                    isActive
-                      ? "bg-sage-primary/10 text-sage-primary"
-                      : "text-slate-light hover:bg-canvas-dominant hover:text-slate-secondary"
-                  }`
-                }
-              >
-                <span className="text-base">{item.icon}</span>
-                {item.name}
-              </NavLink>
-            ))}
+
+          {/* Navigation links optimized with comfortable text sizes and wide tapping targets */}
+          <nav className="space-y-1.5">
+            {navItems.map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-semibold tracking-wide transition-all duration-150 ${
+                      isActive
+                        ? "bg-slate-100 text-slate-950 font-bold shadow-xs border-l-4 border-slate-900 rounded-l-none pl-3"
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
+                    }`
+                  }
+                >
+                  {/* Distinct category icon colors remain crisp and highly visible */}
+                  <IconComponent size={18} className={`stroke-[2.2] shrink-0 ${item.color}`} />
+                  <span>{item.name}</span>
+                </NavLink>
+              );
+            })}
           </nav>
         </div>
         
-        {/* Sidebar Footer - Styled with Canonical Utility Crimson */}
-        <div className="p-4 border-t border-slate-light/10">
+        {/* Sidebar Footer - Spacious Action Deck */}
+        <div className="p-5 border-t border-slate-100 bg-slate-50/60">
           <button
             onClick={handleSignOut}
-            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-utility-crimson hover:bg-utility-crimson/10 transition-colors cursor-pointer"
+            className="flex w-full items-center justify-center gap-2.5 px-4 py-3 rounded-lg text-sm font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200/60 transition-all cursor-pointer shadow-2xs"
           >
-            <span>🚪</span> Logout
+            <LogOut size={16} className="stroke-[2.5]" />
+            <span>Logout</span>
           </button>
         </div>
       </aside>
 
       {/* Main Structural Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Navigation Frame Redesigned to be Crisp Premium White to align with the Canvas */}
-        <header className="h-18 bg-white flex items-center justify-between px-6 border-b border-slate-light/10 shadow-xs">
+        
+        {/* Header Frame - High Visibility Layout */}
+        <header className="h-22 bg-white border-b border-amber-100 flex items-center justify-between px-10 shadow-2xs shrink-0">
           <div>
-            <h1 className="text-base font-bold tracking-tight text-slate-secondary">Dashboard</h1>
-            <p className="text-xs text-slate-light font-medium">Library Management System</p>
+            <h1 className="text-lg font-bold text-slate-900 tracking-tight">Librarian Dashboard</h1>
+            <p className="text-sm text-slate-400 font-medium mt-0.5">Real-time catalog and circulation auditing pipeline</p>
           </div>
-          <div className="flex items-center gap-4 text-sm">
-            <div className="text-right">
-              <p className="font-bold text-slate-secondary font-data">Logged in as: {user?.email}</p>
-              <p className="text-[11px] text-sage-primary font-bold tracking-wide uppercase mt-0.5">Role: {user?.role || "LIBRARIAN"}</p>
+          
+          <div className="flex items-center gap-5">
+            <div className="text-right hidden sm:block">
+              {/* <p className="font-semibold text-sm text-slate-700 bg-slate-50 border border-slate-200/60 px-3.5 py-1.5 rounded-md shadow-2xs inline-block">
+                {user?.email || "librarian@institution.org"}
+              </p> */}
+              <p className="text-xs text-slate-400 font-medium tracking-wide uppercase mt-1">
+                ROLE: <span className="text-slate-600 font-bold">{user?.role || "LIBRARIAN"}</span>
+              </p>
             </div>
-            <div className="w-9 h-9 bg-canvas-dominant text-slate-secondary rounded-full flex items-center justify-center border border-slate-light/10 text-sm shadow-xs">
-              🎓
+            
+            {/* User Profile Avatar Frame */}
+            <div className="w-11 h-11 bg-slate-50 border border-slate-200/60 text-slate-700 rounded-lg flex items-center justify-center shadow-2xs">
+              <User size={18} className="stroke-[2.2]" />
             </div>
           </div>
         </header>
 
-        {/* Content View Injection Portal with Canvas Styling */}
-        <main className="flex-1 overflow-y-auto p-6 bg-canvas-dominant">
+        {/* Content View Injection Portal */}
+        <main className="flex-1 overflow-y-auto p-10 bg-transparent">
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
           >
             <Outlet />
           </motion.div>

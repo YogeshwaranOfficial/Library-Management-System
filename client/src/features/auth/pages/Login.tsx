@@ -6,17 +6,16 @@ import { axiosClient } from "../../../api/axiosClient";
 import { LoginSchema } from "../../../types/schemas";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { BookOpen, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 export const Login = () => {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  // Form Field Tracking Configuration states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [selectedRole, setSelectedRole] = useState<"ADMIN" | "LIBRARIAN">("LIBRARIAN");
   
-  // UI Presentation States
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
@@ -26,12 +25,7 @@ export const Login = () => {
     setIsLoading(true);
     setFieldErrors({});
 
-    // 1. Client-Side Parsing via your frontend schema
-    const parsingResults = LoginSchema.safeParse({
-      email,
-      password,
-      role: selectedRole,
-    });
+    const parsingResults = LoginSchema.safeParse({ email, password, role: selectedRole });
 
     if (!parsingResults.success) {
       const structuredErrors: { email?: string; password?: string } = {};
@@ -45,14 +39,8 @@ export const Login = () => {
       return;
     }
 
-    // 2. Transmit Handshake request to the backend REST API
     try {
-      const networkResponse = await axiosClient.post("/auth/login", {
-        gmail: email,      
-        password: password, 
-        role: selectedRole, 
-      });
-
+      const networkResponse = await axiosClient.post("/auth/login", { gmail: email, password, role: selectedRole });
       const targetPayload = networkResponse.data?.data || networkResponse.data;
       const { user, token } = targetPayload;
 
@@ -61,13 +49,19 @@ export const Login = () => {
         return;
       }
 
-      setAuth(user, token);
-      toast.success("Login Successfully");
-      navigate("/dashboard");
-
+      if (user.role === "ADMIN" && selectedRole === "ADMIN") {
+        setAuth(user, token);
+        toast.success("Admin Logged In Successfully");
+        navigate("/admin/dashboard");
+      } else if (user.role === "LIBRARIAN" && selectedRole === "LIBRARIAN") {
+        setAuth(user, token);
+        toast.success("Librarian Logged In Successfully");
+        navigate("/dashboard");
+      } else {
+        toast.error("Access Denied: Role mismatch error.");
+        navigate("/login");
+      }
     } catch (error: unknown) {
-      console.error("Login Failed:", error);
-      
       if (axios.isAxiosError(error)) {
         toast.error(error.response?.data?.message || "Invalid account credentials.");
       } else {
@@ -79,129 +73,90 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen h-screen w-screen flex items-center justify-center bg-slate-secondary px-4 relative overflow-hidden font-sans">
-      {/* Decorative Branding Background Blobs */}
-      <div className="absolute top-[-20%] left-[-10%] w-124 h-125 rounded-full bg-sage-primary/10 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-5%] w-100 h-100 rounded-full bg-white/5 blur-3xl pointer-events-none" />
-
+    <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 px-4 font-sans selection:bg-amber-100">
       <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-light/10 overflow-hidden"
+        className="w-full max-w-100 bg-white rounded-2xl shadow-xl border border-slate-200/60 overflow-hidden"
       >
-        {/* Core Presentation Branding Shield */}
-        <div className="bg-linear-to-r from-slate-secondary/90 to-slate-secondary p-8 text-center text-white border-b border-slate-light/10">
-          <div className="w-12 h-12 bg-sage-primary rounded-xl flex items-center justify-center mx-auto text-2xl mb-3 shadow-md">
-            📚
+        {/* Branding Header */}
+        <div className="bg-slate-900 p-8 text-center text-white border-b border-slate-800">
+          <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+            <BookOpen size={24} className="text-white" />
           </div>
-          <h2 className="text-xl font-bold tracking-tight">Welcome to</h2>
-          <h2 className="text-xl font-bold tracking-tight mt-0.5">Library Management System</h2>
+          <h2 className="text-lg font-bold tracking-tight">Library Management</h2>
+          <p className="text-[11px] uppercase tracking-widest text-slate-400 font-bold mt-1">Authentication Portal</p>
         </div>
 
-        <form onSubmit={handleFormSubmission} className="p-8 space-y-5">
-          {/* RBAC Role Selector Tabs System */}
+        <form onSubmit={handleFormSubmission} className="p-8 space-y-6">
+          {/* Role Tabs */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-light uppercase tracking-wider block">Choose Your Role</label>
-            <div className="grid grid-cols-2 gap-2 bg-canvas-dominant p-1.5 rounded-xl border border-slate-light/10">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Access Level</label>
+            <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
               <button
                 type="button"
                 onClick={() => setSelectedRole("LIBRARIAN")}
-                className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  selectedRole === "LIBRARIAN"
-                    ? "bg-white text-sage-primary shadow-xs"
-                    : "text-slate-light hover:text-slate-secondary"
-                }`}
+                className={`py-2 text-[11px] font-bold rounded-lg transition-all ${selectedRole === "LIBRARIAN" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-700"}`}
               >
-                Librarian Access
+                Librarian
               </button>
               <button
                 type="button"
                 onClick={() => setSelectedRole("ADMIN")}
-                className={`py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                  selectedRole === "ADMIN"
-                    ? "bg-white text-sage-primary shadow-xs"
-                    : "text-slate-light hover:text-slate-secondary"
-                }`}
+                className={`py-2 text-[11px] font-bold rounded-lg transition-all ${selectedRole === "ADMIN" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-700"}`}
               >
-                System Admin
+                Admin
               </button>
             </div>
           </div>
 
-          {/* Email Destination Input Structure */}
+          {/* Email Input */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-light uppercase tracking-wider block">Email</label>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-light pointer-events-none text-xs">✉️</span>
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email Address</label>
+            <div className="relative group">
+              <Mail className="absolute left-3 top-3 text-slate-400 group-focus-within:text-slate-900 transition-colors" size={16} />
               <input
                 type="email"
-                placeholder="librarian@enterprise.com"
+                placeholder="admin@library.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className={`w-full pl-9 pr-4 py-2.5 bg-canvas-dominant border text-slate-secondary rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
-                  fieldErrors.email 
-                    ? "border-utility-crimson focus:ring-utility-crimson/10 focus:border-utility-crimson" 
-                    : "border-slate-light/10 focus:ring-sage-primary/10 focus:border-sage-primary"
-                }`}
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 outline-none focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all"
               />
             </div>
-            {fieldErrors.email && <p className="text-xs text-utility-crimson font-medium mt-1">{fieldErrors.email}</p>}
+            {fieldErrors.email && <p className="text-[10px] text-rose-600 font-bold mt-1">{fieldErrors.email}</p>}
           </div>
 
-          {/* Password Security Input Structure with Visibility Toggle */}
+          {/* Password Input */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-bold text-slate-light uppercase tracking-wider block">Password</label>
-              <button 
-                type="button" 
-                onClick={() => toast.info("Please notify an administrative systems officer to handle key updates.")}
-                className="text-xs font-bold text-sage-primary hover:text-sage-primary/80 transition-colors outline-hidden cursor-pointer"
-              >
-                Forgot Password?
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Password</label>
+              <button type="button" onClick={() => toast.info("Contact Systems Admin.")} className="text-[10px] font-bold text-amber-600 hover:text-amber-700 transition-colors">
+                Forgot?
               </button>
             </div>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-light pointer-events-none text-xs">🔒</span>
+            <div className="relative group">
+              <Lock className="absolute left-3 top-3 text-slate-400 group-focus-within:text-slate-900 transition-colors" size={16} />
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••••••"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full pl-9 pr-10 py-2.5 bg-canvas-dominant border text-slate-secondary rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
-                  fieldErrors.password 
-                    ? "border-utility-crimson focus:ring-utility-crimson/10 focus:border-utility-crimson" 
-                    : "border-slate-light/10 focus:ring-sage-primary/10 focus:border-sage-primary"
-                }`}
+                className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 outline-none focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all"
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-light hover:text-slate-secondary transition-colors text-xs outline-hidden cursor-pointer"
-              >
-                {showPassword ? "👁️" : "🙈"}
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-slate-400 hover:text-slate-700">
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
-            {fieldErrors.password && <p className="text-xs text-utility-crimson font-medium mt-1">{fieldErrors.password}</p>}
+            {fieldErrors.password && <p className="text-[10px] text-rose-600 font-bold mt-1">{fieldErrors.password}</p>}
           </div>
 
-          {/* Core Submission Trigger Module */}
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 bg-sage-primary hover:bg-sage-primary/90 disabled:bg-slate-light/20 disabled:text-slate-light/50 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-xs active:scale-[0.99] flex items-center justify-center gap-2 outline-hidden cursor-pointer mt-2"
+            className="w-full py-3 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-[0.98] flex items-center justify-center gap-2"
           >
-            {isLoading ? (
-              <>
-                <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span>Validating credentials...</span>
-              </>
-            ) : (
-              <span>Login to Dashboard</span>
-            )}
+            {isLoading ? "Validating..." : "Sign In"}
           </button>
         </form>
       </motion.div>

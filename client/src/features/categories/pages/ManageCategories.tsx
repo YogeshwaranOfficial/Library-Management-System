@@ -8,6 +8,22 @@ import ConfirmationModal from "../../returnedbooks/components/ConfirmationModal"
 import { categoryFormSchema } from "../validation/category.validation";
 import type { CategoryMetrics } from "../types/category.types";
 
+// Editorial Visual Assets
+import { 
+  Plus, 
+  Search, 
+  X, 
+  ChevronDown, 
+  RotateCcw, 
+  Layers, 
+  BookOpen, 
+  RefreshCw, 
+  AlertTriangle,
+  FolderPlus,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+
 interface UpdateMutationResponse {
   data?: {
     category_name?: string;
@@ -151,27 +167,31 @@ export const ManageCategories = () => {
   const isFilterActive = searchQuery.trim() !== "" || bookSort !== "NONE" || borrowSort !== "NONE";
 
   return (
-    <div className="space-y-6 animate-fade-in font-sans text-slate-secondary">
+    <div className="space-y-6 animate-fade-in font-sans text-xs sm:text-sm text-slate-700 text-left">
       
       {/* Top Deck Banner */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-light/10 shadow-xs">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-          <h2 className="text-xl font-bold text-slate-secondary tracking-tight">Manage Catalog Categories</h2>
-          <p className="text-xs text-slate-light mt-0.5 font-medium">Control library book categories, analyze category engagement volumes, and manage inventory segments.</p>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Categories Management Desk</h2>
+          <p className="text-xs text-slate-500 mt-1 font-medium">Control library book categories, analyze category engagement volumes, and manage inventory segments.</p>
         </div>
         <button
+          type="button"
           onClick={handleOpenCreateModal}
-          className="px-4 py-2.5 bg-sage-primary hover:bg-sage-primary/90 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap uppercase tracking-wider"
+          className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap uppercase tracking-wider flex items-center gap-2"
         >
-          ＋ Add New Category
+          <Plus size={14} /> Add New Category
         </button>
       </div>
 
       {/* Control Filtering Deck */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 bg-white p-4 rounded-xl border border-slate-light/10 shadow-2xs">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
         
         {/* Search Input Box Container */}
         <div className="relative flex-1">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            <Search size={16} />
+          </span>
           <input
             type="text"
             placeholder="Filter down table rows by category name..."
@@ -180,82 +200,95 @@ export const ManageCategories = () => {
               setSearchQuery(e.target.value);
               setCurrentPage(1); 
             }}
-            className="w-full pl-3 pr-10 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold outline-hidden focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all"
+            className="w-full pl-11 pr-11 py-2 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl text-xs sm:text-sm font-medium outline-hidden focus:bg-white focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all placeholder-slate-400"
           />
           {searchQuery && (
             <button
+              type="button"
               onClick={() => { setSearchQuery(""); setCurrentPage(1); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-light hover:text-slate-secondary text-xs font-bold cursor-pointer transition-colors"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 p-1 cursor-pointer transition-colors"
             >
-              ✕
+              <X size={14} />
             </button>
           )}
         </div>
 
         {/* Filters Grouping Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 lg:flex-none lg:w-[55%]">
-          <select
-            value={bookSort}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-              setBookSort(e.target.value as "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH");
-              setBorrowSort("NONE"); 
-              setCurrentPage(1); 
-            }}
-            className="px-3 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold outline-hidden focus:bg-white cursor-pointer transition-all"
-          >
-            <option value="NONE">Sort by Owned Count: Default (ABC)</option>
-            <option value="HIGH_TO_LOW">Owned Count: Highest to Lowest</option>
-            <option value="LOW_TO_HIGH">Owned Count: Lowest to Highest</option>
-          </select>
+          <div className="relative">
+            <select
+              value={bookSort}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                setBookSort(e.target.value as "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH");
+                setBorrowSort("NONE"); 
+                setCurrentPage(1); 
+              }}
+              className="w-full pl-4 pr-10 py-2 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-xs sm:text-sm font-bold outline-hidden focus:bg-white cursor-pointer transition-all appearance-none"
+            >
+              <option value="NONE">Sort by Owned Count: Default</option>
+              <option value="HIGH_TO_LOW">Owned Count: High to Low</option>
+              <option value="LOW_TO_HIGH">Owned Count: Low to High</option>
+            </select>
+            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+              <ChevronDown size={14} />
+            </span>
+          </div>
 
-          <select
-            value={borrowSort}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-              setBorrowSort(e.target.value as "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH");
-              setBookSort("NONE"); 
-              setCurrentPage(1); 
-            }}
-            className="px-3 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold outline-hidden focus:bg-white cursor-pointer transition-all"
-          >
-            <option value="NONE">Sort by Borrows: Default (ABC)</option>
-            <option value="HIGH_TO_LOW">Borrows Count: Highest to Lowest</option>
-            <option value="LOW_TO_HIGH">Borrows Count: Lowest to Highest</option>
-          </select>
+          <div className="relative">
+            <select
+              value={borrowSort}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                setBorrowSort(e.target.value as "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH");
+                setBookSort("NONE"); 
+                setCurrentPage(1); 
+              }}
+              className="w-full pl-4 pr-10 py-2 bg-slate-50 border border-slate-200 text-slate-800 rounded-xl text-xs sm:text-sm font-bold outline-hidden focus:bg-white cursor-pointer transition-all appearance-none"
+            >
+              <option value="NONE">Sort by Borrows: Default</option>
+              <option value="HIGH_TO_LOW">Borrows Count: High to Low</option>
+              <option value="LOW_TO_HIGH">Borrows Count: Low to High</option>
+            </select>
+            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+              <ChevronDown size={14} />
+            </span>
+          </div>
         </div>
 
         {/* Global Reset Action Trigger */}
         {isFilterActive && (
           <button
+            type="button"
             onClick={handleResetFilters}
-            className="px-4 py-2 text-xs font-bold text-slate-light bg-canvas-dominant border border-slate-light/10 hover:text-slate-secondary rounded-xl shadow-3xs cursor-pointer transition-all animate-fade-in text-center whitespace-nowrap"
+            className="px-4 py-2 text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 hover:bg-slate-100 hover:text-slate-900 rounded-xl cursor-pointer transition-all animate-fade-in text-center whitespace-nowrap flex items-center justify-center gap-1.5"
           >
-            Reset Filters
+            <RotateCcw size={12} /> Reset Filters
           </button>
         )}
       </div>
 
       {/* Main Grid Render Table Section */}
       {isLoading ? (
-        <div className="text-center py-20 text-xs text-slate-light font-bold animate-pulse tracking-wide">
+        <div className="text-center py-24 text-xs sm:text-sm text-slate-400 font-bold animate-pulse tracking-wide flex flex-col items-center justify-center gap-3">
+          <RefreshCw size={20} className="animate-spin text-slate-300" />
           Compiling catalog taxonomy architecture indices...
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-slate-light/10 shadow-xs overflow-hidden">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-light/10 text-xs font-bold text-slate-light uppercase bg-canvas-dominant tracking-wider">
-                    <th className="py-4 px-5">Category Name Listing</th>
-                    <th className="py-4 px-5">Total Volume Stack</th>
-                    <th className="py-4 px-5">Active Circulation Borrow Count</th>
+                  <tr className="border-b border-slate-200 text-[10px] sm:text-xs font-bold text-slate-400 uppercase bg-slate-50 tracking-wider">
+                    <th className="py-4 px-6 flex items-center gap-1.5"><Layers size={12} /> Category Name Listing</th>
+                    <th className="py-4 px-6"><BookOpen size={12} className="inline mr-1.5" />Total Volume Stack</th>
+                    <th className="py-4 px-6">Active Circulation Borrow Count</th>
                   </tr>
                 </thead>
-                <tbody className="text-sm divide-y divide-slate-light/5 text-slate-secondary">
+                <tbody className="text-xs sm:text-sm divide-y divide-slate-100 text-slate-700">
                   {categoriesList.length === 0 ? (
                     <tr>
-                      <td colSpan={3} className="py-12 text-center text-sm text-slate-light font-medium">
-                        No library category profiles matches the search key terms.
+                      <td colSpan={3} className="py-16 text-center text-slate-400 font-medium">
+                        No library category profiles match the search key terms.
                       </td>
                     </tr>
                   ) : (
@@ -263,19 +296,19 @@ export const ManageCategories = () => {
                       <tr
                         key={cat.category_id}
                         onClick={() => { setSelectedCategory(cat); setIsDetailsOpen(true); }}
-                        className="hover:bg-canvas-dominant/60 transition-colors cursor-pointer group select-none animate-fade-in"
+                        className="hover:bg-slate-50/80 transition-colors cursor-pointer group select-none animate-fade-in"
                       >
-                        <td className="py-4 px-5 font-bold text-slate-secondary group-hover:text-sage-primary transition-colors">
+                        <td className="py-4 px-6 font-bold text-slate-900 group-hover:text-slate-800 transition-colors">
                           {cat.category_name}
                         </td>
-                        <td className="py-4 px-5 font-bold text-slate-light font-data">
+                        <td className="py-4 px-6 font-medium text-slate-500 font-mono text-[11px] sm:text-xs">
                           {cat.booksCount} books
                         </td>
-                        <td className="py-4 px-5">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold font-data tracking-wider border ${
+                        <td className="py-4 px-6">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold font-mono tracking-wide border ${
                             cat.lendingCount > 15 
-                              ? "bg-sage-primary/10 text-sage-primary border-sage-primary/10"
-                              : "bg-canvas-dominant text-slate-light border-slate-light/10"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                              : "bg-slate-100 text-slate-500 border-slate-200"
                           }`}>
                             {cat.lendingCount} times
                           </span>
@@ -286,71 +319,108 @@ export const ManageCategories = () => {
                 </tbody>
               </table>
             </div>
+
+           {totalPages > 0 && (
+                        <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+                          <span>
+                            Page {currentPage} / {totalPages} <span className="text-slate-300 mx-2">|</span> Total {totalRecordsCount} Categories
+                          </span>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              disabled={currentPage === 1}
+                              onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(1, p - 1)); }}
+                              className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                            >
+                              <ChevronLeft size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={currentPage === totalPages}
+                              onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(totalPages, p + 1)); }}
+                              className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                            >
+                              <ChevronRight size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
           </div>
 
           {/* Pagination Controls Block UI Section */}
-          <div className="flex justify-between items-center bg-white px-5 py-4 rounded-xl border border-slate-light/10 shadow-2xs">
-            <span className="text-xs font-medium text-slate-light">
-              Showing page <b className="text-slate-secondary font-data">{currentPage}</b> of <b className="text-slate-secondary font-data">{totalPages}</b> (<span className="font-data">{totalRecordsCount}</span> Archives)
+          {/* <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white px-6 py-4 rounded-2xl border border-slate-200 shadow-xs">
+            <span className="text-xs sm:text-sm font-medium text-slate-500">
+              Showing page <b className="text-slate-900 font-mono">{currentPage}</b> of <b className="text-slate-900 font-mono">{totalPages}</b> (<span className="font-mono">{totalRecordsCount}</span> Archives)
             </span>
-            <div className="flex gap-2 text-xs font-bold">
+            <div className="flex gap-3 text-xs font-bold uppercase tracking-wider">
               <button
+                type="button"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => prev - 1)}
-                className="px-3 py-1.5 bg-white border border-slate-light/10 rounded-lg shadow-3xs text-slate-light hover:text-slate-secondary disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-900 hover:border-slate-300 disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:border-slate-200 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
                 ◀ Previous
               </button>
               <button
+                type="button"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => prev + 1)}
-                className="px-3 py-1.5 bg-white border border-slate-light/10 rounded-lg shadow-3xs text-slate-light hover:text-slate-secondary disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-900 hover:border-slate-300 disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:border-slate-200 disabled:cursor-not-allowed cursor-pointer transition-colors"
               >
                 Next ▶
               </button>
             </div>
-          </div>
+          </div> */}
+
+
+          
         </div>
       )}
 
       {/* Modal A: Pop-up Form for Quick Add Creation */}
       {isCreateOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-slate-secondary/40 backdrop-blur-xs" onClick={() => setIsCreateOpen(false)} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs" onClick={() => setIsCreateOpen(false)} />
           <form 
             onSubmit={handleExecuteCreate} 
-            className="relative z-10 w-full max-w-md bg-white rounded-2xl p-6 border border-slate-light/10 shadow-xl space-y-4 text-slate-secondary"
+            className="relative z-10 w-full max-w-md bg-white rounded-2xl p-6 border border-slate-200 shadow-2xl space-y-5 text-slate-700 animate-scale-up"
           >
             <div>
-              <h3 className="text-base font-bold text-slate-secondary tracking-tight">Add New Category Classification</h3>
-              <p className="text-xs text-slate-light mt-0.5 font-medium">Input a unique classification name to initialize shelf tags mapping slots.</p>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                <FolderPlus size={18} className="text-slate-500" /> Add Category Classification
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 font-medium">Input a unique classification name to initialize shelf tags mapping slots.</p>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-xs font-bold text-slate-light uppercase tracking-wider">Category Name</label>
+            <div className="space-y-2">
+              <label className="block text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider">Category Name</label>
               <input
                 type="text"
                 autoFocus
                 placeholder="e.g. Science Fiction, Biography, History"
                 value={newCatName}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewCatName(e.target.value)}
-                className="w-full px-3.5 py-2 bg-canvas-dominant border border-slate-light/10 text-slate-secondary rounded-xl text-sm font-semibold focus:bg-white outline-hidden focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary transition-all"
+                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl text-xs sm:text-sm font-bold focus:bg-white outline-hidden focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all placeholder-slate-400"
               />
-              {createValidationError && <p className="text-xs text-utility-crimson font-medium mt-1">{createValidationError}</p>}
+              {createValidationError && (
+                <p className="text-xs text-rose-600 font-medium mt-1.5 flex items-center gap-1">
+                  <AlertTriangle size={12} /> {createValidationError}
+                </p>
+              )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 text-xs font-bold">
+            <div className="flex justify-end gap-3 pt-2 text-xs font-bold uppercase tracking-wider">
               <button
                 type="button"
                 onClick={() => setIsCreateOpen(false)}
-                className="px-4 py-2 border border-slate-light/10 text-slate-light rounded-xl hover:text-slate-secondary transition-colors cursor-pointer"
+                className="px-4 py-2 border border-slate-200 text-slate-500 rounded-xl hover:text-slate-900 hover:border-slate-300 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isPending}
-                className="px-4 py-2 bg-sage-primary hover:bg-sage-primary/90 text-white disabled:bg-slate-light/20 disabled:text-slate-light/50 rounded-xl cursor-pointer transition-all"
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white disabled:bg-slate-100 disabled:text-slate-400 rounded-xl cursor-pointer transition-all shadow-md"
               >
                 {createMutation.isPending ? "Creating..." : "Add Category"}
               </button>
