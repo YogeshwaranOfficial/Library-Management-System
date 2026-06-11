@@ -27,12 +27,12 @@ export const SettleFinePaymentModal = ({ isOpen, fine, onClose, onConfirmSettlem
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-secondary/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in text-left">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-light/10 animate-zoom-in">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans text-xs sm:text-sm text-slate-700 text-left animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 animate-zoom-in">
         
         {/* Header */}
         <div className="bg-rose-600 px-6 py-5 text-white flex justify-between items-center">
-          <h3 className="text-xs font-black uppercase tracking-wider">Execute Counter Settlement</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wider">Process Fine Settlement</h3>
           <button 
             type="button"
             onClick={onClose} 
@@ -42,24 +42,24 @@ export const SettleFinePaymentModal = ({ isOpen, fine, onClose, onConfirmSettlem
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 text-slate-secondary">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
           
           {/* Quick Informational Vector */}
-          <div className="p-4 bg-canvas-dominant border border-slate-light/10 rounded-xl space-y-2 text-xs">
-            <div className="flex justify-between font-bold text-slate-light uppercase text-[9px] tracking-wider">
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
+            <div className="flex justify-between font-bold text-slate-400 uppercase text-[11px] tracking-wide">
               <span>Account Name:</span>
-              <span className="text-slate-secondary font-sans font-bold normal-case tracking-normal text-xs">{fine.memberName}</span>
+              <span className="text-slate-900 font-sans font-bold normal-case tracking-normal text-xs">{fine.memberName}</span>
             </div>
-            <div className="flex justify-between font-bold text-slate-light uppercase text-[9px] tracking-wider items-center pt-1 border-t border-slate-light/5">
-              <span>Balance Due Ledger:</span>
-              <span className="text-rose-600 font-data font-black text-sm">₹{fine.fine_amount}.00</span>
+            <div className="flex justify-between font-bold text-slate-400 uppercase text-[11px] tracking-wide items-center pt-1 border-t border-slate-100">
+              <span>Balance Due:</span>
+              <span className="text-rose-600 font-mono font-bold text-sm">₹{fine.fine_amount}.00</span>
             </div>
           </div>
 
           {/* Payment Method Selector Segment */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-slate-light uppercase tracking-wider block">
-              Transaction Channel
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide block">
+              Payment Method
             </label>
             <div className="grid grid-cols-3 gap-2">
               {(["CASH", "CARD", "UPI"] as const).map((method) => (
@@ -67,10 +67,10 @@ export const SettleFinePaymentModal = ({ isOpen, fine, onClose, onConfirmSettlem
                   key={method}
                   type="button"
                   onClick={() => setPaymentMethod(method)}
-                  className={`py-2 text-xs font-black uppercase tracking-wider border rounded-xl transition-all cursor-pointer ${
+                  className={`py-2 text-xs font-bold uppercase tracking-wider border rounded-xl transition-all cursor-pointer ${
                     paymentMethod === method
-                      ? "bg-slate-secondary border-slate-secondary text-white shadow-3xs"
-                      : "bg-canvas-dominant border-slate-light/10 text-slate-light hover:text-slate-secondary"
+                      ? "bg-slate-900 border-slate-900 text-white shadow-xs"
+                      : "bg-slate-50 border-slate-200 text-slate-500 hover:text-slate-900"
                   }`}
                 >
                   {method}
@@ -81,8 +81,8 @@ export const SettleFinePaymentModal = ({ isOpen, fine, onClose, onConfirmSettlem
 
           {/* Payment Calendar Target Input */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black text-slate-light uppercase tracking-wider block">
-              Execution Receipt Date
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide block">
+              Payment Date
             </label>
             <div className="relative">
               <input
@@ -91,21 +91,21 @@ export const SettleFinePaymentModal = ({ isOpen, fine, onClose, onConfirmSettlem
                 max={today}
                 value={selectedPaidDate}
                 onChange={(e) => setSelectedPaidDate(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 bg-canvas-dominant border border-slate-light/10 rounded-xl text-xs font-medium text-slate-secondary placeholder:text-slate-light outline-hidden focus:bg-white focus:border-slate-secondary transition-all cursor-pointer font-data"
+                className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 outline-hidden focus:bg-white focus:border-slate-900 transition-all cursor-pointer font-mono"
               />
-              <Calendar size={14} className="text-slate-light absolute left-3.5 top-3.5 pointer-events-none" />
+              <Calendar size={14} className="text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
             </div>
-            <p className="text-[9px] text-slate-light font-medium">
-              *Backdating is permitted for missed ledger updates. Future dates are locked.
+            <p className="text-[11px] text-slate-400 font-medium">
+              *Backdating is permitted for missed database updates. Future dates remain locked.
             </p>
           </div>
 
-          <div className="pt-3 border-t border-slate-light/5">
+          <div className="pt-3 border-t border-slate-100">
             <button
               type="submit"
-              className="w-full py-3 px-4 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
+              className="w-full py-3 px-4 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs"
             >
-              <CheckSquare size={14} /> Finalize Collection & Close Invoice
+              <CheckSquare size={14} /> Confirm Payment & Close Invoice
             </button>
           </div>
 

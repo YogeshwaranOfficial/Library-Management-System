@@ -20,60 +20,60 @@ export const UnpaidFineAlertModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-55 flex items-center justify-center bg-slate-secondary/50 backdrop-blur-xs p-4 animate-fade-in">
-      <div className="bg-white w-full max-w-md rounded-2xl border border-rose-100 shadow-2xl overflow-hidden animate-zoom-in text-left">
+    <div className="fixed inset-0 z-55 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 font-sans text-xs sm:text-sm text-slate-700 text-left animate-fade-in">
+      <div className="bg-white w-full max-w-md rounded-2xl border border-rose-100 shadow-2xl overflow-hidden animate-zoom-in">
         
         {/* Warning Alert Banner Header */}
-        <div className="bg-rose-50/50 px-6 py-5 border-b border-rose-100/60 flex items-start gap-3.5">
-          <div className="p-2 bg-rose-100/80 rounded-xl text-rose-600 shrink-0">
+        <div className="bg-rose-50 px-6 py-5 border-b border-rose-100 flex items-start gap-3.5">
+          <div className="p-2 bg-rose-100 rounded-xl text-rose-600 shrink-0">
             <ShieldAlert className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-black text-slate-secondary">Return Blocked: Pending Balance</h3>
-            <p className="text-[9px] text-rose-700 font-black mt-0.5 uppercase tracking-widest">
+            <h3 className="text-base font-bold text-slate-900">Return Blocked: Pending Balance</h3>
+            <p className="text-[11px] text-rose-700 font-bold mt-0.5 uppercase tracking-wide">
               Financial Validation Exception Bound
             </p>
           </div>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-4 text-xs leading-relaxed text-slate-secondary font-medium">
-          <p className="text-slate-light">
+        <div className="p-6 space-y-4 text-xs leading-relaxed text-slate-700 font-medium">
+          <p className="text-slate-500">
             The library core system cannot authorize this inventory shelf check-in sequence because an unpaid fine liability matches this active operation.
           </p>
 
           {/* Audit Summary Container */}
-          <div className="bg-canvas-dominant border border-slate-light/10 rounded-xl p-4 space-y-2">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-slate-light uppercase text-[9px] tracking-wider font-bold">Account Holder:</span>
-              <span className="font-bold text-slate-secondary">{memberName}</span>
+              <span className="text-slate-400 uppercase text-[11px] tracking-wide font-bold">Account Holder:</span>
+              <span className="font-bold text-slate-900">{memberName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-slate-light uppercase text-[9px] tracking-wider font-bold">Asset Volume:</span>
-              <span className="font-bold text-slate-secondary max-w-48 truncate">{bookTitle}</span>
+              <span className="text-slate-400 uppercase text-[11px] tracking-wide font-bold">Asset Volume:</span>
+              <span className="font-bold text-slate-900 max-w-48 truncate">{bookTitle}</span>
             </div>
-            <div className="h-px bg-slate-light/10 my-1.5" />
+            <div className="h-px bg-slate-200 my-1.5" />
             <div className="flex justify-between items-center pt-0.5">
-              <span className="text-rose-700 font-black uppercase text-[10px] tracking-wider flex items-center gap-1">
+              <span className="text-rose-700 font-bold uppercase text-[11px] tracking-wide flex items-center gap-1">
                 <AlertTriangle className="w-3.5 h-3.5" /> Overdue Debt:
               </span>
-              <span className="text-base font-black font-data text-slate-secondary">
+              <span className="text-base font-bold font-mono text-slate-900">
                 {fineAmount && fineAmount > 0 ? `₹${fineAmount}.00` : "Calculated at Desk"}
               </span>
             </div>
           </div>
 
-          <p className="text-[10px] text-slate-light italic bg-canvas-dominant/40 p-3 rounded-xl border border-slate-light/5 leading-normal">
+          <p className="text-[11px] text-slate-500 italic bg-slate-50 p-3 rounded-xl border border-slate-200 leading-normal">
             Policy Rule: Outstanding debt liabilities must clear through the cash registration counter desk before restoring book items back into system catalog slots.
           </p>
         </div>
 
         {/* Action Controls Footer */}
-        <div className="px-6 py-4 bg-canvas-dominant border-t border-slate-light/10 flex gap-2 justify-end">
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex gap-2 justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 bg-white text-slate-light border border-slate-light/10 hover:text-slate-secondary font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+            className="px-4 py-2 bg-white text-slate-500 border border-slate-200 hover:text-slate-900 font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer"
           >
             Dismiss Alert
           </button>
@@ -85,7 +85,7 @@ export const UnpaidFineAlertModal = ({
                 onClose();
                 onNavigateToFines();
               }}
-              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
             >
               Collect Fine Counter <ArrowRight className="w-3 h-3" />
             </button>

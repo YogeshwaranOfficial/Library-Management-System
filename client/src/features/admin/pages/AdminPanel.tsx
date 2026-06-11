@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
 import { useAuthStore } from "../../../store/authStore";
-import { Users, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { Users, ArrowUpRight, ShieldCheck } from "lucide-react";
 
 export const AdminPanel: React.FC = () => {
   const token = useAuthStore((state) => state.token);
@@ -12,7 +12,6 @@ export const AdminPanel: React.FC = () => {
   const { data: readersData, isLoading: isLoadingReaders } = useQuery({
     queryKey: ["adminReadersMasterFeed", token],
     queryFn: async () => {
-      // Pass a query parameter limit to get the aggregate counter matrix
       const res = await axiosClient.get("/admin/readers", { params: { limit: 1, offset: 0 } });
       return res.data?.data || res.data;
     },
@@ -29,19 +28,20 @@ export const AdminPanel: React.FC = () => {
     enabled: !!token,
   });
 
-  // Safely extract totalCount properties from the new controller wrapper object format
   const totalReaders = readersData?.totalCount ?? 0;
   const totalLibrarians = librariansData?.totalCount ?? 0;
 
   return (
-    <div className="space-y-6 max-w-6xl animate-fade-in">
+    <div className="space-y-6 max-w-6xl animate-fade-in font-sans selection:bg-amber-100">
+      
       {/* Premium Welcome Banner Matrix card */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-light/10 shadow-xs">
-        <h2 className="text-xl font-bold text-slate-secondary tracking-tight">
-          Welcome back, {"System Admin"}
+      <div className="bg-white p-8 rounded-2xl border border-slate-200/60 shadow-xs relative overflow-hidden">
+        <div className="absolute top-0 left-0 h-full w-1.5 bg-slate-900" />
+        <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+          Welcome back, System Admin
         </h2>
-        <p className="text-xs text-slate-light mt-0.5 font-medium">
-          System access initialization verified. Select a configuration node below to audit active directory accounts.
+        <p className="text-xs text-slate-500 mt-1 font-medium max-w-2xl">
+          System access initialization verified. Select a configuration node below to audit, update, and manage active directory accounts.
         </p>
       </div>
 
@@ -51,24 +51,24 @@ export const AdminPanel: React.FC = () => {
         {/* Gateway Card 1: Manage Users */}
         <Link
           to="/admin/users" 
-          className="group bg-white p-6 rounded-2xl border border-slate-light/10 shadow-xs hover:shadow-md hover:border-sage-primary/20 transition-all cursor-pointer flex items-center justify-between"
+          className="group bg-white p-6 rounded-2xl border border-slate-200/60 shadow-xs hover:shadow-md hover:border-slate-900 transition-all cursor-pointer flex items-center justify-between"
         >
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-sage-primary/10 text-sage-primary flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Users size={22} />
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
+              <Users size={20} />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-light uppercase tracking-wider">Manage Users</p>
-              <h3 className="text-2xl font-black text-slate-secondary mt-0.5">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Directory Control</p>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight mt-0.5">
                 {isLoadingReaders ? (
-                  <span className="text-xs font-bold animate-pulse text-slate-light/50">Computing...</span>
+                  <span className="text-xs font-bold animate-pulse text-slate-400">Computing Matrix...</span>
                 ) : (
-                  `${totalReaders} Active Readers` // 💡 FIXED: Removed .length runtime bug
+                  `${totalReaders} Active Readers`
                 )}
               </h3>
             </div>
           </div>
-          <div className="text-slate-light/40 group-hover:text-sage-primary transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
+          <div className="text-slate-400 group-hover:text-slate-900 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
             <ArrowUpRight size={18} />
           </div>
         </Link>
@@ -76,24 +76,24 @@ export const AdminPanel: React.FC = () => {
         {/* Gateway Card 2: Manage Librarians */}
         <Link
           to="/admin/librarians" 
-          className="group bg-white p-6 rounded-2xl border border-slate-light/10 shadow-xs hover:shadow-md hover:border-slate-secondary/20 transition-all cursor-pointer flex items-center justify-between"
+          className="group bg-white p-6 rounded-2xl border border-slate-200/60 shadow-xs hover:shadow-md hover:border-slate-900 transition-all cursor-pointer flex items-center justify-between"
         >
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-slate-secondary/10 text-slate-secondary flex items-center justify-center group-hover:scale-105 transition-transform">
-              <ShieldCheck size={22} />
+            <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center group-hover:bg-slate-900 group-hover:text-white transition-all duration-300">
+              <ShieldCheck size={20} />
             </div>
             <div>
-              <p className="text-[11px] font-bold text-slate-light uppercase tracking-wider">Manage Librarians</p>
-              <h3 className="text-2xl font-black text-slate-secondary mt-0.5">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Staff Management</p>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight mt-0.5">
                 {isLoadingLibrarians ? (
-                  <span className="text-xs font-bold animate-pulse text-slate-light/50">Computing...</span>
+                  <span className="text-xs font-bold animate-pulse text-slate-400">Computing Matrix...</span>
                 ) : (
-                  `${totalLibrarians} Librarins Assigned` // 💡 FIXED: Removed .length runtime bug
+                  `${totalLibrarians} Librarians Assigned`
                 )}
               </h3>
             </div>
           </div>
-          <div className="text-slate-light/40 group-hover:text-slate-secondary transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
+          <div className="text-slate-400 group-hover:text-slate-900 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all">
             <ArrowUpRight size={18} />
           </div>
         </Link>

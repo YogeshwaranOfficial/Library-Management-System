@@ -73,8 +73,8 @@ export const MemberModal = ({ isOpen, onClose, onSubmit, users, plans, editingMe
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-amber-100 animate-zoom-in">
         
         {/* Modal Branding Header - Clean Light Structured Banner */}
-        <div className="bg-slate-50/80 border-b border-slate-100 p-5 text-slate-900 flex justify-between items-center">
-          <h3 className="text-sm font-bold tracking-tight">{editingMember ? "Renew Membership Plan" : "Add New Member"}</h3>
+        <div className="bg-slate-900 border-b border-slate-100 p-5 text-slate-900 flex justify-between items-center">
+          <h3 className="text-xl text-white font-bold tracking-tight">{editingMember ? "Renew Membership Plan" : "Add New Member"}</h3>
           <button 
             onClick={onClose} 
             className="text-slate-400 hover:text-slate-900 transition-colors cursor-pointer text-base font-bold p-1.5 hover:bg-slate-100 rounded-lg"

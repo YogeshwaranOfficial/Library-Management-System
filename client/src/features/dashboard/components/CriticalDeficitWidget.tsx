@@ -1,3 +1,6 @@
+// Editorial Visual Assets
+import { AlertCircle } from "lucide-react";
+
 interface DeficitItem { 
   id: string; 
   name: string; 
@@ -5,34 +8,38 @@ interface DeficitItem {
 }
 
 export const CriticalDeficitWidget = ({ items }: { items: DeficitItem[] }) => (
-  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs flex flex-col justify-between min-h-65">
+  <div className="bg-white p-6 rounded-2xl border border-slate-200/60 shadow-xs flex flex-col justify-between min-h-65 text-left font-sans">
     <div>
-      <h3 className="text-xs font-bold text-red-600 uppercase tracking-wider">🚨 Procurement Alerts</h3>
-      {/* 💡 UPDATED: Reflects that these are completely out-of-stock items */}
-      <p className="text-xs text-gray-500 mt-0.5">Critical titles with 0 copies remaining on the shelves.</p>
+      <h3 className="text-[11px] font-bold text-rose-600 uppercase tracking-wider flex items-center gap-1.5">
+        <AlertCircle size={14} className="text-rose-600" /> Procurement Alerts
+      </h3>
+      <p className="text-xs text-slate-500 mt-1 leading-relaxed font-medium">
+        Critical titles with 0 copies remaining on the shelves.
+      </p>
     </div>
     
-    <div className="space-y-2.5 my-3 overflow-y-auto max-h-35 pr-1">
+    <div className="space-y-2.5 my-4 overflow-y-auto max-h-35 pr-1 flex-1">
       {items.length === 0 ? (
-        <p className="text-xs text-gray-400 italic py-4 text-center">Zero inventory bottlenecks reported.</p>
+        <p className="text-xs text-slate-400 italic py-6 text-center font-medium">
+          Zero inventory bottlenecks reported.
+        </p>
       ) : (
         items.map(item => (
-          <div key={item.id} className="flex justify-between items-center bg-red-50/50 border border-red-100 p-2 rounded-xl">
-            <span className="text-xs font-semibold text-gray-800 truncate max-w-35" title={item.name}>
+          <div key={item.id} className="flex justify-between items-center bg-rose-50/40 border border-rose-100 p-2.5 rounded-xl transition-colors">
+            <span className="text-xs font-bold text-slate-800 truncate max-w-35 sm:max-w-45" title={item.name}>
               {item.name}
             </span>
-            {/* 💡 UPDATED: Changed from "Holds Pending" to a clear restock urgency level */}
-            <span className="text-[10px] font-bold bg-red-600 text-white px-2 py-0.5 rounded-full whitespace-nowrap">
-              {item.requests > 1 ? `High Demand (0 Left)` : `0 Copies Available`}
+            <span className="text-[10px] font-mono font-bold bg-rose-600 text-white px-2.5 py-0.5 rounded-md whitespace-nowrap uppercase tracking-wider">
+              {item.requests > 1 ? `High Demand` : `Out of Stock`}
             </span>
           </div>
         ))
       )}
     </div>
     
-    {/* Keep this ready for when we link the purchase order handler */}
-    <button className="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold transition-colors">
+    {/* Keep this ready for when we link the purchase order handler
+    <button className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-amber-50 rounded-xl text-xs font-bold tracking-wide transition-all cursor-pointer shadow-xs">
       Quick Restock Request
-    </button>
+    </button> */}
   </div>
 );

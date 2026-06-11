@@ -51,8 +51,8 @@ export const DashboardLayout = () => {
             </div>
             
             <div className="flex flex-col">
-              <span className="font-bold text-base tracking-tight text-slate-900 leading-tight">LMS CORE ENGINE</span>
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">System Administrator</span>
+              <span className="font-bold text-base tracking-tight text-slate-900 leading-tight">LMS</span>
+              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">Librarian Portal</span>
             </div>
           </div>
 
@@ -99,17 +99,17 @@ export const DashboardLayout = () => {
         {/* Header Frame - High Visibility Layout */}
         <header className="h-22 bg-white border-b border-amber-100 flex items-center justify-between px-10 shadow-2xs shrink-0">
           <div>
-            <h1 className="text-lg font-bold text-slate-900 tracking-tight">System Feed Ledger</h1>
+            <h1 className="text-lg font-bold text-slate-900 tracking-tight">Librarian Dashboard</h1>
             <p className="text-sm text-slate-400 font-medium mt-0.5">Real-time catalog and circulation auditing pipeline</p>
           </div>
           
           <div className="flex items-center gap-5">
             <div className="text-right hidden sm:block">
-              <p className="font-semibold text-sm text-slate-700 bg-slate-50 border border-slate-200/60 px-3.5 py-1.5 rounded-md shadow-2xs inline-block">
+              {/* <p className="font-semibold text-sm text-slate-700 bg-slate-50 border border-slate-200/60 px-3.5 py-1.5 rounded-md shadow-2xs inline-block">
                 {user?.email || "librarian@institution.org"}
-              </p>
+              </p> */}
               <p className="text-xs text-slate-400 font-medium tracking-wide uppercase mt-1">
-                Access Level: <span className="text-slate-600 font-bold">{user?.role || "LIBRARIAN"}</span>
+                ROLE: <span className="text-slate-600 font-bold">{user?.role || "LIBRARIAN"}</span>
               </p>
             </div>
             

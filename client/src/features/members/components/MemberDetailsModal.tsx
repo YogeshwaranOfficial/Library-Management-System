@@ -49,9 +49,9 @@ export const MemberDetailsModal: React.FC<MemberDetailsModalProps> = ({
         <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl transition-all overflow-hidden border border-amber-100 flex flex-col max-h-[90vh]">
           
           {/* Header Grid Framework - Clean Bright Banner */}
-          <div className="flex items-center justify-between border-b border-slate-100 p-5 bg-slate-50/80">
-            <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-              {showRenewalScreen ? "Renew Membership Plan" : "Member Profile Card"}
+          <div className="flex items-center justify-between border-b border-slate-100 p-5 bg-slate-900">
+            <h3 className="text-xl font-bold text-white tracking-tight">
+              {showRenewalScreen ? "Renew Membership Plan" : "Member Details"}
             </h3>
             <button 
               onClick={() => { setShowRenewalScreen(false); onClose(); }}

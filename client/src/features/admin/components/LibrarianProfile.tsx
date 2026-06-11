@@ -33,10 +33,7 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({ profile, onB
     },
     onSuccess: () => {
       toast.success("Librarian profile deleted successfully.");
-      
-      // 💡 FIXED: Matches the exact tracking feed array cache tag key used in ManageLibrarians
       queryClient.invalidateQueries({ queryKey: ["adminUsersMasterFeed"] }); 
-      
       setIsDeleteModalOpen(false);
       onBack(); 
     },
@@ -48,37 +45,37 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({ profile, onB
 
   return (
     <>
-      <div className="space-y-6 max-w-4xl animate-fade-in">
+      <div className="space-y-6 max-w-4xl animate-fade-in font-sans">
         
         {/* Navigation Action Strip */}
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-xs font-bold text-slate-light hover:text-slate-secondary transition-colors cursor-pointer group"
+          className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer group uppercase tracking-wider"
         >
           <ArrowLeft size={14} className="transform group-hover:-translate-x-0.5 transition-transform" />
-          Back to Operators Hub
+          Back
         </button>
 
         {/* Identity Details Box */}
-        <div className="bg-white rounded-2xl border border-slate-light/10 shadow-xs overflow-hidden">
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-xl overflow-hidden">
           
-          {/* Banner Layout containing Upper Right Floating Action Options */}
-          <div className="h-24 bg-linear-to-r from-slate-secondary/90 to-slate-secondary p-6 flex items-center justify-between">
-            <span className="text-[10px] font-mono font-bold tracking-widest text-white/40 uppercase">
-              System Node: Active
+          {/* Banner Layout: Swapped to high-contrast dark signature panel */}
+          <div className="h-24 bg-slate-900 p-6 flex items-center justify-between border-b border-amber-100/20">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-amber-50/60 uppercase">
+              System Node: Active Operator
             </span>
             
             {/* FLOATING ACTION MANAGEMENT SYSTEM PORTAL BUTTONS */}
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 text-amber-50 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border border-white/5"
               >
                 <Edit3 size={12} /> Edit Profile
               </button>
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-utility-crimson/20 hover:bg-utility-crimson text-white text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 bg-rose-500/20 hover:bg-rose-600 text-white text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border border-rose-500/10"
               >
                 <UserX size={12} /> Delete Account
               </button>
@@ -86,22 +83,24 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({ profile, onB
           </div>
 
           <div className="p-6 relative">
-            <div className="absolute -top-10 left-6 h-20 w-20 bg-sage-primary border-4 border-white text-white rounded-2xl flex items-center justify-center font-black text-2xl uppercase shadow-md">
+            {/* Avatar block using core premium styling metrics */}
+            <div className="absolute -top-10 left-6 h-20 w-20 bg-slate-900 border-4 border-white text-amber-50 rounded-2xl flex items-center justify-center font-bold text-2xl uppercase shadow-md">
               {profile.name.slice(0, 2)}
             </div>
 
-            <div className="pt-12 md:flex md:items-center md:justify-between border-b border-slate-light/5 pb-6">
+            <div className="pt-12 md:flex md:items-center md:justify-between border-b border-slate-100 pb-6">
               <div>
-                <h2 className="text-xl font-black text-slate-secondary tracking-tight">
+                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
                   {profile.name}
                 </h2>
-                <p className="text-xs text-sage-primary font-bold mt-0.5 flex items-center gap-1.5">
-                  <ShieldCheck size={14} /> Assigned Library Officer
+                <p className="text-xs text-slate-600 font-medium mt-1 flex items-center gap-1.5">
+                  <ShieldCheck size={14} className="text-slate-900" /> Assigned Library Officer
                 </p>
               </div>
-              <div className="mt-4 md:mt-0 bg-canvas-dominant border border-slate-light/10 px-3 py-1.5 rounded-xl text-right">
-                <p className="text-[10px] font-mono font-bold tracking-wider text-slate-light uppercase">Account ID</p>
-                <p className="font-data text-xs text-slate-secondary font-bold uppercase mt-0.5">
+              
+              <div className="mt-4 md:mt-0 bg-slate-50 border border-slate-200/60 px-4 py-2 rounded-xl text-left md:text-right">
+                <p className="text-[9px] font-mono font-bold tracking-widest text-slate-400 uppercase">Account ID</p>
+                <p className="text-xs text-slate-900 font-bold uppercase mt-0.5 tracking-wide">
                   LIB-{profile.user_id.slice(-6).toUpperCase()}
                 </p>
               </div>
@@ -109,27 +108,27 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({ profile, onB
 
             {/* Matrix Data Grid Fields */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-light uppercase tracking-wider block">Email Id</label>
-                <div className="flex items-center gap-2 text-sm text-slate-secondary font-semibold bg-canvas-dominant/50 p-3 rounded-xl border border-slate-light/5">
-                  <Mail size={15} className="text-slate-light" />
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Email Address</label>
+                <div className="flex items-center gap-2.5 text-sm text-slate-700 font-medium bg-slate-50 p-3 rounded-xl border border-slate-200/60 select-all">
+                  <Mail size={15} className="text-slate-400" />
                   <span>{profile.gmail}</span>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-light uppercase tracking-wider block">Phone Number</label>
-                <div className="flex items-center gap-2 text-sm text-slate-secondary font-semibold bg-canvas-dominant/50 p-3 rounded-xl border border-slate-light/5">
-                  <Phone size={15} className="text-slate-light" />
-                  <span className="font-data">{profile.phone_number}</span>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Phone Number</label>
+                <div className="flex items-center gap-2.5 text-sm text-slate-700 font-medium bg-slate-50 p-3 rounded-xl border border-slate-200/60 select-all">
+                  <Phone size={15} className="text-slate-400" />
+                  <span>{profile.phone_number || "No Phone Registered"}</span>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-bold text-slate-light uppercase tracking-wider block">Registration Date</label>
-                <div className="flex items-center gap-2 text-sm text-slate-secondary font-semibold bg-canvas-dominant/50 p-3 rounded-xl border border-slate-light/5">
-                  <Calendar size={15} className="text-slate-light" />
-                  <span className="font-data">{new Date(profile.created_at).toLocaleDateString()}</span>
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Registration Date</label>
+                <div className="flex items-center gap-2.5 text-sm text-slate-700 font-medium bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+                  <Calendar size={15} className="text-slate-400" />
+                  <span>{new Date(profile.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                 </div>
               </div>
             </div>
@@ -139,7 +138,6 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({ profile, onB
       </div>
 
       {/* OVERLAY LAYERS MODAL PORTALS CONTAINER */}
-      {/* 💡 FIXED: Key binding ensures pristine input components mount when switching open states */}
       <LibrarianModal 
         key={isEditModalOpen ? `edit-${profile.user_id}` : "closed"}
         isOpen={isEditModalOpen}

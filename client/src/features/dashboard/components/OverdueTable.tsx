@@ -3,43 +3,45 @@ import type { OverdueRecord } from "../../../types/dashboard";
 export const OverdueTable = ({ records }: { records: OverdueRecord[] | undefined }) => {
   if (!records || records.length === 0) {
     return (
-      <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-        <p className="text-sm text-gray-500 font-medium">System verification clear: No overdue inventory items currently registered.</p>
+      <div className="text-center py-12 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-6 font-sans">
+        <p className="text-sm text-slate-400 font-semibold">
+          System verification clear: No overdue inventory items currently registered.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200">
-      <table className="w-full text-left border-collapse">
+    <div className="overflow-x-auto rounded-2xl border border-slate-200/60 shadow-xs font-sans text-left bg-white">
+      <table className="w-full border-collapse">
         <thead>
-          <tr className="border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50/70">
-            <th className="py-3.5 px-4">Book Title Identifier</th>
-            <th className="py-3.5 px-4">Borrower Account Reference</th>
-            <th className="py-3.5 px-4">Expected Return Date</th>
-            <th className="py-3.5 px-4">Delay Period</th>
-            <th className="py-3.5 px-4 text-right">Accumulated Penalties</th>
+          <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70">
+            <th className="py-4 px-6 font-bold">Book Title Identifier</th>
+            <th className="py-4 px-6 font-bold">Borrower Account Reference</th>
+            <th className="py-4 px-6 font-bold">Expected Return Date</th>
+            <th className="py-4 px-6 font-bold">Delay Period</th>
+            <th className="py-4 px-6 font-bold text-right">Accumulated Penalties</th>
           </tr>
         </thead>
-        <tbody className="text-sm divide-y divide-gray-100 text-gray-700 bg-white">
+        <tbody className="text-sm divide-y divide-slate-100 text-slate-700">
           {records.map((row) => (
-            <tr key={row.id} className="hover:bg-gray-50/40 transition-colors group">
-              <td className="py-3.5 px-4 font-medium text-gray-900 group-hover:text-teal-brand transition-colors">
+            <tr key={row.id} className="hover:bg-slate-50/40 transition-colors group">
+              <td className="py-4 px-6 font-bold text-slate-900 group-hover:text-slate-700 transition-colors">
                 {row.title}
               </td>
-              <td className="py-3.5 px-4 text-gray-600">
-                <span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-700 font-semibold mr-1.5">
+              <td className="py-4 px-6 text-slate-600 font-medium">
+                <span className="font-mono text-[10px] bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded-md text-slate-600 font-bold mr-2 uppercase tracking-wide">
                   ID: {row.memberId}
                 </span>
                 {row.borrowerName}
               </td>
-              <td className="py-3.5 px-4 text-gray-500">{row.dueDate}</td>
-              <td className="py-3.5 px-4">
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700">
+              <td className="py-4 px-6 text-slate-500 font-semibold">{row.dueDate}</td>
+              <td className="py-4 px-6">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-[11px] font-mono font-bold bg-rose-50 text-rose-600 border border-rose-100 uppercase tracking-wide">
                   {row.daysLate} days overdue
                 </span>
               </td>
-              <td className="py-3.5 px-4 font-bold text-gray-900 text-right text-base">
+              <td className="py-4 px-6 font-bold text-slate-900 text-right font-mono text-base">
                 ₹{row.fineAmount}
               </td>
             </tr>

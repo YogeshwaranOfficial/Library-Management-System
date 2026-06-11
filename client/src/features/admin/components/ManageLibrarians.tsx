@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
 import { useAuthStore } from "../../../store/authStore";
-import { LibrarianProfile } from "../components/LibrarianProfile";
-import { LibrarianModal } from "../components/LibrarianModal"; 
+import { LibrarianProfile } from "./LibrarianProfile"; 
+import { LibrarianModal } from "./LibrarianModal"; 
 import { Mail, Phone, ArrowRight, UserPlus, ChevronLeft, ChevronRight } from "lucide-react"; 
 
 interface UserRecord {
@@ -28,7 +28,7 @@ interface ServerApiResponse {
 
 export const ManageLibrarians: React.FC = () => {
   const token = useAuthStore((state) => state.token);
-  const [selectedLibrarianId, setSelectedLibrarianId] = useState<string | null>(null);
+  const [selectedLibrarian, setSelectedLibrarian] = useState<UserRecord | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); 
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,32 +67,31 @@ export const ManageLibrarians: React.FC = () => {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
 
-  if (selectedLibrarianId) {
-    const liveTargetProfile = librariansList.find((l: UserRecord) => l.user_id === selectedLibrarianId);
-    if (liveTargetProfile) {
-      return (
-        <LibrarianProfile 
-          profile={liveTargetProfile} 
-          onBack={() => setSelectedLibrarianId(null)} 
+  // 💡 FIXED: If a librarian card has been clicked, display their profile views context immediately
+  if (selectedLibrarian) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        <LibrarianProfile
+          profile={selectedLibrarian}
+          onBack={() => setSelectedLibrarian(null)}
         />
-      );
-    }
+      </div>
+    );
   }
 
   return (
-    // 💡 CHANGED: Set structural flex container layout to calculate structural heights accurately
-    <div className="flex flex-col min-h-[calc(100vh-6rem)] max-w-6xl relative animate-fade-in">
+    <div className="flex flex-col min-h-[calc(100vh-6rem)] max-w-6xl relative animate-fade-in font-sans">
       
-      {/* HEADER CONTROLS (STAYS AT THE TOP) */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 mb-6 rounded-2xl border border-slate-light/10 shadow-xs shrink-0">
+      {/* HEADER CONTROLS */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 mb-6 rounded-2xl border border-slate-100 shadow-xs shrink-0">
         <div>
-          <h2 className="text-base font-black text-slate-secondary uppercase tracking-wider">Library Operators</h2>
-          <p className="text-xs text-slate-light font-medium mt-0.5">Manage staff terminals, clearance logs, and authority configurations.</p>
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Library Operators</h2>
+          <p className="text-xs text-slate-400 font-medium mt-0.5">Manage staff terminals, clearance logs, and authority configurations.</p>
         </div>
         <button
           type="button"
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-sage-primary hover:bg-sage-primary/90 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer"
+          className="flex items-center justify-center gap-2 px-5 py-3 bg-slate-900 hover:bg-slate-800 text-amber-50 text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
         >
           <UserPlus size={14} />
           Add Librarian
@@ -100,49 +99,48 @@ export const ManageLibrarians: React.FC = () => {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-20 text-xs text-slate-light font-bold animate-pulse flex-1">
+        <div className="text-center py-20 text-xs text-slate-400 font-bold animate-pulse flex-1">
           Sifting team allocation profiles...
         </div>
       ) : (
-        // 💡 CHANGED: Nested contents now wrap into an explicit layout flow architecture
         <div className="flex flex-col flex-1 justify-between">
           
-          {/* SCROLLABLE GRID BOX AREA */}
+          {/* SCROLLABLE GRID AREA */}
           <div className="pb-8 flex-1">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {librariansList.length === 0 ? (
-                <div className="col-span-full bg-white text-center py-12 text-sm text-slate-light border rounded-2xl">
+                <div className="col-span-full bg-white text-center py-12 text-sm text-slate-400 border rounded-2xl border-dashed border-slate-200">
                   No registered operator accounts tracked on this network.
                 </div>
               ) : (
                 librariansList.map((librarian: UserRecord) => (
                   <div 
                     key={librarian.user_id}
-                    onClick={() => setSelectedLibrarianId(librarian.user_id)}
-                    className="group bg-white p-5 rounded-2xl border border-slate-light/10 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
+                    onClick={() => setSelectedLibrarian(librarian)}
+                    className="group bg-white p-5 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md hover:border-slate-200 transition-all cursor-pointer flex flex-col justify-between"
                   >
                     <div>
                       <div className="flex justify-between items-start mb-4">
-                        <div className="h-10 w-10 bg-slate-secondary text-white rounded-xl flex items-center justify-center font-bold text-sm uppercase">
+                        <div className="h-10 w-10 bg-slate-900 text-amber-50 rounded-xl flex items-center justify-center font-bold text-sm uppercase">
                           {librarian.name.slice(0, 2)}
                         </div>
-                        <span className="text-[9px] font-mono font-bold tracking-widest text-sage-primary bg-sage-primary/5 px-2 py-0.5 rounded-md uppercase">
-                          LIBRARIAN-{librarian.user_id.slice(-4).toUpperCase()}
+                        <span className="text-[9px] font-mono font-bold tracking-widest text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md uppercase border border-slate-200/40">
+                          OP-{librarian.user_id.slice(-4).toUpperCase()}
                         </span>
                       </div>
 
-                      <h3 className="font-bold text-base text-slate-secondary group-hover:text-sage-primary transition-colors">
+                      <h3 className="font-bold text-base text-slate-900 group-hover:text-slate-800 transition-colors tracking-tight">
                         {librarian.name}
                       </h3>
                       
-                      <div className="mt-3 space-y-1.5 text-xs text-slate-light font-medium">
-                        <p className="flex items-center gap-2"><Mail size={13} /> {librarian.gmail}</p>
-                        <p className="flex items-center gap-2"><Phone size={13} /> {librarian.phone_number}</p>
+                      <div className="mt-3 space-y-1.5 text-xs text-slate-500 font-medium">
+                        <p className="flex items-center gap-2 select-all"><Mail size={13} className="text-slate-400" /> {librarian.gmail}</p>
+                        <p className="flex items-center gap-2 select-all"><Phone size={13} className="text-slate-400" /> {librarian.phone_number || "No Phone Registered"}</p>
                       </div>
                     </div>
 
-                    <div className="mt-5 pt-3 border-t border-slate-light/5 flex items-center justify-between text-xs font-bold text-slate-light group-hover:text-slate-secondary transition-colors">
-                      <span>Profile</span>
+                    <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-slate-900 transition-colors">
+                      <span className="uppercase tracking-wide text-[10px]">View Full Operator Profile</span>
                       <ArrowRight size={14} className="transform group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
@@ -151,60 +149,40 @@ export const ManageLibrarians: React.FC = () => {
             </div>
           </div>
 
-          {/* 💡 FIXED: STICKY LOCKED BOTTOM PAGINATION CONTROLS BAR */}
-          <div className="sticky bottom-4 left-0 right-0 z-10 mt-auto px-5 py-4 border border-slate-light/10 rounded-2xl bg-white/95 backdrop-blur-xs flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md transition-all">
-            <div className="text-xs text-slate-light font-medium">
-              Showing <span className="font-bold text-slate-secondary">{librariansList.length}</span> of{" "}
-              <span className="font-bold text-slate-secondary">{totalCount}</span> operators logged
+          {/* STICKY FIXED PAGINATION BAR */}
+          <div className="sticky bottom-4 left-0 right-0 z-10 mt-auto px-5 py-4 border border-slate-100 rounded-2xl bg-slate-50/50 backdrop-blur-xs flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg transition-all">
+            <div className="text-sm text-slate-500 font-medium">
+              <span>
+                Page {currentPage} / {totalPages} <span className="text-slate-300 mx-2">|</span> Total {totalCount} Librarians
+              </span>
             </div>
-
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className="p-2 border border-slate-light/10 rounded-xl bg-white text-slate-secondary disabled:opacity-40 disabled:cursor-not-allowed hover:bg-canvas-dominant cursor-pointer transition-all"
-              >
-                <ChevronLeft size={16} />
-              </button>
-
-              {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((pageNum) => (
-                <button
-                  key={pageNum}
-                  type="button"
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                    currentPage === pageNum
-                      ? "bg-sage-primary text-white shadow-xs"
-                      : "bg-white border border-slate-light/10 text-slate-secondary hover:bg-canvas-dominant"
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              ))}
-
-              <button
-                type="button"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                className="p-2 border border-slate-light/10 rounded-xl bg-white text-slate-secondary disabled:opacity-40 disabled:cursor-not-allowed hover:bg-canvas-dominant cursor-pointer transition-all"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
+            <div className="flex gap-2">
+                            <button
+                              type="button"
+                              disabled={currentPage === 1 || totalPages <= 1}
+                              onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.max(prev - 1, 1)); }}
+                              className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                            >
+                              <ChevronLeft size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={currentPage === totalPages || totalPages <= 1}
+                              onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.min(prev + 1, totalPages)); }}
+                              className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                            >
+                              <ChevronRight size={14} />
+                            </button>
+                          </div>
           </div>
 
         </div>
       )}
 
+      {/* CREATION FILE OVERLAY PORTAL CONTAINER */}
       <LibrarianModal 
-        key={selectedLibrarianId || "create-librarian-instance"}
-        isOpen={isCreateModalOpen || !!selectedLibrarianId} 
-        onClose={() => {
-          setIsCreateModalOpen(false);
-          setSelectedLibrarianId(null); 
-        }}
-        librarianToEdit={librariansList.find((l: UserRecord) => l.user_id === selectedLibrarianId) || null}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
       />
     </div>
   );

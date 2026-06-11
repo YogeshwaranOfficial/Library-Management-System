@@ -1,5 +1,4 @@
 import React from "react";
-import { AlertTriangle, Trash2, X } from "lucide-react";
 
 interface DeleteUserModalProps {
   isOpen: boolean;
@@ -19,65 +18,55 @@ export const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-secondary/50 backdrop-blur-xs p-4 animate-fade-in">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-utility-crimson/10 overflow-hidden transform transition-all">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
+      {/* Container: Matches the clean off-white base with soft linen-amber border */}
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 border border-amber-100/80 animate-zoom-in">
         
-        {/* Warning Accent Strip */}
-        <div className="bg-utility-crimson/10 p-4 flex items-center gap-3 border-b border-utility-crimson/10">
-          <div className="p-2 bg-utility-crimson/20 text-utility-crimson rounded-xl">
-            <AlertTriangle size={18} />
+        <div className="text-center">
+          {/* Header: Crisp text-base alignment with deep slate-ink tone */}
+          <h3 className="text-base font-bold text-slate-900 tracking-tight">
+            Confirm User Account Purge
+          </h3>
+          
+          {/* Main Paragraph: Structured at text-sm slate-600 for high editorial legibility */}
+          <p className="text-sm text-slate-600 mt-4 leading-relaxed">
+            Are you sure you want to completely delete the system profile record for{" "}
+            <strong className="text-slate-900 font-bold">"{userName}"</strong> from the library management core engine?
+          </p>
+          
+          {/* Callout Block: Shipped with premium cream/rose warning surface tokens */}
+          <div className="text-xs text-rose-900 font-medium mt-5 bg-rose-50/60 border border-rose-100 p-4 rounded-xl text-left leading-relaxed">
+            <span className="font-bold uppercase tracking-wider block mb-1 text-rose-950 text-[11px]">
+              ⚠️ Irreversible Action:
+            </span>
+            This process instantly flushes out their system user registry parameters, active resource rentals, tracking workflows, and systemic archival logs completely.
           </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-xs text-utility-crimson uppercase tracking-wider">
-             Confirm Delete
-            </h3>
-          </div>
+        </div>
+        
+        {/* Modal Action Footers - Crisp Touchpoints */}
+        <div className="mt-6 flex justify-end gap-3 pt-5 border-t border-slate-100 text-xs font-bold tracking-wide">
+          
+          {/* Cancel Button */}
           <button 
             type="button" 
             onClick={onClose} 
             disabled={isPending}
-            className="p-1 text-slate-light hover:text-slate-secondary rounded-lg transition-colors cursor-pointer"
+            className="px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl transition-all hover:bg-slate-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <X size={16} />
+            Cancel
           </button>
-        </div>
-
-        {/* Message Core Body */}
-        <div className="p-5 space-y-4">
-          <p className="text-xs font-medium text-slate-secondary/90 leading-relaxed">
-            Are you sure want to completely delete <strong className="text-slate-secondary font-bold font-sans">"{userName}"</strong> from the library management databases?
-          </p>
-          <div className="bg-canvas-dominant/60 rounded-xl p-3 border border-slate-light/5">
-            <p className="text-[11px] text-utility-crimson font-bold uppercase tracking-wide flex items-center gap-1.5">
-              ⚠️ Irreversible Action
-            </p>
-            <p className="text-[10px] text-slate-light font-medium mt-0.5">
-              This will instantly clean out their active profile, active rental parameters, and systemic histories.
-            </p>
-          </div>
-        </div>
-
-        {/* Dynamic Action Buttons */}
-        <div className="bg-canvas-dominant p-4 border-t border-slate-light/10 flex items-center justify-end gap-3">
-          <button
-            type="button"
+          
+          {/* Action Button: Dark editorial signature signature button block */}
+          <button 
+            type="button" 
+            onClick={onConfirm} 
             disabled={isPending}
-            onClick={onClose}
-            className="px-4 py-2 bg-white border border-slate-light/10 text-slate-secondary hover:bg-slate-light/10 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer disabled:opacity-50"
+            className="px-4 py-3 bg-slate-900 hover:bg-slate-800 text-amber-50 rounded-xl transition-all cursor-pointer shadow-sm disabled:bg-slate-700 disabled:cursor-not-allowed min-w-30 text-center"
           >
-            Cancel 
+            {isPending ? "Purging Files..." : "Confirm Delete"}
           </button>
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={onConfirm}
-            className="flex items-center gap-1.5 px-5 py-2 bg-utility-crimson hover:bg-utility-crimson/90 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
-          >
-            <Trash2 size={13} /> 
-            {isPending ? "Deleting Files..." : "Confirm Delete"}
-          </button>
+          
         </div>
-
       </div>
     </div>
   );

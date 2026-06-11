@@ -38,43 +38,47 @@ export const DeletePlanModal = ({ isOpen, planId, planName, onClose, onSuccessRe
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-secondary/40 backdrop-blur-xs flex items-center justify-center z-55 p-4 animate-fade-in text-left">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-light/10 animate-zoom-in">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in text-left">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-amber-100/80 animate-zoom-in relative">
         
+        {/* Absolute Positioning Dismiss Controller */}
         <div className="absolute right-4 top-4">
           <button 
             type="button"
             onClick={onClose}
-            className="text-slate-light hover:text-slate-secondary transition-colors cursor-pointer"
+            className="text-slate-400 hover:text-slate-900 transition-colors p-1 hover:bg-slate-50 rounded-lg cursor-pointer"
           >
             <X size={18} />
           </button>
         </div>
 
+        {/* Dynamic Critical Action Notification Core */}
         <div className="p-6 text-center">
-          <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-100/50">
-            <AlertTriangle size={28} className="text-rose-600" />
+          <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-rose-100">
+            <AlertTriangle size={26} className="text-rose-600" />
           </div>
 
-          <h3 className="text-xs font-black text-slate-secondary uppercase tracking-wider">Purge Membership Scheme</h3>
+          <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Delete Membership Plan</h3>
           
-          <p className="text-[11px] text-slate-light font-medium mt-3 leading-relaxed px-2">
-            Are you absolutely sure you want to permanently drop the configuration plan <span className="font-bold text-slate-secondary">"{planName}"</span> from the target database cluster tables?
+          <p className="text-xs text-slate-500 font-medium mt-3 leading-relaxed px-2">
+            Are you absolutely sure you want to permanently drop the configuration plan <span className="font-bold text-slate-900">"{planName}"</span> from the target database cluster tables?
           </p>
 
-          <div className="mt-5 p-3.5 bg-rose-50/50 rounded-xl border border-rose-100/60 flex items-start gap-2.5 text-left">
-            <AlertCircle size={14} className="text-rose-600 shrink-0 mt-0.5" />
-            <p className="text-[10px] text-rose-700 font-bold leading-normal uppercase tracking-tight">
+          {/* Relational Constraints Alert Notice Callout Block */}
+          <div className="mt-5 p-4 bg-amber-50/60 rounded-xl border border-amber-200/60 flex items-start gap-2.5 text-left">
+            <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-[11px] text-amber-900 font-bold leading-normal uppercase tracking-tight">
               Relational Hazard: Members currently bound to this specific plan model id may experience query faults during system verification checkups.
             </p>
           </div>
         </div>
 
-        <div className="px-6 py-4 bg-canvas-dominant border-t border-slate-light/10 flex gap-2">
+        {/* Dynamic Action Trigger Tray */}
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 text-xs font-bold tracking-wide">
           <button 
             type="button" 
             onClick={onClose} 
-            className="flex-1 py-2.5 text-xs font-black uppercase tracking-wider text-slate-light hover:text-slate-secondary bg-white border border-slate-light/10 rounded-xl transition-all cursor-pointer"
+            className="flex-1 py-3 text-slate-700 bg-white border border-slate-200 rounded-xl transition-all hover:bg-slate-100 cursor-pointer"
           >
             Abort
           </button>
@@ -82,7 +86,7 @@ export const DeletePlanModal = ({ isOpen, planId, planName, onClose, onSuccessRe
             type="button" 
             onClick={() => deleteMutation.mutate()}
             disabled={deleteMutation.isPending}
-            className="flex-1 py-2.5 text-xs font-black uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-700 shadow-xs rounded-xl transition-all cursor-pointer disabled:opacity-50"
+            className="flex-1 py-3 text-white bg-rose-600 hover:bg-rose-700 shadow-sm rounded-xl transition-all cursor-pointer disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
           >
             {deleteMutation.isPending ? "Dropping..." : "Confirm Purge"}
           </button>

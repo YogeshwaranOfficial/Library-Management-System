@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, User, Mail, Lock, Phone, ShieldCheck } from "lucide-react";
+import { User, Mail, Lock, Phone, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { axiosClient } from "../../../api/axiosClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -28,25 +28,8 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose }) => {
   // Error tracking vectors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // React Query Mutation handler to execute the POST endpoint handshake
-  const addUserMutation = useMutation({
-    mutationFn: async (payload: Record<string, string>) => {
-      const response = await axiosClient.post("/admin/add-user", payload);
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success("New library reader account provisioned successfully.");
-      queryClient.invalidateQueries({ queryKey: ["adminUsersMasterFeed"] });
-      handleResetAndClose();
-    },
-    onError: (error: AxiosError<BackendErrorResponse>) => {
-      console.error("Account Creation Failed:", error);
-      const serverMessage = error.response?.data?.message;
-      toast.error(serverMessage || "Failed to finalize account registry.");
-    },
-  });
-
-  const handleResetAndClose = () => {
+  // Reset helper invoked during form completion or dismissal
+  const handleForcedReset = () => {
     setName("");
     setGmail("");
     setPassword("");
@@ -56,10 +39,28 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose }) => {
     onClose();
   };
 
+  // React Query Mutation handler to execute the POST endpoint handshake
+  const addUserMutation = useMutation({
+    mutationFn: async (payload: Record<string, string>) => {
+      const response = await axiosClient.post("/admin/add-user", payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("New library reader account provisioned successfully.");
+      queryClient.invalidateQueries({ queryKey: ["adminUsersMasterFeed"] });
+      handleForcedReset();
+    },
+    onError: (error: AxiosError<BackendErrorResponse>) => {
+      console.error("Account Creation Failed:", error);
+      const serverMessage = error.response?.data?.message;
+      toast.error(serverMessage || "Failed to finalize account registry.");
+    },
+  });
+
   const validateForm = () => {
     const localErrors: Record<string, string> = {};
 
-    if (!name.trim()) localErrors.name = "Full name validation entry is required.";
+    if (!name.trim()) localErrors.name = "Full name entry is required.";
     
     const gmailRegex = /^[a-z0-9](\.?[a-z0-9]){4,29}@gmail\.com$/;
     if (!gmail.trim()) {
@@ -106,141 +107,155 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-secondary/40 backdrop-blur-xs font-sans p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-light/10 overflow-hidden animate-fade-in">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-amber-100 animate-zoom-in">
         
-        {/* Header Layout block */}
-        <div className="bg-canvas-dominant p-5 border-b border-slate-light/10 flex items-center justify-between">
+        {/* Modal Branding Header - Slate-900 Core Banner Matching MemberModal */}
+        <div className="bg-slate-900 border-b border-slate-100 p-5 text-white flex justify-between items-center">
           <div>
-            <h3 className="font-bold text-sm text-slate-secondary uppercase tracking-wider">New Library Reader</h3>
-            <p className="text-[11px] text-slate-light mt-0.5 font-medium">All the below informations are mandatory to fill</p>
+            <h3 className="text-lg font-bold tracking-tight">Add New Reader Profile</h3>
+            <p className="text-[11px] text-slate-400 mt-0.5 font-medium">All system configuration inputs are mandatory</p>
           </div>
           <button 
             type="button"
-            onClick={handleResetAndClose}
-            className="p-1.5 hover:bg-slate-light/10 text-slate-light hover:text-slate-secondary rounded-lg transition-colors cursor-pointer"
+            onClick={handleForcedReset} 
+            className="text-slate-400 hover:text-white transition-colors cursor-pointer text-base font-bold p-1.5 hover:bg-slate-800 rounded-lg"
           >
-            <X size={16} />
+            ✕
           </button>
         </div>
 
-        {/* Input Interactive layout fields */}
-        <form onSubmit={handleSubmission} className="p-6 space-y-4">
+        {/* Input Interactive form area */}
+        <form onSubmit={handleSubmission} className="p-6 space-y-4 text-slate-700">
           
-          {/* Name Field */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-light uppercase tracking-wider block">Full Name</label>
+          {/* Full Name Input */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide block">Full Name</label>
             <div className="relative">
-              <User className="absolute left-3 top-3 text-slate-light/70" size={14} />
+              <User className="absolute left-3.5 top-3 text-slate-400" size={15} />
               <input
                 type="text"
                 placeholder="Alex Rivera"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className={`w-full pl-9 pr-4 py-2 bg-canvas-dominant border text-slate-secondary rounded-xl text-xs font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
-                  errors.name ? "border-utility-crimson focus:ring-utility-crimson/5" : "border-slate-light/10 focus:ring-sage-primary/5 focus:border-sage-primary"
+                className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
+                  errors.name 
+                    ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20" 
+                    : "border-slate-200 text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
                 }`}
               />
             </div>
-            {errors.name && <p className="text-[11px] text-utility-crimson font-medium mt-1">{errors.name}</p>}
+            {errors.name && <p className="text-xs text-rose-700 font-bold mt-1 pl-1">{errors.name}</p>}
           </div>
 
-          {/* Email Field */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-light uppercase tracking-wider block">Email id</label>
+          {/* Email Address Input */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide block">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 text-slate-light/70" size={14} />
+              <Mail className="absolute left-3.5 top-3 text-slate-400" size={15} />
               <input
                 type="text"
                 placeholder="alex.rivera@gmail.com"
                 value={gmail}
                 onChange={(e) => setGmail(e.target.value)}
-                className={`w-full pl-9 pr-4 py-2 bg-canvas-dominant border text-slate-secondary rounded-xl text-xs font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
-                  errors.gmail ? "border-utility-crimson focus:ring-utility-crimson/5" : "border-slate-light/10 focus:ring-sage-primary/5 focus:border-sage-primary"
+                className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
+                  errors.gmail 
+                    ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20" 
+                    : "border-slate-200 text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
                 }`}
               />
             </div>
-            {errors.gmail && <p className="text-[11px] text-utility-crimson font-medium mt-1">{errors.gmail}</p>}
+            {errors.gmail && <p className="text-xs text-rose-700 font-bold mt-1 pl-1">{errors.gmail}</p>}
           </div>
 
-          {/* Password Field */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-light uppercase tracking-wider block">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-slate-light/70" size={14} />
-              {/* 💡 FIXED: Changed type to "text" and optimized spacing font details */}
-              <input
-                type="text"
-                placeholder="e.g., SecurePass123"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`w-full pl-9 pr-4 py-2 bg-canvas-dominant border text-slate-secondary rounded-xl text-xs font-semibold font-data tracking-wide transition-all outline-hidden focus:bg-white focus:ring-4 ${
-                  errors.password ? "border-utility-crimson focus:ring-utility-crimson/5" : "border-slate-light/10 focus:ring-sage-primary/5 focus:border-sage-primary"
-                }`}
-              />
+          {/* Security Credentials Block Grid Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide block">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-3 text-slate-400" size={15} />
+                <input
+                  type="text"
+                  placeholder="Password123"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-mono tracking-wide font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
+                    errors.password 
+                      ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20" 
+                      : "border-slate-200 text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
+                  }`}
+                />
+              </div>
             </div>
-            {errors.password && <p className="text-[11px] text-utility-crimson font-medium mt-1">{errors.password}</p>}
-          </div>
 
-          {/* Reconfirm Password Field */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-light uppercase tracking-wider block">Confirm Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-slate-light/70" size={14} />
-              {/* 💡 FIXED: Changed type to "text" and optimized spacing font details */}
-              <input
-                type="text"
-                placeholder="e.g., SecurePass123"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`w-full pl-9 pr-4 py-2 bg-canvas-dominant border text-slate-secondary rounded-xl text-xs font-semibold font-data tracking-wide transition-all outline-hidden focus:bg-white focus:ring-4 ${
-                  errors.confirmPassword ? "border-utility-crimson focus:ring-utility-crimson/5" : "border-slate-light/10 focus:ring-sage-primary/5 focus:border-sage-primary"
-                }`}
-              />
+            {/* Confirm Password */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide block">Confirm Pass</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-3 text-slate-400" size={15} />
+                <input
+                  type="text"
+                  placeholder="Password123"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-mono tracking-wide font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
+                    errors.confirmPassword 
+                      ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20" 
+                      : "border-slate-200 text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
+                  }`}
+                />
+              </div>
             </div>
-            {errors.confirmPassword && <p className="text-[11px] text-utility-crimson font-medium mt-1">{errors.confirmPassword}</p>}
           </div>
+          {(errors.password || errors.confirmPassword) && (
+            <p className="text-xs text-rose-700 font-bold pl-1">
+              {errors.password || errors.confirmPassword}
+            </p>
+          )}
 
-          {/* Phone Number Field */}
-          <div className="space-y-1">
-            <label className="text-[10px] font-bold text-slate-light uppercase tracking-wider block">Mobile Number</label>
+          {/* Mobile Connectivity Number Input */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide block">Mobile Number</label>
             <div className="relative">
-              <Phone className="absolute left-3 top-3 text-slate-light/70" size={14} />
+              <Phone className="absolute left-3.5 top-3 text-slate-400" size={15} />
               <input
                 type="text"
                 maxLength={10}
                 placeholder="9876543210"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-                className={`w-full pl-9 pr-4 py-2 bg-canvas-dominant border text-slate-secondary rounded-xl text-xs font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
-                  errors.phoneNumber ? "border-utility-crimson focus:ring-utility-crimson/5" : "border-slate-light/10 focus:ring-sage-primary/5 focus:border-sage-primary"
+                className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
+                  errors.phoneNumber 
+                    ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20" 
+                    : "border-slate-200 text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
                 }`}
               />
             </div>
-            {errors.phoneNumber && <p className="text-[11px] text-utility-crimson font-medium mt-1">{errors.phoneNumber}</p>}
+            {errors.phoneNumber && <p className="text-xs text-rose-700 font-bold mt-1 pl-1">{errors.phoneNumber}</p>}
           </div>
 
-          {/* Enforced Fixed Configuration Parameter Information Display */}
-          <div className="bg-sage-primary/5 p-3 rounded-xl border border-sage-primary/10 flex items-center gap-2.5 text-xs font-bold text-sage-primary select-none">
-            <ShieldCheck size={16} />
-            <span>Role : READER</span>
+          {/* Enforced Encampment Parameters Verification Card Box */}
+          <div className="flex items-center gap-2.5 p-3 bg-amber-50/40 border border-amber-200/60 rounded-xl text-xs font-bold text-amber-800 select-none">
+            <ShieldCheck size={16} className="text-amber-700 stroke-[2.2]" />
+            <span>Enforced Account Context : READER ACCESS ONLY</span>
           </div>
 
-          {/* Operational action execution buttons row */}
-          <div className="flex gap-2.5 pt-2">
+          {/* Action Footer Frame */}
+          <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 text-xs font-bold tracking-wide">
             <button
               type="button"
-              onClick={handleResetAndClose}
-              className="flex-1 py-2.5 bg-canvas-dominant hover:bg-slate-light/10 text-slate-secondary text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer"
+              onClick={handleForcedReset}
+              className="px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 rounded-xl transition-all hover:bg-slate-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={addUserMutation.isPending}
-              className="flex-1 py-2.5 bg-sage-primary hover:bg-sage-primary/90 disabled:bg-slate-light/20 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-xs cursor-pointer flex items-center justify-center"
+              className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-amber-50 rounded-xl transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer shadow-sm flex items-center justify-center min-w-25"
             >
-              {addUserMutation.isPending ? "Loading..." : "Add user"}
+              {addUserMutation.isPending ? "Syncing..." : "Create Profile"}
             </button>
           </div>
 
