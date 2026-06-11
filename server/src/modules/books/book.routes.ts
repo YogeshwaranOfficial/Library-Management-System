@@ -6,6 +6,7 @@
  *     tags: [Books]
  *     security:
  *       - bearerAuth: []
+ *
  *     parameters:
  *       - in: query
  *         name: page
@@ -25,28 +26,28 @@
  *         name: search
  *         schema:
  *           type: string
- *         description: Search keyword matching against book title or author
+ *         description: Search books by title or author
  *
  *       - in: query
  *         name: category_id
  *         schema:
  *           type: string
  *           format: uuid
- *         description: Filter books by a specific category UUID
+ *         description: Filter books by category
  *
  *     responses:
  *       200:
- *         description: Books successfully fetched
+ *         description: Books fetched successfully
  *
  *       401:
- *         description: Unauthorized access token missing or invalid
+ *         description: Unauthorized
  */
 
 /**
  * @swagger
  * /books:
  *   post:
- *     summary: Create a new library book record
+ *     summary: Create a new book
  *     tags: [Books]
  *     security:
  *       - bearerAuth: []
@@ -57,6 +58,7 @@
  *         application/json:
  *           schema:
  *             type: object
+ *
  *             required:
  *               - book_name
  *               - book_author
@@ -86,7 +88,10 @@
  *         description: Book created successfully
  *
  *       400:
- *         description: Validation payload error
+ *         description: Validation error
+ *
+ *       404:
+ *         description: Category not found
  *
  *       401:
  *         description: Unauthorized
@@ -94,21 +99,87 @@
 
 /**
  * @swagger
- * /books/{book_id}:
- *   put:
- *     summary: Update an existing book's details
+ * /books/search:
+ *   get:
+ *     summary: Search books by keyword
+ *     tags: [Books]
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Search keyword
+ *
+ *     responses:
+ *       200:
+ *         description: Search results returned successfully
+ *
+ *       400:
+ *         description: Invalid search query
+ */
+
+/**
+ * @swagger
+ * /books/categories:
+ *   get:
+ *     summary: Get all book categories
+ *     tags: [Books]
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     responses:
+ *       200:
+ *         description: Categories fetched successfully
+ *
+ *       401:
+ *         description: Unauthorized
+ */
+
+/**
+ * @swagger
+ * /books/{bookId}:
+ *   get:
+ *     summary: Get book by ID
  *     tags: [Books]
  *     security:
  *       - bearerAuth: []
  *
  *     parameters:
  *       - in: path
- *         name: book_id
+ *         name: bookId
  *         required: true
  *         schema:
  *           type: string
  *           format: uuid
- *         description: The unique UUID of the book to update
+ *
+ *     responses:
+ *       200:
+ *         description: Book fetched successfully
+ *
+ *       404:
+ *         description: Book not found
+ */
+
+/**
+ * @swagger
+ * /books/{bookId}:
+ *   patch:
+ *     summary: Update book details
+ *     tags: [Books]
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: bookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
  *
  *     requestBody:
  *       required: true
@@ -120,11 +191,9 @@
  *             properties:
  *               book_name:
  *                 type: string
- *                 example: The Pragmatic Programmer (Revised)
  *
  *               book_author:
  *                 type: string
- *                 example: Andrew Hunt
  *
  *               category_id:
  *                 type: string
@@ -132,45 +201,43 @@
  *
  *               total_copies:
  *                 type: integer
- *                 example: 10
  *
  *               available_copies:
  *                 type: integer
- *                 example: 9
  *
  *     responses:
  *       200:
  *         description: Book updated successfully
  *
  *       404:
- *         description: Book record not found
+ *         description: Book not found
  */
 
 /**
  * @swagger
- * /books/{book_id}:
+ * /books/{bookId}:
  *   delete:
- *     summary: Remove a book from the library catalog
+ *     summary: Delete a book
  *     tags: [Books]
  *     security:
  *       - bearerAuth: []
  *
  *     parameters:
  *       - in: path
- *         name: book_id
+ *         name: bookId
  *         required: true
  *         schema:
  *           type: string
  *           format: uuid
- *         description: The unique UUID of the book to delete
  *
  *     responses:
  *       200:
- *         description: Book successfully deleted from inventory
+ *         description: Book deleted successfully
  *
  *       404:
  *         description: Book not found
  */
+
 import { Router } from "express";
 
 import validate from "../../middlewares/validate.js";

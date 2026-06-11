@@ -1,12 +1,21 @@
 /**
  * @swagger
+ * tags:
+ *   name: Issues
+ *   description: Book circulation (borrow / return / tracking) APIs
+ */
+
+/* =========================================================
+   📚 BORROW BOOK
+========================================================= */
+/**
+ * @swagger
  * /issues/borrow:
  *   post:
  *     summary: Issue/Borrow a book for a member
  *     tags: [Issues]
  *     security:
  *       - bearerAuth: []
- *
  *     requestBody:
  *       required: true
  *       content:
@@ -14,40 +23,43 @@
  *           schema:
  *             type: object
  *             required:
- *               - member_id
- *               - book_id
- *
+ *               - memberId
+ *               - bookId
+ *               - dueDate
  *             properties:
- *               member_id:
+ *               memberId:
  *                 type: string
  *                 format: uuid
- *                 example: a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d
- *
- *               book_id:
+ *               bookId:
  *                 type: string
  *                 format: uuid
- *                 example: f8g9h0i1-j2k3-4l5m-6n7o-8p9q0r1s2t3u
- *
+ *               borrowDate:
+ *                 type: string
+ *                 format: date
+ *               dueDate:
+ *                 type: string
+ *                 format: date
  *     responses:
  *       201:
  *         description: Book borrowed successfully
- *
  *       400:
- *         description: Membership inactive, item out-of-stock, or quota ceilings breached
- *
+ *         description: Borrow limit reached / book unavailable / invalid request
  *       404:
- *         description: Member or Book reference target not found
+ *         description: Member or Book not found
  */
 
+
+/* =========================================================
+   📦 RETURN BOOK
+========================================================= */
 /**
  * @swagger
  * /issues/return:
  *   post:
- *     summary: Return an issued book and reconcile inventory stock balances
+ *     summary: Return a borrowed book
  *     tags: [Issues]
  *     security:
  *       - bearerAuth: []
- *
  *     requestBody:
  *       required: true
  *       content:
@@ -55,40 +67,202 @@
  *           schema:
  *             type: object
  *             required:
- *               - issue_id
- *
+ *               - issueId
  *             properties:
- *               issue_id:
+ *               issueId:
  *                 type: string
  *                 format: uuid
- *                 example: b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e
- *
+ *               returnedDate:
+ *                 type: string
+ *                 format: date
  *     responses:
  *       200:
- *         description: Book returned successfully. Fines dynamically logged if overdue.
- *
+ *         description: Book returned successfully
  *       400:
- *         description: Book has already been safely returned
- *
+ *         description: Book already returned
+ *       403:
+ *         description: Fine pending or return blocked
  *       404:
- *         description: Tracking record not discovered
+ *         description: Issue not found
  */
 
+
+/* =========================================================
+   ⚠️ OVERDUE ISSUES
+========================================================= */
 /**
  * @swagger
  * /issues/overdue:
  *   get:
- *     summary: Fetch active loan tracking cycles currently cataloged as overdue
+ *     summary: Fetch all overdue borrowed books
  *     tags: [Issues]
  *     security:
  *       - bearerAuth: []
- *
  *     responses:
  *       200:
- *         description: List of overdue logs mapped back returned safely
- *
+ *         description: Overdue issues fetched successfully
  *       401:
- *         description: Unauthorized token verification failure
+ *         description: Unauthorized
+ */
+
+
+/* =========================================================
+   📊 ALL ISSUES FEED
+========================================================= */
+/**
+ * @swagger
+ * /issues:
+ *   get:
+ *     summary: Get full circulation feed (borrowed, returned, overdue)
+ *     tags: [Issues]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Issues feed retrieved successfully
+ */
+
+
+/* =========================================================
+   👤 MEMBER ALLOWANCE
+========================================================= */
+/**
+ * @swagger
+ * /issues/member-allowance/{memberId}:
+ *   get:
+ *     summary: Get member borrow limit and active issue count
+ *     tags: [Issues]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Member allowance fetched successfully
+ */
+
+
+/* =========================================================
+   👤 MEMBER ISSUE HISTORY
+========================================================= */
+/**
+ * @swagger
+ * /issues/member/{memberId}:
+ *   get:
+ *     summary: Get all issues for a specific member
+ *     tags: [Issues]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: memberId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Member issue history fetched successfully
+ */
+
+
+/* =========================================================
+   ✏️ UPDATE ISSUE
+========================================================= */
+/**
+ * @swagger
+ * /issues/{id}:
+ *   patch:
+ *     summary: Update issue record (borrow, due date, restore)
+ *     tags: [Issues]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               memberId:
+ *                 type: string
+ *                 format: uuid
+ *               bookId:
+ *                 type: string
+ *                 format: uuid
+ *               borrowDate:
+ *                 type: string
+ *                 format: date
+ *               dueDate:
+ *                 type: string
+ *                 format: date
+ *               status:
+ *                 type: string
+ *                 enum: [BORROWED, RETURNED, OVERDUE]
+ *               returnedDate:
+ *                 type: string
+ *                 format: date
+ *                 nullable: true
+ *     responses:
+ *       200:
+ *         description: Issue updated successfully
+ *       404:
+ *         description: Issue not found
+ */
+
+
+/* =========================================================
+   ❌ DELETE SINGLE ISSUE
+========================================================= */
+/**
+ * @swagger
+ * /issues/{id}:
+ *   delete:
+ *     summary: Delete a single issue record permanently
+ *     tags: [Issues]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Issue deleted successfully
+ *       404:
+ *         description: Issue not found
+ */
+
+
+/* =========================================================
+   🧹 CLEAR RETURNED HISTORY
+========================================================= */
+/**
+ * @swagger
+ * /issues/clear-returned-history:
+ *   delete:
+ *     summary: Delete all returned issue history
+ *     tags: [Issues]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Returned history cleared successfully
  */
 
 import { Router } from "express";

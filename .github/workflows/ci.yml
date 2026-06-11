@@ -1,32 +1,52 @@
-name: CI Pipeline
+name: Backend CI Pipeline
 
 on:
   push:
-    branches: [ develop ]
+    branches:
+      - main
+      - develop
+
   pull_request:
-    branches: [ develop ]
+    branches:
+      - main
+      - develop
 
 jobs:
-  build-and-test:
+  backend-ci:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: server
+
+    env:
+      NODE_ENV: test
+      PORT: 5000
+      DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+      JWT_SECRET: github-actions-secret
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install Dependencies
+        run: npm ci
 
-      - name: Run Tests (Placeholder)
-        # Instead of running 'npm test', we just echo to pass the step
-        run: |
-          echo "Test suite is currently under development."
-          echo "Skipping formal test execution."
-          exit 0
+      - name: TypeScript Build
+        run: npm run build
 
+      - name: Unit Tests
+        run: npm run test:unit
 
+      - name: Integration Tests
+        run: npm run test:integration
 
+      - name: Coverage Report
+        run: npm run test:coverage

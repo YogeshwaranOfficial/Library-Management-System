@@ -429,6 +429,517 @@ describe("IssueService Unit Tests", () => {
     });
   });
 
+describe("borrowBook", () => {
+  const payload = {
+    memberId: "member-1",
+    bookId: "book-1",
+    dueDate: "2099-01-20",
+  };
 
+  const plan = {
+    plan_name: "Premium",
+    max_books_allowed: 5,
+  };
+
+  const member = {
+    member_id: "member-1",
+    membership_status: "ACTIVE",
+    membership_plan: plan,
+  };
+
+  const book = {
+    book_id: "book-1",
+    available_copies: 10,
+    decrement: jest.fn(),
+    increment: jest.fn(),
+  };
+
+  beforeEach(() => {
+    mockSequelize.transaction.mockImplementation(
+      async (callback: any) =>
+        callback(mockTransaction)
+    );
+  });
+
+  it("should borrow book successfully", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      member
+    );
+
+    mockIssue.count.mockResolvedValue(1);
+
+    mockBook.findByPk.mockResolvedValue(
+      book
+    );
+
+    mockIssueRepository.getActiveIssue.mockResolvedValue(
+      null
+    );
+
+    const createdIssue = {
+      issue_id: "issue-1",
+    };
+
+    mockIssueRepository.createIssue.mockResolvedValue(
+      createdIssue
+    );
+
+    const result =
+      await issueService.borrowBook(
+        payload
+      );
+
+    expect(
+      mockIssueRepository.createIssue
+    ).toHaveBeenCalled();
+
+    expect(
+      book.decrement
+    ).toHaveBeenCalledWith(
+      "available_copies",
+      expect.any(Object)
+    );
+
+    expect(
+      book.increment
+    ).toHaveBeenCalledWith(
+      "lending_count",
+      expect.any(Object)
+    );
+
+    expect(result).toEqual(
+      createdIssue
+    );
+  });
+
+  it("should throw when member not found", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      null
+    );
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message: "Member not found",
+    });
+  });
+
+  it("should throw when membership inactive", async () => {
+    mockMember.findByPk.mockResolvedValue({
+      ...member,
+      membership_status: "EXPIRED",
+    });
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message:
+        "Membership is not active",
+    });
+  });
+
+  it("should throw when no plan attached", async () => {
+    mockMember.findByPk.mockResolvedValue({
+      ...member,
+      membership_plan: null,
+    });
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message:
+        "No membership plan associated with this account",
+    });
+  });
+
+  it("should throw when borrow limit reached", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      member
+    );
+
+    mockIssue.count.mockResolvedValue(5);
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message:
+        "Borrow limit reached. Your Premium plan only allows up to 5 books out at a time.",
+    });
+  });
+
+  it("should throw when book not found", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      member
+    );
+
+    mockIssue.count.mockResolvedValue(0);
+
+    mockBook.findByPk.mockResolvedValue(
+      null
+    );
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message: "Book not found",
+    });
+  });
+
+  it("should throw when no copies available", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      member
+    );
+
+    mockIssue.count.mockResolvedValue(0);
+
+    mockBook.findByPk.mockResolvedValue({
+      ...book,
+      available_copies: 0,
+    });
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message:
+        "Book unavailable in current inventory slots",
+    });
+  });
+
+  it("should throw when already borrowed", async () => {
+    mockMember.findByPk.mockResolvedValue(
+      member
+    );
+
+    mockIssue.count.mockResolvedValue(0);
+
+    mockBook.findByPk.mockResolvedValue(
+      book
+    );
+
+    mockIssueRepository.getActiveIssue.mockResolvedValue(
+      {
+        issue_id: "existing",
+      }
+    );
+
+    await expect(
+      issueService.borrowBook(payload)
+    ).rejects.toMatchObject({
+      message:
+        "Book already borrowed and not returned yet",
+    });
+  });
+});
+
+describe("getMemberIssues", () => {
+  it("should return member issues", async () => {
+    const issues = [
+      {
+        issue_id: "issue-1",
+      },
+    ];
+
+    mockIssueRepository.getMemberIssues.mockResolvedValue(
+      issues
+    );
+
+    const result =
+      await issueService.getMemberIssues(
+        "member-1"
+      );
+
+    expect(
+      mockIssueRepository.getMemberIssues
+    ).toHaveBeenCalledWith(
+      "member-1"
+    );
+
+    expect(result).toEqual(
+      issues
+    );
+  });
+});
+
+
+describe("updateIssueParameters", () => {
+  it("should throw when issue not found", async () => {
+    mockIssueRepository.findIssueById.mockResolvedValue(null);
+
+    await expect(
+      issueService.updateIssueParameters(
+        "issue-1",
+        {}
+      )
+    ).rejects.toMatchObject({
+      message:
+        "Issue asset context instance not found",
+    });
+  });
+
+  it("should update active issue successfully", async () => {
+    const futureDate = new Date(
+      Date.now() + 86400000
+    );
+
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      member_id: "member-1",
+      book_id: "book-1",
+      borrowed_date: new Date(),
+      due_date: futureDate,
+      issue_status: "BORROWED",
+    });
+
+    mockIssueRepository.updateIssue.mockResolvedValue({
+      issue_id: "issue-1",
+    });
+
+    const result =
+      await issueService.updateIssueParameters(
+        "issue-1",
+        {
+          dueDate:
+            futureDate.toISOString(),
+        }
+      );
+
+    expect(
+      mockIssueRepository.updateIssue
+    ).toHaveBeenCalled();
+
+    expect(result).toEqual({
+      issue_id: "issue-1",
+    });
+  });
+
+  it("should reject editing returned issue without status override", async () => {
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      issue_status: "RETURNED",
+      member_id: "member-1",
+      book_id: "book-1",
+      borrowed_date: new Date(),
+      due_date: new Date(),
+    });
+
+    await expect(
+      issueService.updateIssueParameters(
+        "issue-1",
+        {
+          dueDate: "2026-01-10",
+        }
+      )
+    ).rejects.toMatchObject({
+      message:
+        "Cannot change data parameters of a closed transactional history log.",
+    });
+  });
+
+  it("should restore returned issue back to borrowed", async () => {
+    const book = {
+      available_copies: 5,
+      decrement: jest.fn(),
+    };
+
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      issue_status: "RETURNED",
+      member_id: "member-1",
+      book_id: "book-1",
+      borrowed_date: new Date(),
+      due_date: new Date(),
+    });
+
+    mockBook.findByPk.mockResolvedValue(
+      book
+    );
+
+    mockFine.findOne.mockResolvedValue({
+      update: jest.fn(),
+    });
+
+    mockIssueRepository.updateIssue.mockResolvedValue({
+      issue_id: "issue-1",
+      issue_status: "BORROWED",
+    });
+
+    const result =
+      await issueService.updateIssueParameters(
+        "issue-1",
+        {
+          status: "BORROWED",
+        }
+      );
+
+    expect(
+      book.decrement
+    ).toHaveBeenCalled();
+
+    expect(
+      mockIssueRepository.updateIssue
+    ).toHaveBeenCalled();
+
+    expect(result).toEqual({
+      issue_id: "issue-1",
+      issue_status: "BORROWED",
+    });
+  });
+
+  it("should throw when restoring and book unavailable", async () => {
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      issue_status: "RETURNED",
+      member_id: "member-1",
+      book_id: "book-1",
+      borrowed_date: new Date(),
+      due_date: new Date(),
+    });
+
+    mockBook.findByPk.mockResolvedValue({
+      available_copies: 0,
+    });
+
+    await expect(
+      issueService.updateIssueParameters(
+        "issue-1",
+        {
+          status: "BORROWED",
+        }
+      )
+    ).rejects.toMatchObject({
+      message:
+        "Cannot undo! This book's shelf slot is fully allocated right now.",
+    });
+  });
+});
+
+describe("deleteSingleIssue", () => {
+  it("should delete active issue and restore inventory", async () => {
+    const book = {
+      increment: jest.fn(),
+    };
+
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      book_id: "book-1",
+      returned_date: null,
+    });
+
+    mockBook.findByPk.mockResolvedValue(
+      book
+    );
+
+    mockIssueRepository.deleteIssueById.mockResolvedValue(
+      1
+    );
+
+    const result =
+      await issueService.deleteSingleIssue(
+        "issue-1"
+      );
+
+    expect(
+      book.increment
+    ).toHaveBeenCalled();
+
+    expect(
+      mockFine.destroy
+    ).toHaveBeenCalled();
+
+    expect(
+      mockIssueRepository.deleteIssueById
+    ).toHaveBeenCalledWith(
+      "issue-1",
+      expect.any(Object)
+    );
+
+    expect(result).toBe(1);
+  });
+
+  it("should delete returned issue without inventory update", async () => {
+    mockIssueRepository.findIssueById.mockResolvedValue({
+      issue_id: "issue-1",
+      book_id: "book-1",
+      returned_date: new Date(),
+    });
+
+    mockIssueRepository.deleteIssueById.mockResolvedValue(
+      1
+    );
+
+    await issueService.deleteSingleIssue(
+      "issue-1"
+    );
+
+    expect(
+      mockBook.findByPk
+    ).not.toHaveBeenCalled();
+
+    expect(
+      mockIssueRepository.deleteIssueById
+    ).toHaveBeenCalled();
+  });
+
+  it("should throw when issue not found", async () => {
+    mockIssueRepository.findIssueById.mockResolvedValue(
+      null
+    );
+
+    await expect(
+      issueService.deleteSingleIssue(
+        "issue-1"
+      )
+    ).rejects.toMatchObject({
+      message:
+        "Issue log element not found",
+    });
+  });
+});
+
+describe("clearAllReturnedHistory", () => {
+  it("should return 0 when no returned issues exist", async () => {
+    mockIssue.findAll.mockResolvedValue([]);
+
+    const result =
+      await issueService.clearAllReturnedHistory();
+
+    expect(result).toBe(0);
+
+    expect(
+      mockIssueRepository.deleteManyIssues
+    ).not.toHaveBeenCalled();
+  });
+
+  it("should clear returned history successfully", async () => {
+    mockIssue.findAll.mockResolvedValue([
+      {
+        issue_id: "issue-1",
+      },
+      {
+        issue_id: "issue-2",
+      },
+    ]);
+
+    mockIssueRepository.deleteManyIssues.mockResolvedValue(
+      2
+    );
+
+    const result =
+      await issueService.clearAllReturnedHistory();
+
+    expect(
+      mockFine.destroy
+    ).toHaveBeenCalled();
+
+    expect(
+      mockIssueRepository.deleteManyIssues
+    ).toHaveBeenCalledWith(
+      ["issue-1", "issue-2"],
+      expect.any(Object)
+    );
+
+    expect(result).toBe(2);
+  });
+});
 
 })

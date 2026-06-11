@@ -1,28 +1,37 @@
-import { jest } from "@jest/globals";
-import type { Request, Response, NextFunction } from "express";
-import notFoundHandler from "../../middlewares/notFoundHandler.js";
-import AppError from "../../utils/AppError.js";
+import request from "supertest";
+import { describe, it, expect, afterAll } from "@jest/globals";
+import app from "../../app.js";
+import sequelize from "../../database/connection/database.js";
 
-describe("notFoundHandler Unit Tests", () => {
-  it("should catch an unhandled route and pass an AppError to next()", () => {
-    const mockRequest = {
-      originalUrl: "/api/v1/ghost-route",
-    } as Request;
+describe("🛡️ Global Fallback Protection & Fallback Router Integration Tests", () => {
+  
+  afterAll(async () => {
+    await sequelize.close();
+  });
 
-    const mockResponse = {} as Response;
-    
-    // Explicitly create the mock function via the imported jest instance
-    const mockNext = jest.fn() as unknown as NextFunction;
+  // ==========================================================================
+  // 🟢 ROUTE FALLBACK / DEAD-END DETECTION
+  // ==========================================================================
+  describe("🚷 UNHANDLED ENDPOINT INRECEPTIONS", () => {
 
-    notFoundHandler(mockRequest, mockResponse, mockNext);
+    it("❌ should gracefully return a structured 404 JSON response when a non-existent route is hit", async () => {
+      const deadEndRoute = "/api/v1/completely-made-up-ghost-route";
+      
+      const response = await request(app)
+        .get(deadEndRoute);
 
-    expect(mockNext).toHaveBeenCalledTimes(1);
+      // Verifies that your notFoundHandler AND your globalErrorHandler work together perfectly
+      expect(response.status).toBe(404);
+      expect(response.body).toHaveProperty("success", false);
+      expect(response.body.message).toContain(`Route ${deadEndRoute} not found`);
+    });
 
-    // Extracting the argument safely for type-checking assertions
-    const errorPassed = (mockNext as any).mock.calls[0][0];
-    
-    expect(errorPassed).toBeInstanceOf(AppError);
-    expect(errorPassed.message).toBe("Route /api/v1/ghost-route not found");
-    expect(errorPassed.statusCode).toBe(404);
+    it("❌ should respond with 404 for unhandled HTTP verbs on valid route roots", async () => {
+      // Testing an invalid method action on a real root endpoint string fallback
+      const response = await request(app)
+        .post("/api/v1/dashboard/metrics"); // Dashboard metrics is a GET, POST should trigger fallback or rejection
+
+      expect([404, 405]).toContain(response.status); 
+    });
   });
 });

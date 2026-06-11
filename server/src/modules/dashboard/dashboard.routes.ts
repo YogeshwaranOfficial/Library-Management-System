@@ -1,15 +1,16 @@
 /**
  * @swagger
- * /dashboard/overview:
+ * /dashboard/metrics:
  *   get:
- *     summary: Fetch high-level tracking counts for dashboard cards
+ *     summary: Fetch dashboard overview metrics
  *     tags: [Dashboard]
  *     security:
  *       - bearerAuth: []
  *
  *     responses:
  *       200:
- *         description: Aggregated card values processed successfully
+ *         description: Dashboard overview fetched successfully
+ *
  *         content:
  *           application/json:
  *             schema:
@@ -25,70 +26,35 @@
  *                   properties:
  *                     totalBooks:
  *                       type: integer
- *
  *                     totalMembers:
  *                       type: integer
- *
  *                     activeMembers:
  *                       type: integer
- *
  *                     expiredMembers:
  *                       type: integer
- *
  *                     issuedBooks:
  *                       type: integer
- *
  *                     returnedBooks:
  *                       type: integer
- *
  *                     overdueBooks:
  *                       type: integer
- *
  *                     unpaidFines:
  *                       type: number
  */
 
 /**
  * @swagger
- * /dashboard/analytics/popular-books:
+ * /dashboard/summary:
  *   get:
- *     summary: Retrieve library circulation rankings (Top 5 popular items)
+ *     summary: Fetch complete dashboard summary with widgets
  *     tags: [Dashboard]
  *     security:
  *       - bearerAuth: []
  *
  *     responses:
  *       200:
- *         description: Array list of high popularity book assets returned successfully
- */
-
-/**
- * @swagger
- * /dashboard/reports/monthly-fines:
- *   get:
- *     summary: Fetch chronological monthly fine income collection records
- *     tags: [Dashboard]
- *     security:
- *       - bearerAuth: []
+ *         description: Dashboard summary logs generated cleanly
  *
- *     responses:
- *       200:
- *         description: Monthly fine report matrix structured successfully
- */
-
-/**
- * @swagger
- * /dashboard/analytics/recent-issues:
- *   get:
- *     summary: Fetch most recent book checkouts for activity streaming
- *     description: Retrieves the latest book issuance records including book titles, borrowing member details, and timeline stats to populate dashboard real-time activity tracking streams.
- *     tags: [Dashboard]
- *     security:
- *       - bearerAuth: []
- *
- *     responses:
- *       200:
- *         description: Latest book transactions tracking matrices processed and compiled successfully
  *         content:
  *           application/json:
  *             schema:
@@ -97,80 +63,132 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
+ *
+ *                 data:
+ *                   type: object
+ *
+ *                   properties:
+ *                     summary:
+ *                       type: object
+ *
+ *                     widgets:
+ *                       type: object
+ *
+ *                     overdueBooks:
+ *                       type: array
+ */
+
+/**
+ * @swagger
+ * /dashboard/analytics/popular-books:
+ *   get:
+ *     summary: Retrieve top 5 most borrowed books
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     responses:
+ *       200:
+ *         description: Popular books fetched successfully
+ *
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *
+ *               properties:
+ *                 success:
+ *                   type: boolean
  *
  *                 data:
  *                   type: array
- *                   description: Chronological list of the most recent library checkouts
+ *
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       book_id:
+ *                         type: string
+ *                         format: uuid
+ *                       book_name:
+ *                         type: string
+ *                       lending_count:
+ *                         type: integer
+ */
+
+/**
+ * @swagger
+ * /dashboard/analytics/recent-issues:
+ *   get:
+ *     summary: Fetch most recent book checkouts
+ *     description: Returns latest borrowing activities with book and member details
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     responses:
+ *       200:
+ *         description: Recent issues fetched successfully
+ *
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *
+ *                 data:
+ *                   type: array
  *
  *                   items:
  *                     type: object
  *
  *                     properties:
- *                       issueId:
+ *                       issue_id:
  *                         type: string
  *                         format: uuid
- *                         example: "40000011-4444-4444-4444-444444444444"
  *
- *                       borrowedDate:
+ *                       member_name:
+ *                         type: string
+ *
+ *                       book_name:
+ *                         type: string
+ *
+ *                       borrowed_date:
  *                         type: string
  *                         format: date
- *                         example: "2026-05-20"
  *
- *                       dueDate:
+ *                       due_date:
  *                         type: string
  *                         format: date
- *                         example: "2026-06-03"
- *
- *                       status:
- *                         type: string
- *                         enum: [BORROWED, RETURNED, OVERDUE]
- *                         example: "BORROWED"
- *
- *                       book:
- *                         type: object
- *
- *                         properties:
- *                           bookId:
- *                             type: string
- *                             format: uuid
- *                             example: "b0000004-3333-3333-3333-333333333333"
- *
- *                           bookName:
- *                             type: string
- *                             example: "You Don't Know JS"
- *
- *                           bookAuthor:
- *                             type: string
- *                             example: "Kyle Simpson"
- *
- *                       member:
- *                         type: object
- *
- *                         properties:
- *                           memberId:
- *                             type: string
- *                             format: uuid
- *                             example: "20000015-2222-2222-2222-222222222222"
- *
- *                           memberName:
- *                             type: string
- *                             example: "Tejas Mehta"
- *
- *                           gmail:
- *                             type: string
- *                             example: "tejas.mehta@gmail.com"
- *
- *       401:
- *         description: Unauthorized access due to missing or structurally malformed JSON Web Tokens
- *
- *       403:
- *         description: Forbidden request access level clearance exceptions (Requires LIBRARIAN privileges)
- *
- *       500:
- *         description: Internal processing failures while querying transactional analytics logs
  */
 
+/**
+ * @swagger
+ * /dashboard/reports/monthly-fines:
+ *   get:
+ *     summary: Fetch monthly fine collection report
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     responses:
+ *       200:
+ *         description: Monthly fine analytics fetched successfully
+ *
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *
+ *                 data:
+ *                   type: array
+ */
 
 import { Router } from "express";
 

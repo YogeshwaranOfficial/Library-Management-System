@@ -13,7 +13,14 @@ const swaggerDefinition = {
       description: "Development Server",
     },
   ],
-  tags: swaggerTags, // 2. Inject your tags list here
+  tags: swaggerTags,
+
+  security: [
+    {
+      bearerAuth: [],
+    },
+  ],
+
   components: {
     securitySchemes: {
       bearerAuth: {
