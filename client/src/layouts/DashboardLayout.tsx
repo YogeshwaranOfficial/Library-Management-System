@@ -84,7 +84,7 @@ export const DashboardLayout = () => {
                   className={({ isActive }) =>
                     `flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-semibold tracking-wide transition-all duration-150 ${
                       isActive
-                        ? "bg-page-bg text-text-main font-bold shadow-xs border-l-4 border-border-main rounded-l-none pl-3"
+                        ? "bg-page-bg text-text-main font-bold shadow-xs border-l-4 border-slate-900 rounded-l-none pl-3"
                         : "text-slate-500 dark:text-slate-400 hover:bg-page-bg/50 hover:text-text-main"
                     }`
                   }
