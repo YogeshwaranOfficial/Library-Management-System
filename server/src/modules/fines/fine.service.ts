@@ -167,26 +167,21 @@ class FineService {
   }
 
   /**
-   * ⏰ BACKGROUND DAEMON AUTOMATED ENGINE
-   * Runs nightly to dynamically calculate accrual amounts across your split-rate structure:
-   * Days inside Active Plan window -> ₹10/day | Days outside/after Plan Expiry -> ₹20/day
-   */
-/**
    * ⏰ DUAL-TRIGGER FINE ACCRUAL SYNC ENGINE
-   * Can be triggered globally by midnight cron, or targeted via member_id for instant manual overrides!
+   * Fixed to calculate pure calendar days, removing millisecond/hour offsets.
    */
   async runFineAccrualSync(targetMemberId?: string) {
     console.log(`🚀 Starting Fine Accrual Sync (${targetMemberId ? `Targeted: ${targetMemberId}` : 'Global Midnight Run'})...`);
     const today = new Date();
 
     await sequelize.transaction(async (t) => {
-      // 🟢 Build dynamic conditions based on target
+      // Look for any active issues where the book isn't returned yet, 
+      // and the due_date is less than or equal to today.
       const issueConditions: any = {
         returned_date: null,
         due_date: { [Symbol.for("lte") as any]: today }
       };
 
-      // If triggered manually by a librarian update, lock it down to just this member
       if (targetMemberId) {
         issueConditions.member_id = targetMemberId;
       }
@@ -211,16 +206,28 @@ class FineService {
         const expiryDate = planExpiryDateStr ? new Date(planExpiryDateStr) : null;
         const isPlanActiveNow = planStatusStr === "ACTIVE" && (expiryDate ? expiryDate >= today : true);
 
-        const dueDateObj = new Date(issue.due_date);
-        const msPerDay = 24 * 60 * 60 * 1000;
-        const totalDelayedDays = Math.ceil((today.getTime() - dueDateObj.getTime()) / msPerDay);
+        // 🧠 THE FIX: Strip out time values (hours, minutes, seconds) completely
+        // Set both dates strictly to midnight (00:00:00) so we calculate pure calendar days.
+        const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
         
+        const dueDateObj = new Date(issue.due_date);
+        const dueDateMidnight = new Date(dueDateObj.getFullYear(), dueDateObj.getMonth(), dueDateObj.getDate());
+
+        const msPerDay = 24 * 60 * 60 * 1000;
+        
+        // Use Math.floor on midnight values to get an exact mathematical calendar count
+        const totalDelayedDays = Math.max(0, Math.floor((todayMidnight.getTime() - dueDateMidnight.getTime()) / msPerDay));
+        
+        // If they changed the due date to today or a future date, delayed days is 0. Skip it.
+        if (totalDelayedDays === 0) continue;
+
         let withinPlanDays = totalDelayedDays;
         let outsidePlanDays = 0;
 
         if (!isPlanActiveNow && expiryDate) {
-          if (expiryDate > dueDateObj) {
-            withinPlanDays = Math.max(0, Math.floor((expiryDate.getTime() - dueDateObj.getTime()) / msPerDay));
+          const expiryMidnight = new Date(expiryDate.getFullYear(), expiryDate.getMonth(), expiryDate.getDate());
+          if (expiryMidnight > dueDateMidnight) {
+            withinPlanDays = Math.max(0, Math.floor((expiryMidnight.getTime() - dueDateMidnight.getTime()) / msPerDay));
             outsidePlanDays = Math.max(0, totalDelayedDays - withinPlanDays);
           } else {
             withinPlanDays = 0;
@@ -244,6 +251,7 @@ class FineService {
             paid_status: false
           }, { transaction: t });
         } else if (!existingFine.paid_status) {
+          // If the fine record exists but isn't paid, recalculate it dynamically
           await existingFine.update({
             delayed_days: totalDelayedDays,
             fine_amount: totalComputedFineAmount
@@ -252,6 +260,101 @@ class FineService {
       }
     });
   }
+
+  /**
+   * 🔄 ONE-TIME MASTER LEDGER RECALCULATION TOOL
+   * Loops through all existing unpaid fines to align old records perfectly 
+   * with the corrected calendar-midnight layout mechanics.
+   */
+  async forceRecalculateAllExistingFines() {
+    console.log("⚠️ Starting full database fine metrics recalculation sync...");
+    const today = new Date();
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const msPerDay = 24 * 60 * 60 * 1000;
+
+    let updatedCount = 0;
+    let purgedCount = 0;
+
+    await sequelize.transaction(async (t) => {
+      // 1. Fetch all unpaid fines along with their core issue and member context data
+      const unpaidFines = await Fine.findAll({
+        where: { paid_status: false },
+        include: [
+          {
+            model: Issue,
+            as: "issue", // Make sure this matches your Fine -> Issue association alias
+            include: [
+              {
+                model: Member,
+                as: "member",
+                include: [{ model: MembershipPlan, as: "membership_plan" }]
+              }
+            ]
+          }
+        ],
+        transaction: t
+      });
+
+      for (const fine of unpaidFines) {
+        const issue = (fine as any).issue;
+        
+        // Safety Fallback: If the underlying issue record was missing, clean up the dead fine row
+        if (!issue) {
+          await fine.destroy({ transaction: t });
+          purgedCount++;
+          continue;
+        }
+
+        const member = issue.member;
+        const planExpiryDateStr = member?.expiry_date;
+        const planStatusStr = member?.membership_status || "ACTIVE";
+        const expiryDate = planExpiryDateStr ? new Date(planExpiryDateStr) : null;
+        const isPlanActiveNow = planStatusStr === "ACTIVE" && (expiryDate ? expiryDate >= today : true);
+
+        // Calculate pure calendar days difference using standard midnights
+        const dueDateObj = new Date(issue.due_date);
+        const dueDateMidnight = new Date(dueDateObj.getFullYear(), dueDateObj.getMonth(), dueDateObj.getDate());
+        
+        const totalDelayedDays = Math.max(0, Math.floor((todayMidnight.getTime() - dueDateMidnight.getTime()) / msPerDay));
+
+        // 🧠 CRITICAL FIX: If the new math shows it shouldn't have a fine, purge the rogue record!
+        if (totalDelayedDays === 0 || issue.returned_date !== null) {
+          await fine.destroy({ transaction: t });
+          purgedCount++;
+          continue;
+        }
+
+        // Calculate tiered rates (Split values)
+        let withinPlanDays = totalDelayedDays;
+        let outsidePlanDays = 0;
+
+        if (!isPlanActiveNow && expiryDate) {
+          const expiryMidnight = new Date(expiryDate.getFullYear(), expiryDate.getMonth(), expiryDate.getDate());
+          if (expiryMidnight > dueDateMidnight) {
+            withinPlanDays = Math.max(0, Math.floor((expiryMidnight.getTime() - dueDateMidnight.getTime()) / msPerDay));
+            outsidePlanDays = Math.max(0, totalDelayedDays - withinPlanDays);
+          } else {
+            withinPlanDays = 0;
+            outsidePlanDays = totalDelayedDays;
+          }
+        }
+
+        const totalComputedFineAmount = (withinPlanDays * 10) + (outsidePlanDays * 20);
+
+        // Apply changes directly to database tracking states
+        await fine.update({
+          delayed_days: totalDelayedDays,
+          fine_amount: totalComputedFineAmount
+        }, { transaction: t });
+        
+        updatedCount++;
+      }
+    });
+
+    console.log(`✅ Repair Finished! Recalculated: ${updatedCount} rows | Purged Stale Rows: ${purgedCount}`);
+    return { recalculated: updatedCount, purged: purgedCount };
+  }
+
 }
 
 export default new FineService();
