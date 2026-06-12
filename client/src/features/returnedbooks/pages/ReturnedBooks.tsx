@@ -6,7 +6,14 @@ import type { BookIssueRecord } from "../../../types/transactions";
 import { toast } from "sonner";
 import { useAuthStore } from "../../../store/authStore";
 import ConfirmationModal from "../components/ConfirmationModal";
-import { Search, Calendar, RotateCcw, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import {
+  Search,
+  Calendar,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+} from "lucide-react";
 
 export const ReturnedBooks = () => {
   const queryClient = useQueryClient();
@@ -19,7 +26,9 @@ export const ReturnedBooks = () => {
   const rowsPerPage = 10;
 
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState<BookIssueRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<BookIssueRecord | null>(
+    null,
+  );
 
   // Declare state trackers for managing the confirmation modal interface
   const [modalConfig, setModalConfig] = useState<{
@@ -38,7 +47,8 @@ export const ReturnedBooks = () => {
     onConfirm: () => {},
   });
 
-  const closeModal = () => setModalConfig((prev) => ({ ...prev, isOpen: false }));
+  const closeModal = () =>
+    setModalConfig((prev) => ({ ...prev, isOpen: false }));
 
   // Query: Feed raw ledger (Fetches full table, filtered to "RETURNED" values below)
   const { data: rawIssues = [], isLoading } = useQuery<BookIssueRecord[]>({
@@ -59,12 +69,17 @@ export const ReturnedBooks = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
-      toast.success("Transaction log reset! Record moved back to Borrowing desk.");
+      queryClient.invalidateQueries({
+        queryKey: ["circulationMasterRecordsFeed"],
+      });
+      toast.success(
+        "Transaction log reset! Record moved back to Borrowing desk.",
+      );
       setIsDetailsOpen(false);
       setSelectedRecord(null);
     },
-    onError: () => toast.error("Failed to alter server parameters mapping logs."),
+    onError: () =>
+      toast.error("Failed to alter server parameters mapping logs."),
   });
 
   // Mutation: Purge single historic ledger entry item permanently
@@ -73,12 +88,15 @@ export const ReturnedBooks = () => {
       return await axiosClient.delete(`/issues/${issueId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
+      queryClient.invalidateQueries({
+        queryKey: ["circulationMasterRecordsFeed"],
+      });
       toast.success("Log item purged permanently.");
       setIsDetailsOpen(false);
       setSelectedRecord(null);
     },
-    onError: () => toast.error("Database constraint rejected execution pipeline."),
+    onError: () =>
+      toast.error("Database constraint rejected execution pipeline."),
   });
 
   // Mutation: Purge ALL historical return items sequentially
@@ -87,10 +105,13 @@ export const ReturnedBooks = () => {
       return await axiosClient.delete("/issues/clear-returned-history");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["circulationMasterRecordsFeed"] });
+      queryClient.invalidateQueries({
+        queryKey: ["circulationMasterRecordsFeed"],
+      });
       toast.success("Historical completions logs cleared completely!");
     },
-    onError: () => toast.error("Failed to run full table ledger maintenance routine."),
+    onError: () =>
+      toast.error("Failed to run full table ledger maintenance routine."),
   });
 
   // Reset Control Interfacing Actions
@@ -108,18 +129,25 @@ export const ReturnedBooks = () => {
         const term = searchQuery.toLowerCase();
         const nameMatch = rec.memberName?.toLowerCase().includes(term) || false;
         const titleMatch = rec.bookTitle?.toLowerCase().includes(term) || false;
-        const authorMatch = rec.bookAuthor?.toLowerCase().includes(term) || false;
+        const authorMatch =
+          rec.bookAuthor?.toLowerCase().includes(term) || false;
         const textCompliance = nameMatch || titleMatch || authorMatch;
 
         // Calendar Match Checking
-        const matchesDate = dateFilter === "" || (rec.returnedDate && rec.returnedDate.includes(dateFilter));
+        const matchesDate =
+          dateFilter === "" ||
+          (rec.returnedDate && rec.returnedDate.includes(dateFilter));
 
         return textCompliance && matchesDate;
       })
-      .sort((a, b) => new Date(b.returnedDate || 0).getTime() - new Date(a.returnedDate || 0).getTime());
+      .sort(
+        (a, b) =>
+          new Date(b.returnedDate || 0).getTime() -
+          new Date(a.returnedDate || 0).getTime(),
+      );
   }, [rawIssues, searchQuery, dateFilter]);
 
-  // Client-Side Chunking 
+  // Client-Side Chunking
   const totalRecordsCount = auditedRecords.length;
   const totalPages = Math.max(1, Math.ceil(totalRecordsCount / rowsPerPage));
   const safeCurrentPage = Math.min(currentPage, totalPages);
@@ -127,7 +155,7 @@ export const ReturnedBooks = () => {
   const paginatedRecords = useMemo(() => {
     return auditedRecords.slice(
       (safeCurrentPage - 1) * rowsPerPage,
-      safeCurrentPage * rowsPerPage
+      safeCurrentPage * rowsPerPage,
     );
   }, [auditedRecords, safeCurrentPage, rowsPerPage]);
 
@@ -136,7 +164,8 @@ export const ReturnedBooks = () => {
     setModalConfig({
       isOpen: true,
       title: "Revert Transaction Status",
-      description: "Are you sure you want to revert this book back to out-of-building status? This will reduce available warehouse inventory allocations and add it back to the borrower's active counts.",
+      description:
+        "Are you sure you want to revert this book back to out-of-building status? This will reduce available warehouse inventory allocations and add it back to the borrower's active counts.",
       confirmText: "Restore Log",
       variant: "warning",
       onConfirm: () => {
@@ -149,7 +178,8 @@ export const ReturnedBooks = () => {
     setModalConfig({
       isOpen: true,
       title: "Delete Checkout Log Entries",
-      description: "Are you sure you want to permanently delete this checkout log configuration? This structural history profile cannot be recovered afterwards.",
+      description:
+        "Are you sure you want to permanently delete this checkout log configuration? This structural history profile cannot be recovered afterwards.",
       confirmText: "Delete Record",
       variant: "danger",
       onConfirm: () => {
@@ -162,7 +192,8 @@ export const ReturnedBooks = () => {
     setModalConfig({
       isOpen: true,
       title: "⚠️ Clear Entire Historical Logs Ledger",
-      description: "DANGER CONTROL: Are you completely sure you want to drop ALL returned history rows? This structural matrix action is immediate and completely purges all historical circulation files permanently.",
+      description:
+        "DANGER CONTROL: Are you completely sure you want to drop ALL returned history rows? This structural matrix action is immediate and completely purges all historical circulation files permanently.",
       confirmText: "Wipe All Records",
       variant: "danger",
       onConfirm: () => {
@@ -172,19 +203,23 @@ export const ReturnedBooks = () => {
   };
 
   // Determine if any mutations are actively loading to show spinner feedback
-  const isActionLoading = 
-    revertReturnMutation.isPending || 
-    deleteSingleMutation.isPending || 
+  const isActionLoading =
+    revertReturnMutation.isPending ||
+    deleteSingleMutation.isPending ||
     clearAllHistoryMutation.isPending;
 
   return (
-    <div className="flex flex-col min-h-screen max-w-6xl relative animate-fade-in pb-12 space-y-5 font-sans text-xs sm:text-sm text-slate-700 text-left">
-      
+    <div className="flex flex-col min-h-screen max-w-6xl relative animate-fade-in pb-12 space-y-5 font-sans text-xs sm:text-sm text-text-main text-left">
       {/* Control Layout Top-deck */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl border border-slate-light/10 shadow-xs shrink-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card-bg p-5 rounded-2xl border border-slate-light/10 shadow-xs shrink-0">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Returned Books Management Desk</h2>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">Review completed book returns, manage archiving, and track overdue fine status ledgers.</p>
+          <h2 className="text-xl font-bold text-text-main tracking-tight">
+            Returned Books Management Desk
+          </h2>
+          <p className="text-xs text-slate-500 font-medium mt-0.5">
+            Review completed book returns, manage archiving, and track overdue
+            fine status ledgers.
+          </p>
         </div>
         {totalRecordsCount > 0 && (
           <button
@@ -197,32 +232,45 @@ export const ReturnedBooks = () => {
       </div>
 
       {/* Interactive Operational Filters Section */}
-      <div className="flex flex-col md:flex-row gap-3 bg-white p-4 rounded-2xl border border-slate-light/10 shadow-xs shrink-0">
+      <div className="flex flex-col md:flex-row gap-3 bg-card-bg p-4 rounded-2xl border border-slate-light/10 shadow-xs shrink-0">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+          <Search
+            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+            size={16}
+          />
           <input
             type="text"
             placeholder="Query history by book, author, or borrower name..."
             value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-            className="w-full pl-10 pr-4 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-xs sm:text-sm font-medium text-slate-900 focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden transition-all"
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full pl-10 pr-4 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-xs sm:text-sm font-medium text-text-main focus:bg-card-bg focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden transition-all"
           />
         </div>
         <div className="flex gap-2.5 min-w-xs">
           <div className="relative flex-1">
-            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+            <Calendar
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+              size={14}
+            />
             <input
               type="date"
               value={dateFilter}
-              onChange={(e) => { setDateFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full pl-9 pr-3 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-800 focus:bg-white focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden transition-all cursor-pointer"
+              onChange={(e) => {
+                setDateFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-9 pr-3 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-800 focus:bg-card-bg focus:ring-4 focus:ring-sage-primary/10 focus:border-sage-primary outline-hidden transition-all cursor-pointer"
             />
           </div>
           <button
+            type="button"
             onClick={handleClearFilters}
-            className="flex items-center gap-1 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap"
+            className="px-4 py-2 text-xs font-bold text-slate-500 bg-slate-50 border border-border-main hover:bg-slate-100 hover:text-text-main rounded-xl cursor-pointer transition-all animate-fade-in text-center whitespace-nowrap flex items-center justify-center gap-1.5 uppercase"
           >
-            <RotateCcw size={12} /> Clear
+            <RotateCcw size={12} /> Reset
           </button>
         </div>
       </div>
@@ -233,9 +281,8 @@ export const ReturnedBooks = () => {
         </div>
       ) : (
         <div className="flex flex-col flex-1 space-y-5">
-          
           {/* INLINE NATURAL LAYOUT TABLE CONTAINER */}
-          <div className="bg-white rounded-2xl border border-slate-light/10 shadow-xs overflow-hidden">
+          <div className="bg-card-bg rounded-2xl border border-slate-light/10 shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -245,35 +292,52 @@ export const ReturnedBooks = () => {
                     <th className="py-3.5 px-5">Issued On</th>
                     <th className="py-3.5 px-5">Target Due</th>
                     <th className="py-3.5 px-5">Returned On</th>
-                    <th className="py-3.5 px-5 text-center">Fines Ledger</th>
+                    {/* <th className="py-3.5 px-5 text-center">Fines Ledger</th> */}
                   </tr>
                 </thead>
-                <tbody className="text-xs sm:text-sm divide-y divide-slate-light/5 text-slate-700 font-medium">
+                <tbody className="text-xs sm:text-sm divide-y divide-slate-light/5 text-text-main font-medium">
                   {paginatedRecords.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-slate-400">
-                        No historical book returns matching the selected filter criteria.
+                      <td
+                        colSpan={6}
+                        className="py-12 text-center text-slate-400"
+                      >
+                        No historical book returns matching the selected filter
+                        criteria.
                       </td>
                     </tr>
                   ) : (
                     paginatedRecords.map((record) => {
-                      const isOverdueDrop = record.returnedDate && record.dueDate && record.returnedDate > record.dueDate;
+                      // const isOverdueDrop = record.returnedDate && record.dueDate && record.returnedDate > record.dueDate;
 
                       return (
                         <tr
                           key={record.id}
-                          onClick={() => { setSelectedRecord(record); setIsDetailsOpen(true); }}
+                          onClick={() => {
+                            setSelectedRecord(record);
+                            setIsDetailsOpen(true);
+                          }}
                           className="hover:bg-canvas-dominant/60 transition-colors cursor-pointer group select-none"
                         >
-                          <td className="py-3.5 px-5 font-bold text-slate-900">
+                          <td className="py-3.5 px-5 font-bold text-text-main">
                             <div>{record.bookTitle}</div>
-                            <span className="text-xs font-medium text-slate-400 tracking-tight font-sans block mt-0.5">By {record.bookAuthor}</span>
+                            <span className="text-xs font-medium text-slate-400 tracking-tight font-sans block mt-0.5">
+                              By {record.bookAuthor}
+                            </span>
                           </td>
-                          <td className="py-3.5 px-5 font-bold text-slate-900">{record.memberName}</td>
-                          <td className="py-3.5 px-5 font-mono text-xs text-slate-500">{record.borrowedDate}</td>
-                          <td className="py-3.5 px-5 font-mono text-xs text-slate-500">{record.dueDate}</td>
-                          <td className="py-3.5 px-5 font-mono text-xs font-bold text-emerald-600 bg-emerald-50/10">{record.returnedDate}</td>
-                          <td className="py-3.5 px-5 text-center">
+                          <td className="py-3.5 px-5 font-bold text-text-main">
+                            {record.memberName}
+                          </td>
+                          <td className="py-3.5 px-5 font-mono text-xs text-slate-500">
+                            {record.borrowedDate}
+                          </td>
+                          <td className="py-3.5 px-5 font-mono text-xs text-slate-500">
+                            {record.dueDate}
+                          </td>
+                          <td className="py-3.5 px-5 font-mono text-xs font-bold text-emerald-600 bg-emerald-50/10">
+                            {record.returnedDate}
+                          </td>
+                          {/* <td className="py-3.5 px-5 text-center">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase border ${
                               isOverdueDrop 
                                 ? "bg-amber-50 text-amber-700 border-amber-100/40" 
@@ -281,7 +345,7 @@ export const ReturnedBooks = () => {
                             }`}>
                               {isOverdueDrop ? "⚠️ Fine Accrued" : "✓ Settled"}
                             </span>
-                          </td>
+                          </td> */}
                         </tr>
                       );
                     })
@@ -290,75 +354,40 @@ export const ReturnedBooks = () => {
               </table>
             </div>
 
-              {totalPages > 0 && (
-                                    <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
-                                      <span>
-                                        Page {currentPage} / {totalPages} <span className="text-slate-300 mx-2">|</span> Total {totalRecordsCount} Books
-                                      </span>
-                                      <div className="flex gap-2">
-                                        <button
-                                          type="button"
-                                          disabled={currentPage === 1}
-                                          onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(1, p - 1)); }}
-                                          className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
-                                        >
-                                          <ChevronLeft size={14} />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          disabled={currentPage === totalPages}
-                                          onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(totalPages, p + 1)); }}
-                                          className="p-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
-                                        >
-                                          <ChevronRight size={14} />
-                                        </button>
-                                      </div>
-                                    </div>
-                                  )}
+            {totalPages > 0 && (
+              <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+                <span>
+                  Page {currentPage} / {totalPages}{" "}
+                  <span className="text-slate-300 mx-2">|</span> Total{" "}
+                  {totalRecordsCount} Books
+                </span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentPage((p) => Math.max(1, p - 1));
+                    }}
+                    className="p-2 border border-border-main bg-card-bg hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentPage((p) => Math.min(totalPages, p + 1));
+                    }}
+                    className="p-2 border border-border-main bg-card-bg hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-
-          {/* NATURAL FLOW INLINE PAGINATION BAR */}
-          {/* <div className="px-5 py-3 border border-slate-light/10 rounded-2xl bg-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs transition-all">
-            <div className="text-xs font-medium text-slate-500">
-              Showing page <span className="font-bold text-slate-900 font-mono">{safeCurrentPage}</span> of <span className="font-bold text-slate-900 font-mono">{totalPages}</span> (<span className="font-bold text-slate-900 font-mono">{totalRecordsCount}</span> archives logged)
-            </div>
-            
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                disabled={safeCurrentPage === 1}
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className="p-1.5 border border-slate-light/10 rounded-lg bg-white text-slate-500 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-canvas-dominant cursor-pointer transition-all"
-              >
-                <ChevronLeft size={14} />
-              </button>
-
-              {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((pageNum) => (
-                <button
-                  key={pageNum}
-                  type="button"
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer font-mono ${
-                    safeCurrentPage === pageNum
-                      ? "bg-slate-900 text-white shadow-xs"
-                      : "bg-white border border-slate-light/10 text-slate-600 hover:bg-canvas-dominant"
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              ))}
-
-              <button
-                type="button"
-                disabled={safeCurrentPage === totalPages}
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                className="p-1.5 border border-slate-light/10 rounded-lg bg-white text-slate-500 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-canvas-dominant cursor-pointer transition-all"
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div> */}
-
         </div>
       )}
 

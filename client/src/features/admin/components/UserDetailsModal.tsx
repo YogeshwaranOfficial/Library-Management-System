@@ -1,5 +1,16 @@
 import React, { useState } from "react";
-import { User, Mail, Phone, Calendar, Shield, Edit2, Trash2, Check, RotateCcw, KeyRound } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  Shield,
+  Edit2,
+  Trash2,
+  Check,
+  RotateCcw,
+  KeyRound,
+} from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
 import { toast } from "sonner";
@@ -26,7 +37,10 @@ interface BackendErrorResponse {
   message: string;
 }
 
-export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClose }) => {
+export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
+  user,
+  onClose,
+}) => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -40,7 +54,10 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClos
   // 1. UPDATE MUTATION
   const updateMutation = useMutation({
     mutationFn: async (payload: Record<string, string>) => {
-      const response = await axiosClient.patch(`/admin/user/${user?.user_id}`, payload);
+      const response = await axiosClient.patch(
+        `/admin/user/${user?.user_id}`,
+        payload,
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -49,7 +66,9 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClos
       setIsEditing(false);
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
-      toast.error(error.response?.data?.message || "Failed to update record details.");
+      toast.error(
+        error.response?.data?.message || "Failed to update record details.",
+      );
     },
   });
 
@@ -76,7 +95,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClos
   const validateForm = () => {
     const localErrors: Record<string, string> = {};
     if (!name.trim()) localErrors.name = "Full name entry is required.";
-    
+
     const gmailRegex = /^[a-z0-9](\.?[a-z0-9]){4,29}@gmail\.com$/;
     if (!gmail.trim()) {
       localErrors.gmail = "Email address tracking parameters are required.";
@@ -92,9 +111,11 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClos
     }
 
     if (!password) {
-      localErrors.password = "Security credential string allocation is required.";
+      localErrors.password =
+        "Security credential string allocation is required.";
     } else if (password.length < 6) {
-      localErrors.password = "Security strings must be at least 6 characters long.";
+      localErrors.password =
+        "Security strings must be at least 6 characters long.";
     }
 
     setErrors(localErrors);
@@ -130,8 +151,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClos
     <>
       {/* High contrast layout backdrop with frosting filter matching MemberDetailsModal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs font-sans">
-        <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl transition-all overflow-hidden border border-amber-100 flex flex-col max-h-[90vh]">
-          
+        <div className="w-full max-w-xl rounded-2xl bg-card-bg shadow-xl transition-all overflow-hidden border border-amber-100 flex flex-col max-h-[90vh]">
           {/* Header Grid Framework - Clean Bright Banner matching screen formats */}
           <div className="flex items-center justify-between border-b border-slate-100 p-5 bg-slate-900">
             <div>
@@ -139,10 +159,13 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClos
                 {isEditing ? "Edit User Profile" : "User Account Information"}
               </h3>
               <p className="text-[11px] text-slate-400 mt-0.5 font-bold tracking-wide uppercase">
-                UUID: USR-{user.user_id ? user.user_id.split("-").pop()?.slice(-6).toUpperCase() : "000000"}
+                ID: USR-
+                {user.user_id
+                  ? user.user_id.split("-").pop()?.slice(-4).toUpperCase()
+                  : "0000"}
               </p>
             </div>
-            <button 
+            <button
               type="button"
               onClick={handleMasterClose}
               className="text-slate-400 hover:text-white transition-colors text-base font-bold cursor-pointer p-1.5 hover:bg-slate-800 rounded-lg"
@@ -152,140 +175,197 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClos
           </div>
 
           {/* Content Box Switcher Container */}
-          <div className="p-6 overflow-y-auto space-y-6 flex-1 text-slate-700">
-            
+          <div className="p-6 overflow-y-auto space-y-6 flex-1 text-text-main">
             {/* Input fields / View Data fields container stack */}
             <div className="space-y-5">
-              
               {/* Full Name Section */}
               <div className="space-y-1.5">
-                <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">Full Name</span>
+                <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">
+                  Full Name
+                </span>
                 {isEditing ? (
                   <div className="relative">
-                    <User className="absolute left-3.5 top-3 text-slate-400" size={15} />
+                    <User
+                      className="absolute left-3.5 top-3 text-slate-400"
+                      size={15}
+                    />
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
-                        errors.name 
-                          ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20" 
-                          : "border-slate-200 text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
+                      className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
+                        errors.name
+                          ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
+                          : "border-border-main text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
                       }`}
                     />
                   </div>
                 ) : (
-                  <span className="font-bold text-slate-900 block text-base pl-1">{user.name}</span>
+                  <span className="font-bold text-text-main block text-base pl-1">
+                    {user.name}
+                  </span>
                 )}
-                {errors.name && <p className="text-xs text-rose-700 font-bold mt-1 pl-1">{errors.name}</p>}
+                {errors.name && (
+                  <p className="text-xs text-rose-700 font-bold mt-1 pl-1">
+                    {errors.name}
+                  </p>
+                )}
               </div>
 
               {isEditing && <hr className="border-slate-100" />}
 
               {/* Dynamic Interactive Input Grid Setup */}
-              <div className={`grid grid-cols-1 ${isEditing ? "sm:grid-cols-1 gap-y-5" : "sm:grid-cols-2 gap-y-5 gap-x-6"} text-sm`}>
-                
+              <div
+                className={`grid grid-cols-1 ${isEditing ? "sm:grid-cols-1 gap-y-5" : "sm:grid-cols-2 gap-y-5 gap-x-6"} text-sm`}
+              >
                 {/* Email Entry Section */}
                 <div className="space-y-1.5">
-                  <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">Email Address</span>
+                  <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">
+                    Email Address
+                  </span>
                   {isEditing ? (
                     <div className="relative">
-                      <Mail className="absolute left-3.5 top-3 text-slate-400" size={15} />
+                      <Mail
+                        className="absolute left-3.5 top-3 text-slate-400"
+                        size={15}
+                      />
                       <input
                         type="text"
                         value={gmail}
                         onChange={(e) => setGmail(e.target.value)}
-                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
-                          errors.gmail 
-                            ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20" 
-                            : "border-slate-200 text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
+                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
+                          errors.gmail
+                            ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
+                            : "border-border-main text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
                         }`}
                       />
                     </div>
                   ) : (
-                    <span className="font-semibold text-slate-900 mt-1 block select-all text-base pl-1">{user.gmail}</span>
+                    <span className="font-semibold text-text-main mt-1 block select-all text-base pl-1">
+                      {user.gmail}
+                    </span>
                   )}
-                  {errors.gmail && <p className="text-xs text-rose-700 font-bold mt-1 pl-1">{errors.gmail}</p>}
+                  {errors.gmail && (
+                    <p className="text-xs text-rose-700 font-bold mt-1 pl-1">
+                      {errors.gmail}
+                    </p>
+                  )}
                 </div>
 
                 {/* Phone Number Entry Section */}
                 <div className="space-y-1.5">
-                  <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">Phone Number</span>
+                  <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">
+                    Phone Number
+                  </span>
                   {isEditing ? (
                     <div className="relative">
-                      <Phone className="absolute left-3.5 top-3 text-slate-400" size={15} />
+                      <Phone
+                        className="absolute left-3.5 top-3 text-slate-400"
+                        size={15}
+                      />
                       <input
                         type="text"
                         maxLength={10}
                         value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
-                          errors.phoneNumber 
-                            ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20" 
-                            : "border-slate-200 text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
+                        onChange={(e) =>
+                          setPhoneNumber(e.target.value.replace(/\D/g, ""))
+                        }
+                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
+                          errors.phoneNumber
+                            ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
+                            : "border-border-main text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
                         }`}
                       />
                     </div>
                   ) : (
-                    <span className="font-semibold text-slate-900 mt-1 block select-all text-base pl-1">{user.phone_number || "No Verified Phone"}</span>
+                    <span className="font-semibold text-text-main mt-1 block select-all text-base pl-1">
+                      {user.phone_number || "No Verified Phone"}
+                    </span>
                   )}
-                  {errors.phoneNumber && <p className="text-xs text-rose-700 font-bold mt-1 pl-1">{errors.phoneNumber}</p>}
+                  {errors.phoneNumber && (
+                    <p className="text-xs text-rose-700 font-bold mt-1 pl-1">
+                      {errors.phoneNumber}
+                    </p>
+                  )}
                 </div>
 
                 {/* Password Configuration String Row */}
                 <div className="space-y-1.5">
-                  <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">Password</span>
+                  <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">
+                    Password
+                  </span>
                   {isEditing ? (
                     <div className="relative">
-                      <KeyRound className="absolute left-3.5 top-3 text-slate-400" size={15} />
+                      <KeyRound
+                        className="absolute left-3.5 top-3 text-slate-400"
+                        size={15}
+                      />
                       <input
                         type="text"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="Assign new plain text system credential mapping"
-                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
-                          errors.password 
-                            ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20" 
-                            : "border-slate-200 text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
+                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
+                          errors.password
+                            ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
+                            : "border-border-main text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
                         }`}
                       />
                     </div>
                   ) : (
-                    <span className="font-mono font-semibold text-slate-900 mt-1 block select-all text-base tracking-wide pl-1">
+                    <span className="font-mono font-semibold text-text-main mt-1 block select-all text-base tracking-wide pl-1">
                       {user.password || "••••••••"}
                     </span>
                   )}
-                  {errors.password && <p className="text-xs text-rose-700 font-bold mt-1 pl-1">{errors.password}</p>}
+                  {errors.password && (
+                    <p className="text-xs text-rose-700 font-bold mt-1 pl-1">
+                      {errors.password}
+                    </p>
+                  )}
                 </div>
               </div>
 
               {!isEditing && (
                 <>
                   <hr className="border-slate-100" />
-                  
+
                   {/* Immutable Metadata Dashboard Blocks */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="bg-slate-50 border border-slate-200/40 p-4 rounded-xl flex items-center gap-3">
-                      <Shield size={18} className="text-slate-500 stroke-[2.2]" />
+                    <div className="bg-slate-50 border border-border-main/40 p-4 rounded-xl flex items-center gap-3">
+                      <Shield
+                        size={18}
+                        className="text-slate-500 stroke-[2.2]"
+                      />
                       <div>
-                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">Security Role Status</span>
-                        <span className="text-sm font-bold text-slate-800">{user.role}</span>
+                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                          Security Role Status
+                        </span>
+                        <span className="text-sm font-bold text-slate-800">
+                          {user.role}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 border border-slate-200/40 p-4 rounded-xl flex items-center gap-3">
-                      <Calendar size={18} className="text-slate-500 stroke-[2.2]" />
+                    <div className="bg-slate-50 border border-border-main/40 p-4 rounded-xl flex items-center gap-3">
+                      <Calendar
+                        size={18}
+                        className="text-slate-500 stroke-[2.2]"
+                      />
                       <div>
-                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">System Enrollment Date</span>
+                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                          System Enrollment Date
+                        </span>
                         <span className="text-sm font-bold text-slate-800">
-                          {new Date(user.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                          {new Date(user.created_at).toLocaleDateString(
+                            undefined,
+                            { year: "numeric", month: "long", day: "numeric" },
+                          )}
                         </span>
                       </div>
                     </div>
                   </div>
                 </>
               )}
-
             </div>
 
             {/* Operations Actions Layout Interface Tray Footer */}
@@ -295,7 +375,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClos
                   <button
                     type="button"
                     onClick={handleRevert}
-                    className="px-4 py-3 bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold uppercase tracking-wide rounded-xl transition-all hover:bg-slate-100 cursor-pointer flex items-center justify-center gap-1.5"
+                    className="px-4 py-3 bg-slate-50 border border-border-main text-text-main text-xs font-bold uppercase tracking-wide rounded-xl transition-all hover:bg-slate-100 cursor-pointer flex items-center justify-center gap-1.5"
                   >
                     <RotateCcw size={14} /> Revert Changes
                   </button>
@@ -305,7 +385,10 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClos
                     disabled={updateMutation.isPending}
                     className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-amber-50 text-xs font-bold uppercase tracking-wide rounded-xl transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
                   >
-                    <Check size={14} /> {updateMutation.isPending ? "Saving Sync..." : "Commit Edit"}
+                    <Check size={14} />{" "}
+                    {updateMutation.isPending
+                      ? "Saving Sync..."
+                      : "Commit Edit"}
                   </button>
                 </>
               ) : (
@@ -317,7 +400,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClos
                   >
                     <Trash2 size={14} /> Delete User Profile
                   </button>
-                  
+
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
@@ -328,13 +411,12 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({ user, onClos
                 </div>
               )}
             </div>
-
           </div>
         </div>
       </div>
 
       {/* Secure Action Delete Confirmation Sub-modal stack overlay */}
-      <DeleteUserModal 
+      <DeleteUserModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={() => deleteMutation.mutate()}

@@ -52,7 +52,7 @@ export interface WidgetAnalyticsData {
   criticalDeficit: { id: string; name: string; requests: number }[];
   fineVelocity: { collected: number };
   deadStock: { id: string; title: string; shelf: string }[];
-  categoryPopularity: { name: string; value: number; color: string }[];
+  categoryPopularity: { name: string; value: number; color: string | undefined }[];
   returnForecast: { date: string; count: number }[];
   engagementLeaderboard: { id: string; name: string; loans: number; onTimeRate: number }[];
   retentionMetrics: { avgDays: number; threshold: number };

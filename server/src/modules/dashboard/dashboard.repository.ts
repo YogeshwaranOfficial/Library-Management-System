@@ -2,6 +2,7 @@ import { Op, fn, col, literal } from "sequelize";
 import Book from "../../database/models/Book.js";
 import Fine from "../../database/models/Fine.js";
 import Issue from "../../database/models/Issue.js";
+import Category from "../../database/models/Category.js";
 import Member from "../../database/models/Member.js";
 import User from "../../database/models/User.js";
 import { OverdueRecord } from "./dashboard.types.js";
@@ -72,13 +73,15 @@ class DashboardRepository {
     // 1. CONCURRENT ROOT COUNT AGGREGATIONS
     // =========================================================================
     const [
-      totalBooksCount, 
+      totalBooksCount,
+      totalCopiesCount,
       activeMembersCount, 
       issuedBooksCount, 
       fineAggregationResult,
       recoveredFinesResult
     ] = await Promise.all([
       Book.count(),
+      Book.sum("available_copies").then(sum => sum || 0),
       Member.count({ where: { membership_status: "ACTIVE" } }),
       Issue.count({ where: { returned_date: null } }),
       Fine.findOne({
@@ -93,11 +96,11 @@ class DashboardRepository {
       })
     ]);
 
-    const totalCopiesCount = totalBooksCount; 
+    // The remainder of your calculations now receive a accurate inventory count anchor
     const availableBooksCount = Math.max(0, totalCopiesCount - issuedBooksCount);
     const totalFinesAgg = fineAggregationResult ? Number((fineAggregationResult as any).total_unpaid) : 0;
     const collectedFinesAgg = recoveredFinesResult ? Number((recoveredFinesResult as any).total_recovered) : 0;
-
+    
     // =========================================================================
     // 2. QUERY OVERDUE RECORDS JOIN TREE
     // =========================================================================
@@ -237,14 +240,53 @@ class DashboardRepository {
       };
     });
 
-    // Idea 7: Category Popularity Distribution Breakdown 
-    // Uses fallback mock data slices if categories are untagged in the current Book schema
-    const categoryPopularity = [
-      { name: "Engineering", value: Math.max(12, issuedBooksCount), color: "bg-teal-500" },
-      { name: "Mathematics", value: Math.max(8, activeMembersCount % 10), color: "bg-blue-500" },
-      { name: "Fiction", value: Math.max(15, totalBooksCount % 20), color: "bg-indigo-500" },
-      { name: "History", value: 6, color: "bg-amber-500" }
-    ];
+
+    // =========================================================================
+    // Idea 7: Category Popularity Distribution Breakdown (REAL-TIME DB QUERIES)
+    // =========================================================================
+    // 1. Predefined sequential dashboard brand colors for your top 4 slots
+    const brandColors = ["bg-teal-500", "bg-blue-500", "bg-indigo-500", "bg-amber-500"];
+
+    // 2. Query the category table to get the top 4 categories ordered by book volume
+    // Note: Assuming your Category model is imported/available in this scope.
+    // If it's named differently, adjust the model reference name accordingly.
+    const dbCategoryPopularity = await Category.findAll({
+      attributes: [
+        "category_id",
+        "category_name",
+        [fn("COUNT", fn("DISTINCT", col("books.book_id"))), "booksCount"]
+      ],
+      include: [
+        {
+          model: Book,
+          as: "books", // Matches your existing category-to-books association alias
+          attributes: [],
+          required: false // Keeps categories visible even if they have 0 volumes setup
+        }
+      ],
+      group: ["Category.category_id", "Category.category_name"],
+      order: [[fn("COUNT", fn("DISTINCT", col("books.book_id"))), "DESC"]],
+      limit: 4,
+      subQuery: false,
+      raw: true
+    });
+
+    // 3. Map database raw records directly into your existing frontend contract schema
+    const categoryPopularity = dbCategoryPopularity.map((cat: any, index: number) => ({
+      name: String(cat.category_name || "Uncategorized"),
+      value: Number(cat.booksCount) || 0,
+      color: brandColors[index] || brandColors[brandColors.length - 1]
+    }));
+
+    // 4. Fallback Guard: If your library database tables have 0 categories populated yet
+    if (categoryPopularity.length === 0) {
+      categoryPopularity.push(
+        { name: "Engineering", value: 0, color: "bg-teal-500" },
+        { name: "Mathematics", value: 0, color: "bg-blue-500" },
+        { name: "Fiction", value: 0, color: "bg-indigo-500" },
+        { name: "History", value: 0, color: "bg-amber-500" }
+      );
+    }
 
     // Idea 8: 7-Day Return Flow Forecaster
     const returnForecast = Array.from({ length: 7 }).map((_, i) => {
@@ -309,9 +351,7 @@ class DashboardRepository {
       widgets: {
         peakHours: peakHoursFormatted,
         criticalDeficit,
-        fineVelocity: {
-          collected: collectedFinesAgg
-        },
+        fineVelocity: { collected: collectedFinesAgg },
         deadStock,
         categoryPopularity,
         returnForecast,
