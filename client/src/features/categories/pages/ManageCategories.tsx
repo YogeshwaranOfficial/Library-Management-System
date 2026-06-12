@@ -274,9 +274,9 @@ export const ManageCategories = () => {
               }}
               className="w-full pl-4 pr-10 py-2 bg-slate-50 border border-border-main text-slate-800 rounded-xl text-xs font-bold uppercase tracking-wider appearance-none outline-hidden focus:bg-card-bg focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all cursor-pointer"
             >
-              <option value="NONE">Sort by Total Volume</option>
-              <option value="HIGH_TO_LOW">Volume: High to Low</option>
-              <option value="LOW_TO_HIGH">Volume: Low to High</option>
+              <option value="NONE">Sort by Volume</option>
+              <option value="HIGH_TO_LOW">High to Low</option>
+              <option value="LOW_TO_HIGH">Low to High</option>
             </select>
             <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
               <ChevronDown size={14} />
@@ -297,8 +297,8 @@ export const ManageCategories = () => {
               className="w-full pl-4 pr-10 py-2 bg-slate-50 border border-border-main text-slate-800 rounded-xl text-xs font-bold uppercase tracking-wider appearance-none outline-hidden focus:bg-card-bg focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all cursor-pointer"
             >
               <option value="NONE">Sort by Borrows</option>
-              <option value="HIGH_TO_LOW">Borrows: High to Low</option>
-              <option value="LOW_TO_HIGH">Borrows: Low to High</option>
+              <option value="HIGH_TO_LOW">High to Low</option>
+              <option value="LOW_TO_HIGH">Low to High</option>
             </select>
             <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
               <ChevronDown size={14} />
