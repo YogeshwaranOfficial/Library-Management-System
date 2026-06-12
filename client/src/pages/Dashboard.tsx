@@ -20,26 +20,31 @@ export const Dashboard = () => {
   const [amnestyDiscount, setAmnestyDiscount] = useState(20);
 
   // Background analytical payload cache sync
-  const { data: apiPayload, isLoading, isError } = useQuery({
+  const {
+    data: apiPayload,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["advancedDashboardAnalytics", token],
     queryFn: async () => {
       const res = await axiosClient.get("/dashboard/summary");
       return res.data?.data || res.data;
     },
     enabled: !!token,
-    staleTime: 1000 * 60 * 5, // 5 minute guard
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 
   // High-Visibility Light State Loading Screen
   if (isLoading || !token) {
     return (
-      <div className="flex h-screen w-full items-center justify-center flex-col gap-6 bg-white font-sans text-slate-800">
+      <div className="flex h-screen w-full items-center justify-center flex-col gap-6 bg-card-bg font-sans text-slate-800">
         <div className="relative">
           {/* Crisp slate structural spinner */}
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 border-t-slate-900 shadow-2xs" />
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-border-main border-t-slate-900 shadow-2xs" />
         </div>
 
-        <p className="text-sm text-slate-800 font-bold uppercase tracking-wider bg-slate-50 border border-slate-200 px-5 py-3 rounded-lg shadow-2xs">
+        <p className="text-sm text-slate-800 font-bold uppercase tracking-wider bg-slate-50 border border-border-main px-5 py-3 rounded-lg shadow-2xs">
           Booting Control Center Intelligence...
         </p>
       </div>
@@ -53,8 +58,9 @@ export const Dashboard = () => {
         <h3 className="text-base font-bold text-orange-800 uppercase tracking-wide">
           Operational Sync Failure
         </h3>
-        <p className="text-sm text-orange-700 font-medium mt-3 bg-white p-4 rounded-xl border border-orange-200/60 max-w-lg mx-auto">
-          Unable to pull central analytical datasets from backend database registers. Please reload the dashboard engine view.
+        <p className="text-sm text-orange-700 font-medium mt-3 bg-card-bg p-4 rounded-xl border border-orange-200/60 max-w-lg mx-auto">
+          Unable to pull central analytical datasets from backend database
+          registers. Please reload the dashboard engine view.
         </p>
       </div>
     );
@@ -77,40 +83,39 @@ export const Dashboard = () => {
   return (
     /* Comfortable, light-weight archival grid background wrapper */
     <div className="space-y-8 p-2 animate-fade-in bg-transparent min-h-screen pb-16 font-sans text-slate-800 selection:bg-amber-200">
-      
       {/* Level 1: Core System KPI Indicators */}
       <div className="relative transition-all duration-300">
         <MetricsGrid data={gridMetrics} />
       </div>
 
       {/* Level 2: Realtime Alerts (Critical Deficits, Dead Stocks, Analytics) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 *:bg-white *:border *:border-amber-100 *:rounded-2xl *:p-6 *:shadow-2xs *:transition-all *:duration-150 hover:*:border-slate-300">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 *:bg-card-bg *:border *:border-amber-100 *:rounded-2xl *:p-6 *:shadow-2xs *:transition-all *:duration-150 hover:*:border-slate-300">
         <CriticalDeficitWidget items={widgets.criticalDeficit || []} />
         <DeadStockWidget items={widgets.deadStock || []} />
         <RetentionAnalytics metrics={widgets.retentionMetrics} />
       </div>
 
       {/* Level 3: Financial Risks & Auditing Simulation Controls */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 *:bg-white *:border *:border-amber-100 *:rounded-2xl *:p-7 *:shadow-2xs *:transition-all *:duration-150 hover:*:border-slate-300">
-        <FineVelocityGauge 
-          collected={widgets.fineVelocity?.collected || 0} 
-          outstanding={gridMetrics.totalOutstandingFines} 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 *:bg-card-bg *:border *:border-amber-100 *:rounded-2xl *:p-7 *:shadow-2xs *:transition-all *:duration-150 hover:*:border-slate-300">
+        <FineVelocityGauge
+          collected={widgets.fineVelocity?.collected || 0}
+          outstanding={gridMetrics.totalOutstandingFines}
         />
-        <AmnestySimulator 
-          totalOutstanding={gridMetrics.totalOutstandingFines} 
-          discount={amnestyDiscount} 
-          onChange={setAmnestyDiscount} 
+        <AmnestySimulator
+          totalOutstanding={gridMetrics.totalOutstandingFines}
+          discount={amnestyDiscount}
+          onChange={setAmnestyDiscount}
         />
       </div>
 
       {/* Level 4: Traffic Indexes & Distribution Return Timelines */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 *:bg-white *:border *:border-amber-100 *:rounded-2xl *:p-7 *:shadow-2xs *:transition-all *:duration-150 hover:*:border-slate-300">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 *:bg-card-bg *:border *:border-amber-100 *:rounded-2xl *:p-7 *:shadow-2xs *:transition-all *:duration-150 hover:*:border-slate-300">
         <PeakHoursChart data={widgets.peakHours || []} />
         <ReturnForecaster forecast={widgets.returnForecast || []} />
       </div>
 
       {/* Level 5: Media Density Map & Reader Engagement Logs */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 *:bg-white *:border *:border-amber-100 *:rounded-2xl *:p-6 *:shadow-2xs *:transition-all *:duration-150 hover:*:border-slate-300">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 *:bg-card-bg *:border *:border-amber-100 *:rounded-2xl *:p-6 *:shadow-2xs *:transition-all *:duration-150 hover:*:border-slate-300">
         <div className="lg:col-span-2 p-0! overflow-hidden">
           <CategoryTreeMap categories={widgets.categoryPopularity || []} />
         </div>

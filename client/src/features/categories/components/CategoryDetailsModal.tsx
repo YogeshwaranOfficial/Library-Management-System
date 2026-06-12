@@ -2,7 +2,15 @@ import React, { useState } from "react";
 import type { CategoryMetrics } from "../types/category.types";
 
 // Editorial Visual Assets
-import { Layers, BookOpen, BarChart3, Calendar, Edit3, Trash2, X } from "lucide-react";
+import {
+  Layers,
+  BookOpen,
+  BarChart3,
+  Calendar,
+  Edit3,
+  Trash2,
+  X,
+} from "lucide-react";
 
 interface CategoryDetailsModalProps {
   isOpen: boolean;
@@ -49,28 +57,29 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
       setLocalError("Name must contain alphabets only");
       return;
     }
-    
+
     setLocalError("");
     await onUpdateName(category.category_id, editName.trim());
     setIsEditing(false);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 font-sans text-slate-700 text-left">
-      <div className="bg-white w-full max-w-xl rounded-2xl border border-slate-200 shadow-2xl overflow-hidden animate-scale-up">
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 font-sans text-text-main text-left">
+      <div className="bg-card-bg w-full max-w-xl rounded-2xl border border-border-main shadow-2xl overflow-hidden animate-scale-up">
         {/* Header section - Clean Dark Structured Banner */}
         <div className="bg-slate-900 px-8 py-5 border-b border-slate-100 flex justify-between items-center">
           <div>
-            <h3 className="text-xl font-bold text-white tracking-tight">Category Details</h3>
+            <h3 className="text-xl font-bold text-white tracking-tight">
+              Category Details
+            </h3>
             <p className="text-xs text-slate-400 font-mono font-bold tracking-wider mt-1 uppercase">
               ID: {readableId}
-            </p>          
+            </p>
           </div>
-          <button 
+          <button
             type="button"
-            onClick={onClose} 
-            className="text-slate-400 hover:bg-white/10 hover:rounded-lg transition-colors p-1 cursor-pointer"
+            onClick={onClose}
+            className="text-slate-400 hover:bg-card-bg/10 hover:rounded-lg transition-colors p-1 cursor-pointer"
           >
             <X size={20} />
           </button>
@@ -88,12 +97,16 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-900 rounded-xl placeholder:text-slate-400 outline-hidden focus:bg-white focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all"
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-border-main text-sm font-semibold text-text-main rounded-xl placeholder:text-slate-400 outline-hidden focus:bg-card-bg focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all"
                 />
-                {localError && <p className="text-xs text-rose-700 font-bold mt-1.5 px-1">{localError}</p>}
+                {localError && (
+                  <p className="text-xs text-rose-700 font-bold mt-1.5 px-1">
+                    {localError}
+                  </p>
+                )}
               </div>
             ) : (
-              <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900">
+              <div className="px-4 py-3 bg-slate-50 border border-border-main rounded-xl font-semibold text-text-main">
                 {category.category_name}
               </div>
             )}
@@ -105,16 +118,16 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
                 <BookOpen size={12} /> Total Owned Books
               </span>
-              <span className="text-xl font-mono font-bold text-slate-900 mt-1 block">
+              <span className="text-xl font-mono font-bold text-text-main mt-1 block">
                 {category.booksCount}
               </span>
             </div>
-            
+
             <div className="p-4 bg-amber-50/40 border border-amber-100 rounded-xl text-center">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-center gap-1">
                 <BarChart3 size={12} /> Total Borrows
               </span>
-              <span className="text-xl font-mono font-bold text-slate-900 mt-1 block">
+              <span className="text-xl font-mono font-bold text-text-main mt-1 block">
                 {category.lendingCount}
               </span>
             </div>
@@ -125,11 +138,11 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
               <Calendar size={14} /> System Registry Date
             </label>
-            <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 text-sm font-semibold">
+            <div className="px-4 py-3 bg-slate-50 border border-border-main rounded-xl text-slate-500 text-sm font-semibold">
               {new Date(category.created_at).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
-                day: "numeric"
+                day: "numeric",
               })}
             </div>
           </div>
@@ -150,8 +163,12 @@ export const CategoryDetailsModal: React.FC<CategoryDetailsModalProps> = ({
             <>
               <button
                 type="button"
-                onClick={() => { setIsEditing(false); setEditName(category.category_name); setLocalError(""); }}
-                className="px-5 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl transition-all hover:bg-slate-100 cursor-pointer"
+                onClick={() => {
+                  setIsEditing(false);
+                  setEditName(category.category_name);
+                  setLocalError("");
+                }}
+                className="px-5 py-3 bg-card-bg border border-border-main text-text-main rounded-xl transition-all hover:bg-slate-100 cursor-pointer"
               >
                 Cancel
               </button>

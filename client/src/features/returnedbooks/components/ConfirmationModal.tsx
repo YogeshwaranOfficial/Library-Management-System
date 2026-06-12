@@ -34,17 +34,16 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans text-xs sm:text-sm text-slate-700 text-left animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans text-xs sm:text-sm text-text-main text-left animate-fade-in">
       {/* Backdrop overlay blur */}
-      <div 
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" 
+      <div
+        className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal Container */}
-      <div className="relative z-10 w-full max-w-sm transform overflow-hidden rounded-2xl bg-white p-6 text-left shadow-xl border border-slate-200 animate-zoom-in">
+      <div className="relative z-10 w-full max-w-sm transform overflow-hidden rounded-2xl bg-card-bg p-6 text-left shadow-xl border border-border-main animate-zoom-in">
         <div className="flex items-start gap-3.5">
-          
           {/* Context Icon indicators matched down to severity matrices */}
           {variant === "danger" && (
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-600">
@@ -61,9 +60,9 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               <Info size={18} />
             </div>
           )}
-          
+
           <div className="text-left w-full mt-0.5">
-            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+            <h3 className="text-xs font-bold text-text-main uppercase tracking-wide">
               {title}
             </h3>
             <div className="mt-2">
@@ -84,12 +83,12 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           >
             {isLoading ? "Processing..." : confirmText}
           </button>
-          
+
           <button
             type="button"
             disabled={isLoading}
             onClick={onClose}
-            className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 rounded-xl transition-colors cursor-pointer disabled:opacity-40"
+            className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-text-main border border-border-main bg-card-bg hover:bg-slate-50 rounded-xl transition-colors cursor-pointer disabled:opacity-40"
           >
             {cancelText}
           </button>
