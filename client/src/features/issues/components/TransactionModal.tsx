@@ -207,7 +207,7 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
         <div className="bg-slate-900 p-5 text-white flex justify-between items-center border-b border-slate-light/10">
           <div>
             <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Circulation Terminal</h3>
-            <h2 className="text-xl font-bold text-white tracking-tight mt-0.5">{editingRecord ? "Adjust Loan Parameters" : "Issue New Book Voucher"}</h2>
+            <h2 className="text-xl font-bold text-white tracking-tight mt-0.5">{editingRecord ? "Edit issue details" : "Issue New Book"}</h2>
           </div>
           <button 
             type="button" 
@@ -222,7 +222,7 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
           
           {/* 1. MEMBER LOOKUP INPUT SECTION */}
           <div className="relative">
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Member Registration</label>
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">Member Name</label>
             <div className="relative">
               <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
               <input
@@ -422,7 +422,7 @@ export const TransactionModal = ({ isOpen, onClose, onSubmit, editingRecord }: T
               disabled={isSubmissionBlocked}
               className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed shadow-xs rounded-xl transition-all cursor-pointer"
             >
-              {editingRecord ? "Save Parameters" : "Confirm Issue"}
+              {editingRecord ? "Save Changes" : "Create Issue"}
             </button>
           </div>
         </form>

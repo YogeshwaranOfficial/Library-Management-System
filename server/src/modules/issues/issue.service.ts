@@ -262,15 +262,21 @@ class IssueService {
         throw new AppError("Cannot change data parameters of a closed transactional history log.", httpStatus.BAD_REQUEST);
       }
 
-      // 📈 DYNAMIC EXTENSION STATE HANDLING
+     // 📈 DYNAMIC EXTENSION STATE HANDLING
       const finalTargetDueDate = payload.dueDate ? new Date(payload.dueDate) : new Date(issue.due_date);
-      const isNowSafe = finalTargetDueDate > new Date();
+      
+      // Strip time from both objects for an accurate comparison check
+      const today = new Date();
+      const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const targetDueDateMidnight = new Date(finalTargetDueDate.getFullYear(), finalTargetDueDate.getMonth(), finalTargetDueDate.getDate());
+
+      const isNowSafe = targetDueDateMidnight >= todayMidnight;
       const recalculatedStatus = isNowSafe ? "BORROWED" : "OVERDUE";
 
       if (isNowSafe) {
         await Fine.destroy({ where: { issue_id, paid_status: false }, transaction: t });
       }
-
+      
       return await issueRepository.updateIssue(issue_id, {
         member_id: payload.memberId || issue.member_id,
         book_id: payload.bookId || issue.book_id,
