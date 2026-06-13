@@ -1,6 +1,4 @@
-import { Op, CreationAttributes } from "sequelize";
-
-import Book from "../../database/models/Book.js";
+import { fn, col, Op, CreationAttributes } from "sequelize";import Book from "../../database/models/Book.js";
 import Category from "../../database/models/Category.js";
 
 import {
@@ -15,8 +13,8 @@ class BookRepository {
       book_author: payload.book_author,
       category_id: payload.category_id,
       total_copies: payload.total_copies,
-      // 💡 Now perfectly legal since we expanded the interface contract type!
       available_copies: payload.available_copies ?? payload.total_copies,
+      language: payload.language
     } as CreationAttributes<Book>);
   }
 
@@ -24,42 +22,62 @@ class BookRepository {
    * 💡 Handles clean pagination limits, offsets, mixed title/author searches, 
    * and isolated category ID relational filtering.
    */
-  async getBooks(
-    page: number,
-    limit: number,
-    search?: string,
-    category_id?: string
-  ) {
-    const offset = (page - 1) * limit;
 
-    return Book.findAndCountAll({
-      where: {
-        ...(search && {
-          [Op.or]: [
-            { book_name: { [Op.iLike]: `%${search}%` } },
-            { book_author: { [Op.iLike]: `%${search}%` } },
-          ],
-        }),
-        ...(category_id && { category_id }),
-      },
 
-      include: [
-        {
-          model: Category,
-          as: "category",
-          attributes: [
-            ["category_id", "id"],
-            ["category_name", "name"]
-          ],
-        },
-      ],
+async getBooks(
+  page: number,
+  limit: number,
+  search?: string,
+  category_id?: string,
+  language?: string
+) {
+  const offset = (page - 1) * limit;
 
-      limit,
-      offset,
-      order: [["created_at", "DESC"]],
-    });
+  // 1. Build an isolated, strong where clause object literal
+  const whereClause: any = {};
+
+  // Handle fuzzy title/author searches
+  if (search) {
+    whereClause[Op.or] = [
+      { book_name: { [Op.iLike]: `%${search}%` } },
+      { book_author: { [Op.iLike]: `%${search}%` } },
+    ];
   }
 
+  // Handle direct relational category identifiers
+  if (category_id) {
+    whereClause.category_id = category_id;
+  }
+
+  // 🌟 FIXED: Explicit strict lowercase validation to safeguard string matches
+  if (language) {
+    whereClause.language = {
+      [Op.iLike]: language.trim() // Protects against hidden spaces or casing mismatches (e.g., "hindi" vs "Hindi")
+    };
+  }
+
+  // 2. Fire structured finder query payload
+  return Book.findAndCountAll({
+    where: whereClause,
+    include: [
+      {
+        model: Category,
+        as: "category",
+        attributes: [
+          ["category_id", "id"],
+          ["category_name", "name"]
+        ],
+        required: false // Keeps books visible even if their category isn't loaded
+      },
+    ],
+    limit,
+    offset,
+    order: [["created_at", "DESC"]],
+    // 🌟 CRITICAL FOR PAGINATION WITH INNER JOINS:
+    // Prevents duplicate row counts and keeps where clauses locked to the parent table!
+    distinct: true, 
+  });
+}
   async getBookById(book_id: string) {
     return Book.findByPk(book_id, {
       include: [
@@ -75,13 +93,13 @@ class BookRepository {
     book_id: string,
     payload: UpdateBookPayload
   ) {
-    // 💡 FIX: Safe, explicit assignments prevent accidental column drops on PATCH updates
     await Book.update({
       ...(payload.book_name && { book_name: payload.book_name }),
       ...(payload.book_author && { book_author: payload.book_author }),
       ...(payload.category_id && { category_id: payload.category_id }),
       ...(payload.total_copies !== undefined && { total_copies: payload.total_copies }),
       ...(payload.available_copies !== undefined && { available_copies: payload.available_copies }),
+      ...(payload.language && { language: payload.language })
     }, {
       where: { book_id },
     });
@@ -103,7 +121,7 @@ class BookRepository {
           { book_author: { [Op.iLike]: `%${searchToken}%` } }
         ]
       },
-      attributes: ["book_id", "book_name", "book_author", "available_copies"],
+      attributes: ["book_id", "book_name", "book_author", "available_copies", "language"],
       order: [["book_name", "ASC"]],
       limit: 15
     });
@@ -116,6 +134,7 @@ class BookRepository {
         book_id: book.book_id,
         title: book.book_name,
         author: book.book_author || "Unknown Author",
+        language: book.language || "Not Mentioned",
         available_copies: stockCount,
         compliance: {
           status: outOfStock ? "OUT_OF_STOCK" : "AVAILABLE",
@@ -140,6 +159,23 @@ class BookRepository {
       order: [["category_name", "ASC"]],
     });
   }
+
+  async getLanguages() {
+  const records = await Book.findAll({
+    attributes: [
+      [fn("DISTINCT", col("language")), "language"]
+    ],
+    where: {
+      language: {
+        [Op.not]: null as any
+      }
+    },
+    raw: true,
+    order: [["language", "ASC"]],
+  });
+
+  return records.map((r: any) => r.language);
+}
 }
 
 export default new BookRepository();

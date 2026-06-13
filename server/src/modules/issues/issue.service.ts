@@ -203,7 +203,6 @@ class IssueService {
     return issueRepository.getMemberIssues(member_id);
   }
 
-  // 4. Update Settings (Includes Robust Integrated Return Undo Framework Engine)
   async updateIssueParameters(
     issue_id: string,
     payload: { 
@@ -225,20 +224,18 @@ class IssueService {
       /* 🔄 DUAL-COMPLIANT REVERT RETURN LOGIC ACTIVATION                            */
       /* -------------------------------------------------------------------------- */
       if (issue.issue_status === "RETURNED" && payload.status === "BORROWED") {
-        const book = await Book.findByPk(issue.book_id, { lock: t.LOCK.UPDATE, transaction: t });
+        const bookIdToUse = payload.bookId || issue.book_id;
+        const book = await Book.findByPk(bookIdToUse, { lock: t.LOCK.UPDATE, transaction: t });
         if (!book) throw new AppError("Associated book inventory asset missing.", httpStatus.NOT_FOUND);
         
-        // Decrement available shelf inventory because the book is moving back out of the library
         if (book.available_copies <= 0) {
           throw new AppError("Cannot undo! This book's shelf slot is fully allocated right now.", httpStatus.BAD_REQUEST);
         }
         await book.decrement("available_copies", { by: 1, transaction: t });
 
-        // 🧠 Dynamically calculate corrected status based on target date vs today
         const targetDueDate = payload.dueDate ? new Date(payload.dueDate) : new Date(issue.due_date);
         const dynamicRestoredStatus = new Date() > targetDueDate ? "OVERDUE" : "BORROWED";
 
-        // 🟢 FIX: Update fine row instead of running Fine.destroy()
         const existingFine = await Fine.findOne({ where: { issue_id }, transaction: t });
         if (existingFine) {
           await existingFine.update({
@@ -250,11 +247,11 @@ class IssueService {
 
         return await issueRepository.updateIssue(issue_id, {
           member_id: payload.memberId || issue.member_id,
-          book_id: payload.bookId || issue.book_id,
+          book_id: bookIdToUse,
           borrowed_date: payload.borrowDate ? new Date(payload.borrowDate) : issue.borrowed_date,
           due_date: targetDueDate,
           issue_status: dynamicRestoredStatus,
-          returned_date: null // Wipe timestamp marker row
+          returned_date: null
         }, { transaction: t });
       }
 
@@ -262,10 +259,30 @@ class IssueService {
         throw new AppError("Cannot change data parameters of a closed transactional history log.", httpStatus.BAD_REQUEST);
       }
 
-     // 📈 DYNAMIC EXTENSION STATE HANDLING
+      /* -------------------------------------------------------------------------- */
+      /* 🔄 🟢 FIX: HANDLE BOOK TITLES SWAPPING ON ACTIVE COPIES                   */
+      /* -------------------------------------------------------------------------- */
+      if (!issue.returned_date && payload.bookId && payload.bookId !== issue.book_id) {
+        // 1. Give back the stock slot to the old book title
+        const oldBook = await Book.findByPk(issue.book_id, { lock: t.LOCK.UPDATE, transaction: t });
+        if (oldBook) {
+          await oldBook.increment("available_copies", { by: 1, transaction: t });
+          await oldBook.decrement("lending_count", { by: 1, transaction: t });
+        }
+
+        // 2. Claim a stock slot out from the brand new target book title
+        const newBook = await Book.findByPk(payload.bookId, { lock: t.LOCK.UPDATE, transaction: t });
+        if (!newBook) throw new AppError("New target book title selection not found.", httpStatus.NOT_FOUND);
+        if (newBook.available_copies <= 0) {
+          throw new AppError("Selected target book variant is completely out of stock.", httpStatus.BAD_REQUEST);
+        }
+        await newBook.decrement("available_copies", { by: 1, transaction: t });
+        await newBook.increment("lending_count", { by: 1, transaction: t });
+      }
+
+      // 📈 DYNAMIC EXTENSION STATE HANDLING
       const finalTargetDueDate = payload.dueDate ? new Date(payload.dueDate) : new Date(issue.due_date);
       
-      // Strip time from both objects for an accurate comparison check
       const today = new Date();
       const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       const targetDueDateMidnight = new Date(finalTargetDueDate.getFullYear(), finalTargetDueDate.getMonth(), finalTargetDueDate.getDate());

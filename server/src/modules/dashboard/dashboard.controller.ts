@@ -15,6 +15,11 @@ export const getDashboardSummaryController = asyncHandler(
     // 💡 Executing the centralized class instance method
     const result: CompleteDashboardSummaryResponse = await dashboardService.getDashboardSummaryService();
 
+    console.log("=== 🛰️ BACKEND DASHBOARD SUMMARY PAYLOAD ===");
+    console.log("Total Books (Titles Count):", result.summary.totalBooks);
+    console.log("Total Copies (Physical Sum):", result.summary.totalCopies);
+    console.log("Available Books (Shelf Sum):", result.summary.availableBooks);
+    console.log("============================================");
     // Return formatted using JSend convention format to feed TanStack query smoothly
     return res.status(200).json({
       success: true,

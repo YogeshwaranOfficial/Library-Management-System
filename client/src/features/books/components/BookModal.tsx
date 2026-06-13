@@ -47,7 +47,7 @@ export const BookModal = ({
     formState: { errors },
   } = useForm<BookFormValues>({
     resolver: zodResolver(BookFormSchema),
-    defaultValues: { title: "", author: "", totalCopies: 1, categoryId: "" },
+    defaultValues: { title: "", author: "", language:"", totalCopies: 1, categoryId: "" },
   });
 
   // Simple synchronization cycle without cascading state updates
@@ -56,17 +56,19 @@ export const BookModal = ({
       reset({
         title: editingBook.title,
         author: editingBook.author,
+        language: editingBook.language,
         totalCopies: editingBook.totalCopies,
         categoryId: editingBook.categoryId,
       });
     } else {
-      reset({ title: "", author: "", totalCopies: 1, categoryId: "" });
+      reset({ title: "", author: "", language:"", totalCopies: 1, categoryId: "" });
     }
   }, [editingBook, reset]);
 
   // Safely cleans state artifacts within action contexts outside of reactive render loops
   const handleCloseModal = () => {
     setOcrAlternatives([]);
+    reset();
     onClose();
   };
 
@@ -204,6 +206,22 @@ export const BookModal = ({
                 <input
                   type="text"
                   {...register("author")}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-border-main text-xs sm:text-sm font-semibold text-text-main rounded-xl placeholder:text-slate-400 outline-hidden focus:bg-card-bg focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all"
+                />
+                {errors.author && (
+                  <p className="text-xs text-rose-700 font-bold mt-1.5">
+                    {errors.author.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                  <BookOpen size={12} /> Language
+                </label>
+                <input
+                  type="text"
+                  {...register("language")}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-border-main text-xs sm:text-sm font-semibold text-text-main rounded-xl placeholder:text-slate-400 outline-hidden focus:bg-card-bg focus:border-slate-900 focus:ring-4 focus:ring-slate-900/5 transition-all"
                 />
                 {errors.author && (

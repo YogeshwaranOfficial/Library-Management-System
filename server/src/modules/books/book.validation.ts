@@ -16,6 +16,8 @@ export const createBookSchema = z.object({
     total_copies: z.coerce
       .number()
       .min(1, "Total copies must be at least 1"),
+
+    langauge: z.string().min(2, "langauge name atleast contain 2 charcaters")
   }),
 });
 
@@ -24,9 +26,9 @@ export const updateBookSchema = z.object({
     book_name: z.string().optional(),
     book_author: z.string().optional(),
     category_id: z.uuid().optional(),
-    // 💡 FIX: Coerce numbers here as well for updates
     total_copies: z.coerce.number().optional(),
     available_copies: z.coerce.number().optional(),
+    langauge: z.string().optional()
   }),
 });
 

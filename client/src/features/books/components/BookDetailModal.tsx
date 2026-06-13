@@ -54,7 +54,7 @@ export const BookDetailModal = ({
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4 font-sans text-text-main text-left">
-        <div className="bg-card-bg w-full max-w-xl rounded-2xl border border-border-main shadow-2xl overflow-hidden animate-scale-up">
+        <div className="bg-card-bg w-full max-w-xl rounded-2xl border border-slate-200 shadow-2xl overflow-hidden animate-scale-up">
           {/* Header section */}
           <div className="bg-slate-900 px-8 py-5 border-b border-slate-100 flex justify-between items-center">
             <div>
@@ -77,11 +77,12 @@ export const BookDetailModal = ({
 
           {/* Detailed Metadata Grid */}
           <div className="p-8 space-y-5 text-base">
+            <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
                 <BookOpen size={14} /> Book Name
               </label>
-              <div className="px-4 py-3 bg-slate-50 border border-border-main rounded-xl font-semibold text-text-main">
+              <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-text-main">
                 {book.title}
               </div>
             </div>
@@ -90,8 +91,18 @@ export const BookDetailModal = ({
               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
                 <User size={14} /> Author / Creator
               </label>
-              <div className="px-4 py-3 bg-slate-50 border border-border-main rounded-xl font-medium text-slate-800">
+              <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800">
                 {book.author}
+              </div>
+            </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                 <BookOpen size={14} />Language
+              </label>
+              <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800">
+                {book.language}
               </div>
             </div>
 
@@ -100,7 +111,7 @@ export const BookDetailModal = ({
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
                   <Layers size={14} /> Category Classification
                 </label>
-                <div className="px-4 py-3 bg-slate-50 border border-border-main rounded-xl font-medium text-slate-800 truncate">
+                <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-800 truncate">
                   {book.categoryName}
                 </div>
               </div>
@@ -108,7 +119,7 @@ export const BookDetailModal = ({
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
                   <Calendar size={14} /> Shelf Registry Date
                 </label>
-                <div className="px-4 py-3 bg-slate-50 border border-border-main rounded-xl text-slate-500 text-sm font-semibold truncate">
+                <div className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 text-sm font-semibold truncate">
                   {shelfEntryDate}
                 </div>
               </div>

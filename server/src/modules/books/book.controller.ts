@@ -100,6 +100,19 @@ export const getCategoriesController = asyncHandler(
   }
 );
 
+export const getLanguagesController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const result = await bookService.getLanguages();
+
+    sendResponse(res, {
+      success: true,
+      statusCode: 200,
+      message: "Languages fetched successfully",
+      data: result,
+    });
+  }
+);
+
 export const searchBooksController = asyncHandler(async (req: Request, res: Response) => {
   // 💡 FIX (Line 84): Cast req.query.q cleanly into a string primitive fallback 
   const searchString = String(req.query.q || "");

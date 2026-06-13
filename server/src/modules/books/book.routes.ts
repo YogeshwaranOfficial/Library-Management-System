@@ -251,6 +251,7 @@ import {
   searchBooksController,
   updateBookController,
   getCategoriesController,
+  getLanguagesController
 } from "./book.controller.js";
 
 import {
@@ -268,6 +269,12 @@ router.get(
   "/categories",
   auth,
   getCategoriesController
+);
+
+router.get(
+  "/languages",
+  auth,
+  getLanguagesController
 );
 
 router.get(

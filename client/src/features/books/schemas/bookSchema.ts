@@ -7,6 +7,7 @@ export const BookFormSchema = z.object({
     .int({ message: "Stock counts must be whole integers" })
     .min(1, { message: "Minimum catalog collection entry requires 1 copy" }),
   categoryId: z.string().min(1, { message: "Please map this asset to an organizational category" }),
+  language: z.string().min(1, { message: "language is required" }),
 });
 
 export type BookFormValues = z.infer<typeof BookFormSchema>;

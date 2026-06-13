@@ -103,7 +103,7 @@ export const FineDetailsModal = ({
             <div className="space-y-2">
               <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
                 <BookOpen size={12} className="text-text-main shrink-0" />{" "}
-                Circulated Media Target
+                Book Details
               </h4>
               <div className="bg-slate-50 p-4 rounded-xl border border-border-main grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
                 <div className="col-span-2">

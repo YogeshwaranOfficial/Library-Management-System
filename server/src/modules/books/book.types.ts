@@ -9,6 +9,7 @@ export interface SearchBookResult {
     message: string;
     isBlocked: boolean;    // true means dropdown blocks click selection (0 copies)
   };
+  language: string | "English";
 }
 
 export interface CreateBookPayload {
@@ -16,7 +17,8 @@ export interface CreateBookPayload {
   book_author: string;
   category_id: string;
   total_copies: number;
-  available_copies?: number; // 💡 Added as an optional property
+  available_copies?: number;
+  language: string | "English"; 
 }
 
 export interface UpdateBookPayload {
@@ -25,4 +27,5 @@ export interface UpdateBookPayload {
   category_id?: string;
   total_copies?: number;
   available_copies?: number;
+  language?: string | "English";
 }

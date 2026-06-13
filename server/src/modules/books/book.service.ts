@@ -84,6 +84,10 @@ class BookService {
   async getCategories() {
     return bookRepository.getCategories();
   }
+
+  async getLanguages() {
+    return bookRepository.getLanguages();
+  }
 }
 
 export default new BookService();

@@ -4,7 +4,7 @@ import { axiosClient } from "../../../api/axiosClient";
 import { BookModal } from "../components/BookModal";
 import { DeleteBookModal } from "../components/DeleteBookModal";
 import { BookDetailModal } from "../components/BookDetailModal";
-import type { BookInventoryItem, BookCategory } from "../../../types/books";
+import type { BookInventoryItem, BookCategory, LanguageCategory } from "../../../types/books";
 import type { BookFormValues } from "../schemas/bookSchema";
 import { toast } from "sonner";
 
@@ -28,6 +28,7 @@ export const BooksPage = () => {
   const [localSearch, setLocalSearch] = useState("");
   const [activeSearchQuery, setActiveSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [languageFilter, setLanguageFilter] = useState("");
 
   // Dynamic Pagination Tracking States
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,6 +60,7 @@ export const BooksPage = () => {
       "libraryBooksCatalogFeed",
       activeSearchQuery,
       categoryFilter,
+      languageFilter,
       currentPage,
     ],
     queryFn: async () => {
@@ -68,6 +70,7 @@ export const BooksPage = () => {
           limit: RECORDS_PER_PAGE,
           search: activeSearchQuery || undefined,
           category_id: categoryFilter || undefined,
+          language: languageFilter || undefined,
         },
       });
       return response.data;
@@ -82,6 +85,22 @@ export const BooksPage = () => {
       return response.data?.data || [];
     },
   });
+
+const { data: languages = [] } = useQuery<string[], Error, LanguageCategory[]>({
+  queryKey: ["bookLanguageDropdownFeed"],
+  queryFn: async (): Promise<string[]> => {
+    const response = await axiosClient.get("/books/languages");
+    return response.data?.data || [];
+  },
+  select: (rawData: string[]): LanguageCategory[] => {
+    if (!Array.isArray(rawData)) return [];
+    
+    return rawData.map((langName: string) => ({
+      id: langName,   
+      name: langName, 
+    }));
+  }
+});
 
   // Structural mapping layer for explicit type safety checks
   interface BackendBookRow {
@@ -103,6 +122,7 @@ export const BooksPage = () => {
       name: string;
     };
     categoryName?: string;
+    language:string;
   }
 
   // Extract core rows and pagination totals safely
@@ -120,6 +140,7 @@ export const BooksPage = () => {
     author: String(b.book_author || "Unknown"),
     totalCopies: Number(b.total_copies || b.totalCopies || 0),
     availableCopies: Number(b.available_copies ?? b.availableCopies ?? 0),
+    language: String(b.language || "Not Mentioned"),
     lendingCount: Number(b.lending_count || b.lendingCount || 0),
     categoryId: String(b.category_id || b.categoryId || ""),
     categoryName: String(b.category?.name || b.categoryName || "Unclassified"),
@@ -131,11 +152,17 @@ export const BooksPage = () => {
     setLocalSearch("");
     setActiveSearchQuery("");
     setCategoryFilter("");
+    setLanguageFilter("");
     setCurrentPage(1);
   };
 
   const handleCategoryChange = (val: string) => {
     setCategoryFilter(val);
+    setCurrentPage(1);
+  };
+
+  const handleLanguageChange = (val: string) => {
+    setLanguageFilter(val);
     setCurrentPage(1);
   };
 
@@ -145,6 +172,7 @@ export const BooksPage = () => {
       const processedPayload = {
         book_name: payload.title,
         book_author: payload.author,
+        language: payload.language,
         total_copies: Number(payload.totalCopies),
         category_id: payload.categoryId,
       };
@@ -197,6 +225,8 @@ export const BooksPage = () => {
       toast.error("Unable to execute target ledger deletion contract.");
     },
   });
+
+  
 
   return (
     <div className="flex flex-col min-h-screen max-w-6xl relative animate-fade-in pb-12 font-sans text-xs sm:text-sm text-text-main text-left">
@@ -271,6 +301,27 @@ export const BooksPage = () => {
             </span>
           </div>
 
+          
+
+          {/* Language Dropdown Selection Box Container */}
+          <div className="w-full md:w-56 relative">
+            <select
+              value={languageFilter}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              className="w-full pl-4 pr-10 py-2 bg-slate-50 border border-border-main text-slate-800 rounded-xl text-xs font-bold uppercase tracking-wider appearance-none outline-hidden focus:bg-card-bg focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all cursor-pointer"
+            >
+              <option value="">All Languages</option>
+              {languages.map((lang) => (
+                <option key={lang.id} value={lang.id}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
+            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+              <ChevronDown size={14} />
+            </span>
+          </div>
+
           {/* Reset Action Control Trigger */}
           <button
             type="button"
@@ -295,7 +346,8 @@ export const BooksPage = () => {
                 <thead>
                   <tr className="border-b border-border-main text-[11px] font-bold text-slate-400 uppercase bg-slate-50 tracking-wider">
                     <th className="py-3.5 px-5">Book Title & Creator Index</th>
-                    <th className="py-3.5 px-5">Category</th>
+                    <th className="py-3.5 px-5">Language</th>
+                    <th className="py-3.5 px-5">Category</th>                    
                     <th className="py-3.5 px-5 text-center">Total Volumes</th>
                     <th className="py-3.5 px-5 text-center">
                       Shelf Availability
@@ -333,6 +385,11 @@ export const BooksPage = () => {
                           <div className="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">
                             By {book.author}
                           </div>
+                        </td>
+                        <td className="py-3.5 px-5">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-bold uppercase tracking-wider  text-text-main ">
+                            {book.language}
+                          </span>
                         </td>
                         <td className="py-3.5 px-5">
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-slate-50 text-text-main border border-slate-100">
