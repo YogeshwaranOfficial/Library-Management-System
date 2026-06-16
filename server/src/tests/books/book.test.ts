@@ -95,7 +95,8 @@ describe("📚 Books Inventory Module Integration Tests", () => {
           book_name: `Integration Test Book ${timestamp}`,
           book_author: "Author Assignment Test Node",
           category_id: seededCategoryId,
-          total_copies: "15" // Passed as string to verify Zod's `z.coerce.number()` handling
+          total_copies: "15",
+          language: "English"
         });
 
       expect(response.status).toBe(201);
