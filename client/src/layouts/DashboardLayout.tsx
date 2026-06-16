@@ -1,8 +1,9 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Lucide Icons with balanced stroke weight for high legibility
+// Lucide Icons with balanced stroke weight for clean, institutional clarity
 import { 
   LayoutDashboard, 
   Users, 
@@ -15,28 +16,46 @@ import {
   LogOut, 
   Library,
   User,
+  Menu,
 } from "lucide-react";
 
 export const DashboardLayout = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // State engine managing navigation flyout and dashboard scroll adjustments
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [isScrolled, setIsScrolled] = useState<boolean>(false);
+  
+  const mainScrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Initialize theme state safely by matching persistent localStorage cache indices
-  // const [darkMode, setDarkMode] = useState<boolean>(
-  //   () => localStorage.getItem("theme") === "dark"
-  // );
+  // Layout Rule: Transparent header states apply only at zero-scroll offset on the primary dashboard
+  const isDashboardPage = location.pathname === "/dashboard" || location.pathname === "/";
 
-  // Synchronize layout class strings on theme changes
-  // useEffect(() => {
-  //   const rootWindowElement = window.document.documentElement;
-  //   if (darkMode) {
-  //     rootWindowElement.classList.add("dark");
-  //     localStorage.setItem("theme", "dark");
-  //   } else {
-  //     rootWindowElement.classList.remove("dark");
-  //     localStorage.setItem("theme", "light");
-  //   }
-  // }, [darkMode]);
+  // Watch scroll container progression to toggle header canvas states dynamically
+  useEffect(() => {
+    const scrollEl = mainScrollContainerRef.current;
+    if (!scrollEl) return;
+
+    const handleScrollUpdate = () => {
+      if (scrollEl.scrollTop > 20) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    scrollEl.addEventListener("scroll", handleScrollUpdate);
+    return () => scrollEl.removeEventListener("scroll", handleScrollUpdate);
+  }, [location.pathname]);
+
+  // Handle immediate viewport layout reset on route change
+  useEffect(() => {
+    if (mainScrollContainerRef.current) {
+      mainScrollContainerRef.current.scrollTop = 0;
+    }
+  }, [location.pathname]);
 
   const handleSignOut = () => {
     logout();
@@ -44,122 +63,152 @@ export const DashboardLayout = () => {
   };
 
   const navItems = [
-    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard, color: "text-blue-600" },
-    { name: "Manage Members", path: "/members", icon: Users, color: "text-teal-600" },
-    { name: "Manage Plans", path: "/plans", icon: CreditCard, color: "text-indigo-600" },
-    { name: "Manage Books", path: "/books", icon: BookOpen, color: "text-amber-700" },
-    { name: "Manage Categories", path: "/categories", icon: Tags, color: "text-purple-600" },
-    { name: "Borrow & Return Desk", path: "/transactions", icon: RefreshCw, color: "text-emerald-600" },
-    { name: "Returned Books", path: "/returnedbooks", icon: BookCheck, color: "text-sky-600" },
-    { name: "Fines & Payments", path: "/fines", icon: Receipt, color: "text-orange-600" },
+    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+    { name: "Manage Members", path: "/members", icon: Users },
+    { name: "Manage Plans", path: "/plans", icon: CreditCard },
+    { name: "Manage Books", path: "/books", icon: BookOpen },
+    { name: "Manage Categories", path: "/categories", icon: Tags },
+    { name: "Borrow & Return Desk", path: "/transactions", icon: RefreshCw },
+    { name: "Returned Books", path: "/returnedbooks", icon: BookCheck },
+    { name: "Fines & Payments", path: "/fines", icon: Receipt },
   ];
 
+  // Configure operational header styling based on page context and scroll threshold
+  const getHeaderStyles = () => {
+    if (isDashboardPage) {
+      return isScrolled
+        ? "fixed top-0 left-0 right-0 bg-[#1A365D] border-b border-[#E2E8F0]/10 shadow-sm text-white"
+        : "absolute top-0 left-0 right-0 bg-transparent border-b border-transparent text-white";
+    }
+    return "relative bg-[#1A365D] border-b border-[#E2E8F0]/10 shadow-sm text-white";
+  };
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-page-bg font-sans text-text-main antialiased selection:bg-amber-200 transition-colors duration-200">
+    <div className="w-screen h-screen overflow-hidden flex flex-col bg-[#F7FAFC] font-sans text-[#2D3748] antialiased selection:bg-[#2B6CB0]/10 relative">
       
-      {/* Sidebar Navigation - Warm Archival Minimalist Layout */}
-      <aside className="w-72 bg-card-bg border-r border-border-main flex flex-col justify-between relative z-20 shadow-xs shrink-0 transition-colors duration-200">
-        <div className="p-6">
-          <div className="flex items-center gap-3.5 py-3 border-b border-border-main mb-6">
-            
-            {/* Elegant Institutional Identity Icon */}
-            <div className="w-10 h-10 bg-slate-900 dark:bg-slate-950 text-amber-100 rounded-lg flex items-center justify-center shadow-xs shrink-0">
-              <Library size={20} className="stroke-[2.2]" />
-            </div>
-            
-            <div className="flex flex-col">
-              <span className="font-bold text-base tracking-tight text-text-main leading-tight">LMS</span>
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">Librarian Portal</span>
-            </div>
-          </div>
-
-          {/* Navigation links */}
-          <nav className="space-y-1.5">
-            {navItems.map((item) => {
-              const IconComponent = item.icon;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-semibold tracking-wide transition-all duration-150 ${
-                      isActive
-                        ? "bg-page-bg text-text-main font-bold shadow-xs border-l-4 border-slate-900 rounded-l-none pl-3"
-                        : "text-slate-500 dark:text-slate-400 hover:bg-page-bg/50 hover:text-text-main"
-                    }`
-                  }
-                >
-                  <IconComponent size={18} className={`stroke-[2.2] shrink-0 ${item.color}`} />
-                  <span>{item.name}</span>
-                </NavLink>
-              );
-            })}
-          </nav>
-        </div>
+      {/* Institutional Top Application Header Bar */}
+      <header className={`h-20 w-full flex items-center justify-between px-8 z-40 transition-all duration-300 select-none ${getHeaderStyles()}`}>
         
-        {/* Sidebar Footer - Spacious Action Deck */}
-        <div className="p-5 border-t border-border-main bg-page-bg/30 transition-colors duration-200">
+        {/* Core Navigation Cluster */}
+        <div className="flex items-center gap-5">
           <button
-            onClick={handleSignOut}
-            className="flex w-full items-center justify-center gap-2.5 px-4 py-3 rounded-lg text-sm font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-900/40 border border-orange-200/60 transition-all cursor-pointer shadow-2xs"
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-2 rounded-lg border flex items-center justify-center transition-all cursor-pointer shadow-2xs bg-white/10 hover:bg-white/20 border-white/10 text-white"
+            title="Toggle System Directory"
           >
-            <LogOut size={16} className="stroke-[2.5]" />
-            <span>Logout</span>
+            <Menu size={18} className="stroke-[2.2]" />
           </button>
+
+          <div className="flex flex-col">
+            <span className="font-bold text-base tracking-tight leading-tight text-white">
+              LMS
+            </span>
+            <span className="text-xs font-semibold uppercase tracking-wider mt-0.5 font-sans text-[#D69E2E]">
+              Library Management System
+            </span>
+          </div>
         </div>
-      </aside>
 
-      {/* Main Structural Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        
-        {/* Header Frame - High Visibility Layout */}
-        <header className="h-22 bg-card-bg border-b border-border-main flex items-center justify-between px-10 shadow-2xs shrink-0 transition-colors duration-200">
-          <div>
-            <h1 className="text-lg font-bold text-text-main tracking-tight">Librarian Dashboard</h1>
-            <p className="text-sm text-slate-400 font-medium mt-0.5">Real-time catalog and circulation auditing pipeline</p>
+        {/* User Identity Matrix */}
+        <div className="flex items-center gap-5">
+          <div className="text-right hidden sm:block">
+            <p className="text-xs font-semibold tracking-wide uppercase text-white/80">
+              ROLE: <span className="text-[#D69E2E] font-bold">{user?.role || "LIBRARIAN"}</span>
+            </p>
           </div>
-          
-          <div className="flex items-center gap-5">
-            <div className="text-right hidden sm:block">
-              <p className="text-xs text-slate-400 font-medium tracking-wide uppercase mt-1">
-                ROLE: <span className="text-text-main font-bold">{user?.role || "LIBRARIAN"}</span>
-              </p>
-            </div>
 
-            {/* User Profile Avatar Frame */}
-            <div className="w-11 h-11 bg-page-bg border border-border-main text-text-main rounded-lg flex items-center justify-center shadow-2xs">
-              <User size={18} className="stroke-[2.2]" />
-            </div>
+          <div className="w-11 h-11 border border-white/10 bg-white/10 text-white rounded-lg flex items-center justify-center shadow-2xs">
+            <User size={18} className="stroke-[2.2]" />
+          </div>
+        </div>
+      </header>
 
-            {/* Dark/Light Theme Button Switcher */}
-            {/* <button
-              type="button"
-              onClick={() => setDarkMode(!darkMode)}
-              title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-              className="w-11 h-11 flex items-center justify-center bg-page-bg hover:bg-page-bg/80 text-text-main border border-border-main rounded-lg cursor-pointer transition-all shadow-2xs"
+      {/* Slideout Shell Menu System */}
+      <AnimatePresence>
+        {menuOpen && (
+          <>
+            {/* Structural Backdrop Dimmer Mask */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setMenuOpen(false)}
+              className="absolute inset-0 bg-[#1A365D]/30 backdrop-blur-xs z-40 cursor-pointer"
+            />
+
+            {/* Main Full-Height Left Drawer Panel */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 26, stiffness: 220 }}
+              className="absolute left-0 top-0 bottom-0 h-screen w-80 bg-[#1A365D] border-r border-[#E2E8F0]/10 shadow-2xl z-50 p-6 flex flex-col justify-between text-white"
             >
-              {darkMode ? (
-                <Sun size={18} className="stroke-[2.2] text-amber-500 animate-fade-in" />
-              ) : (
-                <Moon size={18} className="stroke-[2.2] text-slate-600 animate-fade-in" />
-              )}
-            </button> */}
-            
-            
-          </div>
-        </header>
+              <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
+                
+                {/* Drawer Branding Header Section */}
+                <div className="flex items-center gap-3 pb-5 border-b border-white/10 mb-5 shrink-0">
+                  <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center border border-white/10">
+                    <Library size={18} className="stroke-[2.2] text-[#D69E2E]" />
+                  </div>
+                  <span className="font-bold text-sm tracking-tight text-white">System Directory</span>
+                </div>
 
-        {/* Content View Injection Portal */}
-        <main className="flex-1 overflow-y-auto p-10 bg-transparent">
-          <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-          >
-            <Outlet />
-          </motion.div>
-        </main>
-      </div>
+                {/* Navigation Routing Links: Anchored on Navy with clean Accent Gold active lines */}
+                <nav className="space-y-1 flex-1">
+                  {navItems.map((item) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <NavLink
+                        key={item.path}
+                        to={item.path}
+                        onClick={() => setMenuOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-4 px-4 py-3.5 rounded-md text-sm font-medium tracking-wide transition-all duration-150 ${
+                            isActive
+                              ? "bg-white/10 text-white font-bold border-l-4 border-[#D69E2E] rounded-l-none pl-3 shadow-2xs"
+                              : "text-white/70 hover:bg-white/5 hover:text-white"
+                          }`
+                        }
+                      >
+                        <IconComponent size={18} className="stroke-[2.2] shrink-0" />
+                        <span>{item.name}</span>
+                      </NavLink>
+                    );
+                  })}
+                </nav>
+              </div>
+
+              {/* Action Area Drawer Footer with crisp institutional action styling */}
+              <div className="pt-4 border-t border-white/10 bg-[#1A365D] shrink-0">
+                <button
+                  onClick={() => { setMenuOpen(false); handleSignOut(); }}
+                  className="flex w-full items-center justify-center gap-2 px-4 py-3.5 rounded-lg text-xs font-bold text-white bg-[#2B6CB0] hover:bg-[#2B6CB0]/90 border border-transparent transition-all cursor-pointer shadow-sm uppercase tracking-wider"
+                >
+                  <LogOut size={14} className="stroke-[2.5]" />
+                  <span>Logout Account</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Main Document / Workspace Framework Interface Content Slot */}
+      <main 
+        ref={mainScrollContainerRef}
+        className="flex-1 overflow-y-auto bg-transparent relative"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="h-full w-full"
+        >
+          <Outlet />
+        </motion.div>
+      </main>
+
     </div>
   );
 };

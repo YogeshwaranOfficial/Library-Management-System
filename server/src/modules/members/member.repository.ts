@@ -2,97 +2,155 @@ import Member from "../../database/models/Member.js";
 import User from "../../database/models/User.js";
 import MembershipPlan from "../../database/models/MembershipPlan.js";
 import { CreateMemberPayload, UpdateMemberPayload } from "./member.types.js";
-import { Op, WhereOptions } from "sequelize";
+import { Op, WhereOptions, Sequelize } from "sequelize";
 import Issue from "../../database/models/Issue.js"; 
+
 
 export const createMemberRepository = async (payload: CreateMemberPayload) => {
   // 💡 Safe database row instantiation with clean explicit formatting
   return await Member.create(payload as any);
 };
 
-export const getAllMembersRepository = async (query: Record<string, any>) => {
+export const getAllMembersRepository = async (
+  query: Record<string, any>
+) => {
   const page = Number(query.page) || 1;
   const limit = Number(query.limit) || 10;
   const offset = (page - 1) * limit;
 
-  // 1. Bulk update expired records cleanly using a standardized string date token
-  const todayString = new Date().toISOString().split('T')[0];
-  
+  const todayString = new Date().toISOString().split("T")[0];
+
   await Member.update(
     { membership_status: "EXPIRED" },
     {
       where: {
-        expiry_date: { [Op.lt]: todayString }, 
-        membership_status: { [Op.ne]: "EXPIRED" }
-      }
+        expiry_date: { [Op.lt]: todayString },
+        membership_status: { [Op.ne]: "EXPIRED" },
+      },
     }
   );
 
-  // 2. Build explicit Member level filter properties
+  // =========================================================
+  // TABLE FILTERS (status affects table rows)
+  // =========================================================
+
   const memberWhereClause: WhereOptions = {};
+
   if (query.status) {
     memberWhereClause.membership_status = query.status;
   } else if (query.membership_status) {
     memberWhereClause.membership_status = query.membership_status;
   }
 
-  // 3. Build dynamic configuration structures for association tables
   const userInclude: Record<string, any> = {
     model: User,
     as: "user",
-    attributes: ["uuid", "name", "gmail", "phone_number"]
+    attributes: ["uuid", "name", "gmail", "phone_number"],
   };
 
   if (query.search) {
     userInclude.where = {
-      name: { [Op.iLike]: `%${query.search}%` } 
+      name: {
+        [Op.iLike]: `%${query.search}%`,
+      },
     };
   }
 
   const planInclude: Record<string, any> = {
     model: MembershipPlan,
     as: "membership_plan",
-    attributes: ["membership_plan_id", "plan_name", "price"]
+    attributes: ["membership_plan_id", "plan_name", "price"],
   };
 
   if (query.plan) {
     planInclude.where = {
-      plan_name: query.plan
+      plan_name: query.plan,
     };
   }
 
-  // 4. Fire final structured find query
+  // =========================================================
+  // TABLE DATA QUERY
+  // =========================================================
+
   const result = await Member.findAndCountAll({
     where: memberWhereClause,
     limit,
     offset,
     include: [userInclude, planInclude],
     order: [["created_at", "DESC"]],
-    distinct: true
+    distinct: true,
   });
 
-  // 5. 💡 NEW: Map over the records to fix the ID mismatch and inject the custom short ID badge
   const formattedRows = result.rows.map((memberInstance: any) => {
-    // Convert Sequelize model instance to plain JSON object so we can modify properties
     const member = memberInstance.toJSON();
-    
-    // Explicitly grab the true member table ID key (adjust column name to match your DB schema, e.g., 'id' or 'member_id')
-    const trueMemberId = member.id || member.member_id || "";
-    
-    // Extract last 4 alphanumeric characters cleanly from the string
-    const cleanUuidString = String(trueMemberId).replace(/-/g, ""); // strip hyphens if needed
-    const shortToken = cleanUuidString.slice(-4).toUpperCase();
-    
+
+    const trueMemberId =
+      member.id || member.member_id || "";
+
+    const cleanUuidString = String(trueMemberId).replace(
+      /-/g,
+      ""
+    );
+
+    const shortToken = cleanUuidString
+      .slice(-4)
+      .toUpperCase();
+
     return {
       ...member,
-      id: trueMemberId,               // ✅ Forces frontend key to explicitly point to Member Table Primary Key
-      displayId: `MEMBER-${shortToken || "0000"}`, // ✨ Custom badge ready for your dashboard grid (e.g., MEMBER-2240)
+      id: trueMemberId,
+      displayId: `MEMBER-${shortToken || "0000"}`,
     };
   });
 
+  // =========================================================
+  // DASHBOARD COUNTS
+  // ONLY PLAN FILTER SHOULD AFFECT THESE
+  // STATUS FILTER MUST BE IGNORED
+  // =========================================================
+
+  let dashboardPlanWhere: any = {};
+
+  if (query.plan) {
+    const selectedPlan = await MembershipPlan.findOne({
+      where: {
+        plan_name: query.plan,
+      },
+      attributes: ["membership_plan_id"],
+    });
+
+    if (selectedPlan) {
+      dashboardPlanWhere.membership_plan_id =
+        selectedPlan.get("membership_plan_id");
+    }
+  }
+
+  const [dashboardTotal, totalActive, totalExpired] =
+    await Promise.all([
+      Member.count({
+        where: dashboardPlanWhere,
+      }),
+
+      Member.count({
+        where: {
+          ...dashboardPlanWhere,
+          membership_status: "ACTIVE",
+        },
+      }),
+
+      Member.count({
+        where: {
+          ...dashboardPlanWhere,
+          membership_status: "EXPIRED",
+        },
+      }),
+    ]);
+
   return {
-    count: result.count,
-    rows: formattedRows
+    count: dashboardTotal, // dashboard total
+    totalActive,
+    totalExpired,
+    rows: formattedRows, // table rows
   };
 };
 
@@ -231,4 +289,65 @@ export const searchMembersByNameRepository = async (searchToken: string) => {
   );
 
   return detailedResults;
+};
+
+export const getAllPlansWithMetrics = async (searchTerm?: string) => {
+  const whereClause: any = {};
+  
+  // 💡 FIXED: Stripped the non-existent 'description' search parameter to avoid SQL crashes
+  if (searchTerm) {
+    whereClause.plan_name = { [Op.iLike]: `%${searchTerm}%` };
+  }
+
+  // 1. Fetch raw plans along with active/inactive counters per plan
+  const plans = await MembershipPlan.findAll({
+    where: whereClause,
+    attributes: {
+      include: [
+        // 💡 FIXED: Pointed to explicit 'members' lowercase table and 'membership_status' column parameters
+        [
+          Sequelize.literal(`(
+            SELECT COUNT(*)::int 
+            FROM "members" AS m 
+            WHERE m.membership_plan_id = "MembershipPlan".membership_plan_id 
+            AND m.membership_status = 'ACTIVE'
+          )`),
+          'active_members_count'
+        ],
+        // 💡 FIXED: Inactive members are those whose membership_status evaluates to 'EXPIRED'
+        [
+          Sequelize.literal(`(
+            SELECT COUNT(*)::int 
+            FROM "members" AS m 
+            WHERE m.membership_plan_id = "MembershipPlan".membership_plan_id 
+            AND m.membership_status = 'EXPIRED'
+          )`),
+          'inactive_members_count'
+        ]
+      ]
+    },
+    // 💡 FIXED: Target the proper snake_case column 'created_at' matching model options configuration
+    order: [["created_at", "DESC"]]
+  });
+
+  // 2. Fetch Global aggregated numbers across the complete platform
+  // Using explicit Member.count builds clean optimized queries automatically and avoids raw SQL failures!
+  const [globalActiveMembers, globalInactiveMembers] = await Promise.all([
+    Member.count({
+      where: {
+        membership_status: "ACTIVE"
+      }
+    }),
+    Member.count({
+      where: {
+        membership_status: "EXPIRED"
+      }
+    })
+  ]);
+
+  return {
+    plans,
+    globalActiveMembers,
+    globalInactiveMembers
+  };
 };

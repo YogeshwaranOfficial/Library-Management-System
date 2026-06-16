@@ -5,32 +5,42 @@ class CategoriesService {
   /**
    * Retrieves all categories along with aggregated counts for books and loans
    */
-  async getAllCategoriesWithMetrics(
-    page: number,
-    limit: number,
-    search?: string,
-    bookSort?: "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH",
-    borrowSort?: "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH"
-  ) {
-    const result = await categoryRepository.getCategoriesWithMetrics(
-      page,
-      limit,
-      search,
-      bookSort,
-      borrowSort
-    );
+async getAllCategoriesWithMetrics(
+  page: number,
+  limit: number,
+  search?: string,
+  bookSort?: "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH",
+  borrowSort?: "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH"
+) {
+  const result = await categoryRepository.getCategoriesWithMetrics(
+    page,
+    limit,
+    search,
+    bookSort,
+    borrowSort
+  );
 
-    // Because Sequelize 'group by' is active, findAndCountAll returns "count" 
-    // as an array of grouped row lengths. We extract the accurate data length here:
-    const totalCount = Array.isArray(result.count) ? result.count.length : result.count;
+  // Because Sequelize 'group by' is active, findAndCountAll returns "count" 
+  // as an array of grouped row lengths. We extract the accurate data length here:
+  const totalCount = Array.isArray(result.count) ? result.count.length : result.count;
 
+  // Clean data records by sanitizing database string aggregates into pure numbers
+  const sanitizedRows = result.rows.map((row: any) => {
     return {
-      rows: result.rows,
-      totalCount,
-      totalPages: Math.ceil(totalCount / limit),
-      currentPage: page
+      ...row,
+      booksCount: row.booksCount ? parseInt(row.booksCount, 10) : 0,
+      totalCopies: row.totalCopies ? parseInt(row.totalCopies, 10) : 0,
+      lendingCount: row.lendingCount ? parseInt(row.lendingCount, 10) : 0,
     };
-  }
+  });
+
+  return {
+    rows: sanitizedRows,
+    totalCount,
+    totalPages: Math.ceil(totalCount / limit),
+    currentPage: page
+  };
+}
 
   /**
    * Business Logic: Creates a new category slot after verifying name uniqueness

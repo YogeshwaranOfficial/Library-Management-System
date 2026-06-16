@@ -25,12 +25,16 @@ export const getBooksController = asyncHandler(
     const limit = Number(req.query.limit) || 10;
     const search = req.query.search ? String(req.query.search).trim() : undefined;
     const category_id = req.query.category_id ? String(req.query.category_id).trim() : undefined;
+    // 🌟 FIX: Extract the language query parameter securely from the request URL string
+    const language = req.query.language ? String(req.query.language).trim() : undefined;
    
+    // 🌟 FIX: Pass language as the 5th parameter into your service layer
     const result = await bookService.getBooks(
       page,
       limit,
       search,
-      category_id
+      category_id,
+      language 
     );
 
     sendResponse(res, {

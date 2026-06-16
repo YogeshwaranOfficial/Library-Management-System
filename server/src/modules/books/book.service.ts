@@ -20,9 +20,11 @@ class BookService {
     return bookRepository.createBook(completePayload);
   }
 
-  async getBooks(page: number, limit: number, search?: string, category_id?: string) {
-    return bookRepository.getBooks(page, limit, search, category_id);
-  }
+ // 🌟 FIX: Add language?: string to your service layer method parameters
+async getBooks(page: number, limit: number, search?: string, category_id?: string, language?: string) {
+  // 🌟 FIX: Forward the language parameter directly down to the repository method execution context
+  return bookRepository.getBooks(page, limit, search, category_id, language);
+}
 
   async getBookById(book_id: string) {
     const book = await bookRepository.getBookById(book_id);

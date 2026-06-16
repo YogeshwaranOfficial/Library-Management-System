@@ -18,13 +18,7 @@ class BookRepository {
     } as CreationAttributes<Book>);
   }
 
-  /**
-   * 💡 Handles clean pagination limits, offsets, mixed title/author searches, 
-   * and isolated category ID relational filtering.
-   */
-
-
-async getBooks(
+  async getBooks(
   page: number,
   limit: number,
   search?: string,
@@ -49,35 +43,65 @@ async getBooks(
     whereClause.category_id = category_id;
   }
 
-  // 🌟 FIXED: Explicit strict lowercase validation to safeguard string matches
+  // Explicit strict matching safeguarding string casing discrepancies
   if (language) {
     whereClause.language = {
-      [Op.iLike]: language.trim() // Protects against hidden spaces or casing mismatches (e.g., "hindi" vs "Hindi")
+      [Op.iLike]: language.trim()
     };
   }
 
-  // 2. Fire structured finder query payload
-  return Book.findAndCountAll({
-    where: whereClause,
-    include: [
-      {
-        model: Category,
-        as: "category",
-        attributes: [
-          ["category_id", "id"],
-          ["category_name", "name"]
-        ],
-        required: false // Keeps books visible even if their category isn't loaded
-      },
-    ],
-    limit,
-    offset,
-    order: [["created_at", "DESC"]],
-    // 🌟 CRITICAL FOR PAGINATION WITH INNER JOINS:
-    // Prevents duplicate row counts and keeps where clauses locked to the parent table!
-    distinct: true, 
-  });
-}
+  // 2. Concurrently fire the paginated rows query and the global meta aggregations
+  // Using Promise.all keeps database round-trip costs optimally minimized.
+  const [paginatedResult, metadataAggregation] = await Promise.all([
+    // Main Paginated Data Engine Fetch
+    Book.findAndCountAll({
+      where: whereClause,
+      include: [
+        {
+          model: Category,
+          as: "category",
+          attributes: [
+            ["category_id", "id"],
+            ["category_name", "name"]
+          ],
+          required: false
+        },
+      ],
+      limit,
+      offset,
+      order: [["created_at", "DESC"]],
+      distinct: true, 
+    }),
+
+    // Global Aggregate Metrics Engine
+    // Note: We deliberately pass the exact same whereClause parameters here so that 
+    // the header indicators accurately reflect the currently filtered subset.
+    Book.findAll({
+      where: whereClause,
+      attributes: [
+        [fn("SUM", col("total_copies")), "globalTotalCopies"],
+        [fn("SUM", col("available_copies")), "globalAvailableCopies"]
+      ],
+      raw: true
+    })
+  ]);
+
+  // 3. Extract the computed sums safely out of the array response raw rows
+  const metricsRow = metadataAggregation[0] as unknown as Record<string, string | null>;
+  const globalTotalCopies = Number(metricsRow?.globalTotalCopies || 0);
+  const globalAvailableCopies = Number(metricsRow?.globalAvailableCopies || 0);
+
+  // 4. Return custom formatted metadata response payload structural block
+  return {
+    rows: paginatedResult.rows,
+    count: paginatedResult.count,
+    meta: {
+      globalTotalCopies,
+      globalAvailableCopies
+    }
+  };
+  }
+
   async getBookById(book_id: string) {
     return Book.findByPk(book_id, {
       include: [

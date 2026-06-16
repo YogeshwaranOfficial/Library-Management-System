@@ -60,3 +60,14 @@ export const searchMembersQueryValidation = z.object({
       .min(1, { message: "Search criteria must contain at least 1 character." }),
   }),
 });
+
+// =========================================================
+// NEW: GET ALL PLANS METRICS QUERY PARAMETERS VALIDATION
+// =========================================================
+export const getPlansQueryValidation = z.object({
+  query: z.object({
+    page: z.preprocess((val) => String(val), z.string()).optional(),
+    limit: z.preprocess((val) => String(val), z.string()).optional(),
+    search: z.string().optional(),
+  }),
+});

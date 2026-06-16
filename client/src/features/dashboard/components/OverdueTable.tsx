@@ -7,8 +7,8 @@ export const OverdueTable = ({
 }) => {
   if (!records || records.length === 0) {
     return (
-      <div className="text-center py-12 bg-slate-50/50 rounded-2xl border border-dashed border-border-main p-6 font-sans">
-        <p className="text-sm text-slate-400 font-semibold">
+      <div className="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-gray-200 p-6 font-sans select-none">
+        <p className="text-sm text-[#718096] font-semibold">
           System verification clear: No overdue inventory items currently
           registered.
         </p>
@@ -17,10 +17,10 @@ export const OverdueTable = ({
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border-main/60 shadow-xs font-sans text-left bg-card-bg">
+    <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-xs font-sans text-left bg-white select-none">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70">
+          <tr className="border-b border-gray-200 text-[10px] font-bold text-[#718096] uppercase tracking-wider bg-slate-50">
             <th className="py-4 px-6 font-bold">Book Title Identifier</th>
             <th className="py-4 px-6 font-bold">Borrower Account Reference</th>
             <th className="py-4 px-6 font-bold">Expected Return Date</th>
@@ -30,22 +30,22 @@ export const OverdueTable = ({
             </th>
           </tr>
         </thead>
-        <tbody className="text-sm divide-y divide-slate-100 text-text-main">
+        <tbody className="text-sm divide-y divide-gray-100 text-[#2D3748]">
           {records.map((row) => (
             <tr
               key={row.id}
-              className="hover:bg-slate-50/40 transition-colors group"
+              className="hover:bg-slate-50/60 transition-colors group"
             >
-              <td className="py-4 px-6 font-bold text-text-main group-hover:text-text-main transition-colors">
+              <td className="py-4 px-6 font-bold text-[#1A365D] transition-colors">
                 {row.title}
               </td>
-              <td className="py-4 px-6 text-slate-600 font-medium">
-                <span className="font-mono text-[10px] bg-slate-100 border border-border-main/60 px-2 py-0.5 rounded-md text-slate-600 font-bold mr-2 uppercase tracking-wide">
+              <td className="py-4 px-6 text-[#2D3748] font-medium">
+                <span className="font-mono text-[10px] bg-slate-50 border border-gray-200 px-2 py-0.5 rounded-md text-[#718096] font-bold mr-2 uppercase tracking-wide">
                   ID: {row.memberId}
                 </span>
                 {row.borrowerName}
               </td>
-              <td className="py-4 px-6 text-slate-500 font-semibold">
+              <td className="py-4 px-6 text-[#718096] font-semibold">
                 {row.dueDate}
               </td>
               <td className="py-4 px-6">
@@ -53,7 +53,7 @@ export const OverdueTable = ({
                   {row.daysLate} days overdue
                 </span>
               </td>
-              <td className="py-4 px-6 font-bold text-text-main text-right font-mono text-base">
+              <td className="py-4 px-6 font-bold text-[#1A365D] text-right font-mono text-base">
                 ₹{row.fineAmount}
               </td>
             </tr>

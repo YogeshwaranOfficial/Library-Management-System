@@ -10,60 +10,66 @@ class CategoryRepository {
    * and aggregation function matrices.
    */
   async getCategoriesWithMetrics(
-    page: number,
-    limit: number,
-    search?: string,
-    bookSort?: "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH",
-    borrowSort?: "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH"
-  ) {
-    const offset = (page - 1) * limit;
+  page: number,
+  limit: number,
+  search?: string,
+  bookSort?: "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH",
+  borrowSort?: "NONE" | "HIGH_TO_LOW" | "LOW_TO_HIGH"
+) {
+  const offset = (page - 1) * limit;
 
-    // Define the dynamic ordering rules based on aggregate metrics aliases
-    let orderClause: any[] = [["category_name", "ASC"]]; // Default alphabetical sort
-    if (bookSort && bookSort !== "NONE") {
-      orderClause = [[fn("COUNT", fn("DISTINCT", col("books.book_id"))), bookSort === "HIGH_TO_LOW" ? "DESC" : "ASC"]];
-    } else if (borrowSort && borrowSort !== "NONE") {
-      orderClause = [[fn("COUNT", col("books->issues.issue_id")), borrowSort === "HIGH_TO_LOW" ? "DESC" : "ASC"]];
-    }
-
-    return Category.findAndCountAll({
-      attributes: [
-        "category_id",
-        "category_name",
-        "created_at",
-        "updated_at",
-        [fn("COUNT", fn("DISTINCT", col("books.book_id"))), "booksCount"],
-        [fn("COUNT", col("books->issues.issue_id")), "lendingCount"]
-      ],
-      where: {
-        ...(search && {
-          category_name: { [Op.iLike]: `%${search.trim()}%` }
-        })
-      },
-      include: [
-        {
-          model: Book,
-          as: "books",
-          attributes: [],
-          required: false,
-          include: [
-            {
-              model: Issue,
-              as: "issues",
-              attributes: [],
-              required: false
-            }
-          ]
-        }
-      ],
-      group: ["Category.category_id"],
-      order: orderClause,
-      limit,
-      offset,
-      subQuery: false, // Prevents Sequelize from placing limit/offset inside a nested subquery wrapper which messes up joins
-      raw: true
-    });
+  // Define the dynamic ordering rules based on aggregate metrics aliases
+  let orderClause: any[] = [["category_name", "ASC"]]; // Default alphabetical sort
+  if (bookSort && bookSort !== "NONE") {
+    orderClause = [[fn("COUNT", fn("DISTINCT", col("books.book_id"))), bookSort === "HIGH_TO_LOW" ? "DESC" : "ASC"]];
+  } else if (borrowSort && borrowSort !== "NONE") {
+    orderClause = [[fn("COUNT", col("books->issues.issue_id")), borrowSort === "HIGH_TO_LOW" ? "DESC" : "ASC"]];
   }
+
+  return Category.findAndCountAll({
+    attributes: [
+      "category_id",
+      "category_name",
+      "created_at",
+      "updated_at",
+      // 1. Total distinct book titles/entries under this category
+      [fn("COUNT", fn("DISTINCT", col("books.book_id"))), "booksCount"],
+      
+      // 2. Total physical stock copies combined across all books in this category
+      [fn("COALESCE", fn("SUM", col("books.total_copies")), 0), "totalCopies"],
+      
+      // 3. Total historical borrow/lending transactions
+      [fn("COUNT", col("books->issues.issue_id")), "lendingCount"]
+    ],
+    where: {
+      ...(search && {
+        category_name: { [Op.iLike]: `%${search.trim()}%` }
+      })
+    },
+    include: [
+      {
+        model: Book,
+        as: "books",
+        attributes: [],
+        required: false,
+        include: [
+          {
+            model: Issue,
+            as: "issues",
+            attributes: [],
+            required: false
+          }
+        ]
+      }
+    ],
+    group: ["Category.category_id"],
+    order: orderClause,
+    limit,
+    offset,
+    subQuery: false, // Prevents Sequelize from placing limit/offset inside a nested subquery wrapper which messes up joins
+    raw: true
+  });
+}
 
   /**
    * Look up an existing profile match by name (case-insensitive)

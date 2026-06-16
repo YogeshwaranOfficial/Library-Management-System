@@ -11,11 +11,12 @@ class DashboardRepository {
   /**
    * Fetches the flat overview counters for the core metrics endpoint
    */
+ /**
+   * Fetches the flat overview counters for the core metrics endpoint
+   */
   async getOverview() {
     const [
-      totalCopies,        // 🌟 FIXED: Swapped out findOne for explicit column sum
-      availableCopies,    // 🌟 FIXED: Swapped out findOne for explicit column sum
-      totalBooks,
+      bookMetricsResult, // 🌟 FIXED: Consolidated parent-level calculations
       totalMembers,
       activeMembers,
       expiredMembers,
@@ -24,9 +25,15 @@ class DashboardRepository {
       overdueCount,
       fineAggregationResult,
     ] = await Promise.all([
-      Book.sum("total_copies"),
-      Book.sum("available_copies"),
-      Book.count(), 
+      // Aggregating directly via findAll to guarantee scope alignment
+      Book.findAll({
+        attributes: [
+          [fn("COUNT", col("book_id")), "totalBooks"],
+          [fn("COALESCE", fn("SUM", col("total_copies")), 0), "totalCopies"],
+          [fn("COALESCE", fn("SUM", col("available_copies")), 0), "availableCopies"]
+        ],
+        raw: true
+      }),
       Member.count(),
       Member.count({ where: { membership_status: "ACTIVE" } }),
       Member.count({ where: { membership_status: "EXPIRED" } }),
@@ -45,12 +52,16 @@ class DashboardRepository {
       }),
     ]);
 
+    const bookMetrics = bookMetricsResult?.[0] as any;
+    const totalBooks = Number(bookMetrics?.totalBooks || 0);
+    const totalCopies = Number(bookMetrics?.totalCopies || 0);
+    const availableCopies = Number(bookMetrics?.availableCopies || 0);
     const unpaidFines = fineAggregationResult ? Number((fineAggregationResult as any).total_unpaid) : 0;
 
     return {
-      totalBooks,       
-      totalCopies: Number(totalCopies || 0),      
-      availableCopies: Number(availableCopies || 0),  
+      totalBooks,      
+      totalCopies,      
+      availableCopies,  
       totalMembers,
       activeMembers,
       expiredMembers,
@@ -61,24 +72,28 @@ class DashboardRepository {
     };
   }
 
+
   async getDashboardSummaryData() {
     const today = new Date();
 
     // =========================================================================
-    // 1. CONCURRENT ROOT COUNT AGGREGATIONS (FIXED & ALIGNED)
+    // 1. CONCURRENT ROOT COUNT AGGREGATIONS (FIXED & FULLY ALIGNED)
     // =========================================================================
     const [
-      totalCopiesCount,      // 🌟 FIXED: Direct mathematical sum
-      availableBooksCount,  // 🌟 FIXED: Direct mathematical sum
-      totalBooksCount,
+      bookMetricsResult, // 🌟 FIXED: Consolidated to match exact database schema lines
       activeMembersCount, 
       issuedBooksCount, 
       fineAggregationResult,
       recoveredFinesResult
     ] = await Promise.all([
-      Book.sum("total_copies"),
-      Book.sum("available_copies"),
-      Book.count(),
+      Book.findAll({
+        attributes: [
+          [fn("COUNT", col("book_id")), "totalBooks"],
+          [fn("COALESCE", fn("SUM", col("total_copies")), 0), "totalCopies"],
+          [fn("COALESCE", fn("SUM", col("available_copies")), 0), "availableBooks"]
+        ],
+        raw: true
+      }),
       Member.count({ where: { membership_status: "ACTIVE" } }),
       Issue.count({ where: { returned_date: null } }),
       Fine.findOne({
@@ -92,6 +107,11 @@ class DashboardRepository {
         raw: true,
       })
     ]);
+
+    const bookMetrics = bookMetricsResult?.[0] as any;
+    const totalBooksCount = Number(bookMetrics?.totalBooks || 0);
+    const totalCopiesCount = Number(bookMetrics?.totalCopies || 0);
+    const availableBooksCount = Number(bookMetrics?.availableBooks || 0);
 
     const totalFinesAgg = fineAggregationResult ? Number((fineAggregationResult as any).total_unpaid) : 0;
     const collectedFinesAgg = recoveredFinesResult ? Number((recoveredFinesResult as any).total_recovered) : 0;
@@ -297,13 +317,13 @@ class DashboardRepository {
     };
 
     // =========================================================================
-    // 4. UNIFIED CONSOLIDATED DATA OUTPUT HANDOFF (FIXED MAP)
+    // 4. UNIFIED CONSOLIDATED DATA OUTPUT HANDOFF
     // =========================================================================
     return {
       summary: {
         totalBooks: totalBooksCount,        
-        totalCopies: Number(totalCopiesCount || 0),      // 🌟 FIXED
-        availableBooks: Number(availableBooksCount || 0),// 🌟 FIXED
+        totalCopies: totalCopiesCount,      
+        availableBooks: availableBooksCount,
         activeMembers: activeMembersCount,
         overdueCount,
         overduePercentage,

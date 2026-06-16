@@ -8,18 +8,18 @@ export const FineVelocityGauge = ({
   const total = collected + outstanding || 1;
   const percentage = Math.round((collected / total) * 100);
   return (
-    <div className="bg-card-bg p-6 rounded-2xl border border-border-main/60 shadow-xs flex items-center justify-between gap-4 text-left font-sans">
+    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs flex items-center justify-between gap-4 text-left font-sans select-none">
       <div className="space-y-2">
-        <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+        <h3 className="text-[11px] font-bold text-[#718096] uppercase tracking-wider">
           Recovery Collection Velocity
         </h3>
         <div className="space-y-1">
-          <p className="text-2xl font-bold text-text-main tracking-tight">
+          <p className="text-2xl font-bold text-[#1A365D] tracking-tight">
             ₹{collected} Recovered
           </p>
-          <p className="text-xs text-slate-400 font-semibold">
+          <p className="text-xs text-[#718096] font-semibold">
             Remaining Outstanding:{" "}
-            <span className="text-slate-600 font-mono">₹{outstanding}</span>
+            <span className="text-[#2D3748] font-mono">₹{outstanding}</span>
           </p>
         </div>
       </div>
@@ -37,7 +37,7 @@ export const FineVelocityGauge = ({
           />
           {/* Reactive quantitative value progress track layer */}
           <path
-            className="text-text-main"
+            className="text-[#1A365D]"
             strokeDasharray={`${percentage}, 100`}
             strokeWidth="3.5"
             strokeLinecap="round"
@@ -46,7 +46,7 @@ export const FineVelocityGauge = ({
             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
           />
         </svg>
-        <span className="absolute text-sm font-mono font-bold text-text-main">
+        <span className="absolute text-sm font-mono font-bold text-[#1A365D]">
           {percentage}%
         </span>
       </div>

@@ -17,41 +17,47 @@ export const RestoreFineModal = ({
   if (!isOpen || !fine) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans text-xs sm:text-sm text-text-main text-left animate-fade-in">
-      <div className="bg-card-bg rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-border-main animate-zoom-in">
-        <div className="text-center">
-          <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-100">
-            <RotateCcw size={20} className="text-amber-600" />
-          </div>
-          <h3 className="text-xs font-bold text-text-main uppercase tracking-wide">
-            Restore Fine Record
-          </h3>
-          <p className="text-[11px] text-slate-500 font-medium mt-2.5 leading-relaxed">
-            Are you sure you want to revert the payment transaction for{" "}
-            <span className="font-bold text-text-main">
-              "{fine.memberName}"
-            </span>
-            ? This will shift the record back to the active overdue list.
-          </p>
-        </div>
-
-        <div className="mt-5 pt-1 flex gap-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-text-main border border-border-main rounded-xl transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => onConfirm(fine.fine_id)}
-            className="flex-1 py-2.5 text-xs font-bold uppercase tracking-wider bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-xs transition-all cursor-pointer"
-          >
-            Restore Entry
-          </button>
-        </div>
+  <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans select-none text-left">
+    <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden p-6 animate-zoom-in text-center text-[#2D3748]">
+      
+      {/* Centered Action Icon Container Frame */}
+      <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-5 bg-amber-50 border border-amber-200">
+        <RotateCcw size={28} className="text-amber-600" />
       </div>
+
+      {/* Corporate Styled Header Accent Stack */}
+      <h4 className="text-xl font-bold text-[#1A365D] tracking-tight">
+        Restore Fine Record
+      </h4>
+
+      {/* Description Context Block */}
+      <p className="text-sm text-[#718096] leading-relaxed mt-4">
+        Are you sure you want to revert the payment transaction for{" "}
+        <span className="font-semibold text-[#1A365D]">
+          "{fine.memberName}"
+        </span>
+        ? This will shift the record back to the active overdue list.
+      </p>
+
+      {/* Footer Action Control Layout Block Area */}
+      <div className="mt-6 pt-5 border-t border-gray-100 flex gap-3">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex-1 py-2.5 border border-gray-200 rounded-xl bg-white text-[#2D3748] text-xs font-bold uppercase tracking-wider hover:bg-gray-50 transition-all cursor-pointer"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={() => onConfirm(fine.fine_id)}
+          className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm"
+        >
+          Restore Entry
+        </button>
+      </div>
+
     </div>
-  );
+  </div>
+);
 };

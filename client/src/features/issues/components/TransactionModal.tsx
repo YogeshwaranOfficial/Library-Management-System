@@ -241,38 +241,38 @@ export const TransactionModal = ({
     });
   };
 
-  return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans text-xs sm:text-sm text-text-main text-left">
-      <div className="bg-card-bg rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-light/10 animate-zoom-in">
-        {/* HEADER BLOCK BRANDED SYSTEM */}
-        <div className="bg-slate-900 p-5 text-white flex justify-between items-center border-b border-slate-light/10">
+ return (
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans select-none text-left animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-200 flex flex-col max-h-[90vh] transition-all">
+        {/* HEADER BLOCK BRANDED SYSTEM - Matched with reference framework layout */}
+        <div className="flex items-center justify-between border-b border-gray-200 p-5 bg-white shrink-0">
           <div>
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Circulation Terminal
+            <h3 className="text-lg font-bold text-[#1A365D] tracking-tight">
+              {editingRecord ? "Edit Issue Details" : "Issue New Book"}
             </h3>
-            <h2 className="text-xl font-bold text-white tracking-tight mt-0.5">
-              {editingRecord ? "Edit issue details" : "Issue New Book"}
-            </h2>
+            <p className="text-[11px] text-[#718096] font-bold mt-1 tracking-wider uppercase">
+              Circulation Terminal Desk Operation
+            </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 hover:bg-card-bg/10 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer"
+            className="text-[#718096] hover:text-[#1A365D] hover:bg-gray-100 transition-all text-xs font-bold cursor-pointer p-1.5 rounded-full"
           >
-            <X size={16} />
+            <X size={14} />
           </button>
         </div>
 
-        <form onSubmit={handleFormSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleFormSubmit} className="p-6 overflow-y-auto space-y-6 flex-1 text-[#2D3748]">
           {/* 1. MEMBER LOOKUP INPUT SECTION */}
           <div className="relative">
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+            <label className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest mb-1.5">
               Member Name
             </label>
             <div className="relative">
               <User
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                size={16}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#718096] pointer-events-none"
+                size={14}
               />
               <input
                 type="text"
@@ -283,14 +283,14 @@ export const TransactionModal = ({
                   setShowMemberDropdown(true);
                 }}
                 placeholder="Search member profile index..."
-                className="w-full pl-10 pr-4 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-xs sm:text-sm font-medium text-text-main focus:bg-card-bg focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 outline-hidden transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 font-semibold text-[#1A365D] text-sm rounded-xl placeholder:text-[#718096]/50 outline-hidden focus:border-[#2B6CB0] focus:ring-2 focus:ring-[#2B6CB0]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
             {showMemberDropdown &&
               suggestedMembers.length > 0 &&
               !editingRecord && (
-                <ul className="absolute left-0 right-0 mt-1 bg-card-bg border border-slate-light/10 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-slate-light/5">
+                <ul className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-gray-100">
                   {suggestedMembers.map((m) => {
                     const isBlocked = m.compliance?.isBlocked;
                     const complianceStatus = m.compliance?.status;
@@ -315,16 +315,16 @@ export const TransactionModal = ({
                             ? "bg-rose-50/70 text-rose-800 hover:bg-rose-100/80"
                             : complianceStatus === "WARNING_LAST_SLOT"
                               ? "bg-amber-50/60 text-amber-900 hover:bg-amber-100/70"
-                              : "hover:bg-canvas-dominant text-text-main"
+                              : "hover:bg-slate-50 text-[#2D3748]"
                         }`}
                       >
                         <div>
                           <span
-                            className={`font-bold block text-xs sm:text-sm ${isBlocked ? "line-through text-rose-900/60" : "text-text-main"}`}
+                            className={`font-bold block text-sm ${isBlocked ? "line-through text-rose-900/60" : "text-[#1A365D]"}`}
                           >
                             {m.name}
                           </span>
-                          <span className="text-slate-500 font-mono text-[11px]">
+                          <span className="text-[#718096] font-mono text-[11px] font-medium">
                             📞 {m.phone_number || "No Contact Profile"}
                           </span>
                         </div>
@@ -332,7 +332,7 @@ export const TransactionModal = ({
                           className={`px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase ${
                             isBlocked
                               ? "bg-rose-100 text-rose-700"
-                              : "bg-slate-100 text-text-main"
+                              : "bg-slate-100 text-[#2D3748]"
                           }`}
                         >
                           {complianceStatus === "EXPIRED"
@@ -354,27 +354,27 @@ export const TransactionModal = ({
               className={`p-4 rounded-xl border text-xs space-y-1.5 transition-all ${
                 borrowMetrics.complianceStatus === "LIMIT_EXCEEDED" ||
                 borrowMetrics.isExpired
-                  ? "bg-rose-50/50 border-rose-100 text-rose-950"
+                  ? "bg-rose-50/50 border-rose-200 text-rose-950"
                   : borrowMetrics.complianceStatus === "WARNING_LAST_SLOT"
-                    ? "bg-amber-50/50 border-amber-100 text-amber-950"
-                    : "bg-slate-50 border-border-main text-text-main"
+                    ? "bg-amber-50/50 border-amber-200 text-amber-950"
+                    : "bg-slate-50 border-gray-200 text-[#2D3748]"
               }`}
             >
               <div className="font-bold flex justify-between items-center">
-                <span className="text-slate-500 uppercase text-[11px] tracking-wide">
+                <span className="text-[#718096] uppercase text-[11px] tracking-wide">
                   Plan Load Allocation:
                 </span>
-                <span className="font-bold text-xs sm:text-sm text-text-main">
+                <span className="font-bold text-sm text-[#1A365D]">
                   {borrowMetrics.currentBorrows} / {borrowMetrics.maxAllowed}{" "}
                   Assets Held
                 </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              <p className="text-xs text-[#718096] font-medium leading-relaxed">
                 {borrowMetrics.complianceMessage ||
                   `✓ Active operational context verified. Authorized for custom parameters.`}
               </p>
               {maxAllowedDate && (
-                <p className="text-[11px] text-rose-600 font-mono font-bold uppercase tracking-wider pt-1 border-t border-border-main">
+                <p className="text-[11px] text-rose-600 font-mono font-bold uppercase tracking-wider pt-2 mt-1 border-t border-gray-200">
                   📅 Plan Expiration Boundary: {maxAllowedDate}
                 </p>
               )}
@@ -383,13 +383,13 @@ export const TransactionModal = ({
 
           {/* 2. BOOK LOOKUP INPUT SECTION */}
           <div className="relative">
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+            <label className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest mb-1.5">
               Book Asset Index
             </label>
             <div className="relative">
               <BookOpen
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                size={16}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#718096] pointer-events-none"
+                size={14}
               />
               <input
                 type="text"
@@ -400,14 +400,14 @@ export const TransactionModal = ({
                   setShowBookDropdown(true);
                 }}
                 placeholder="Search catalog by system title or author..."
-                className="w-full pl-10 pr-4 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-xs sm:text-sm font-medium text-text-main focus:bg-card-bg focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 outline-hidden transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 font-semibold text-[#1A365D] text-sm rounded-xl placeholder:text-[#718096]/50 outline-hidden focus:border-[#2B6CB0] focus:ring-2 focus:ring-[#2B6CB0]/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
             {showBookDropdown &&
               suggestedBooks.length > 0 &&
               !editingRecord && (
-                <ul className="absolute left-0 right-0 mt-1 bg-card-bg border border-slate-light/10 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-slate-light/5">
+                <ul className="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50 divide-y divide-gray-100">
                   {suggestedBooks.map((b) => {
                     const outOfStock =
                       b.compliance?.isBlocked || b.available_copies <= 0;
@@ -428,14 +428,14 @@ export const TransactionModal = ({
                         className={`p-3 text-xs flex justify-between items-center cursor-pointer transition-colors ${
                           outOfStock
                             ? "bg-rose-50/80 text-rose-800 hover:bg-rose-100/70"
-                            : "hover:bg-canvas-dominant text-text-main"
+                            : "hover:bg-slate-50 text-[#2D3748]"
                         }`}
                       >
                         <div>
-                          <span className="font-bold text-xs sm:text-sm text-text-main block">
+                          <span className="font-bold text-sm text-[#1A365D] block">
                             📖 {b.title}
                           </span>
-                          <span className="text-slate-500 text-[11px] block mt-0.5 font-medium">
+                          <span className="text-[#718096] text-[11px] block mt-0.5 font-medium">
                             Author: {b.author}
                           </span>
                         </div>
@@ -462,17 +462,17 @@ export const TransactionModal = ({
             <div
               className={`p-3 rounded-xl border text-xs flex justify-between items-center ${
                 selectedBook.available_copies <= 0
-                  ? "bg-rose-50/50 border-rose-100 text-rose-950"
-                  : "bg-canvas-dominant border-slate-light/10 text-text-main"
+                  ? "bg-rose-50/50 border-rose-200 text-rose-950"
+                  : "bg-slate-50 border-gray-200 text-[#2D3748]"
               }`}
             >
               <div className="flex gap-2.5 items-center">
-                <HelpCircle size={14} className="text-slate-400" />
+                <HelpCircle size={14} className="text-[#718096]" />
                 <div>
-                  <h4 className="font-bold text-text-main text-xs">
+                  <h4 className="font-bold text-[#1A365D] text-xs">
                     Target Media Profile Anchored
                   </h4>
-                  <p className="text-xs text-slate-500 font-medium w-64 truncate mt-0.5">
+                  <p className="text-xs text-[#718096] font-medium w-64 truncate mt-0.5">
                     {selectedBook.title}{" "}
                     {selectedBook.author && `— By ${selectedBook.author}`}
                   </p>
@@ -482,15 +482,15 @@ export const TransactionModal = ({
           )}
 
           {/* 3. CALENDAR WORK PERIOD SETTINGS */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 border-t border-b border-gray-100 py-4 font-mono text-xs bg-slate-50/50 px-2 rounded-xl">
             <div>
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+              <label className="block text-[11px] font-bold text-[#718096] uppercase font-sans tracking-wide mb-1.5">
                 Borrow Signature
               </label>
               <div className="relative">
                 <Calendar
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400/70 pointer-events-none"
-                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#718096]/70 pointer-events-none"
+                  size={13}
                 />
                 <input
                   type="date"
@@ -500,18 +500,18 @@ export const TransactionModal = ({
                       ? formatToISODate(editingRecord.borrowedDate)
                       : getTodayString()
                   }
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-border-main rounded-xl text-xs font-mono font-bold text-slate-400 outline-hidden select-none"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-100 border border-gray-200 rounded-xl text-xs font-mono font-bold text-[#718096] outline-hidden select-none"
                 />
               </div>
             </div>
             <div>
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+              <label className="block text-[11px] font-bold text-[#1A365D] uppercase font-sans tracking-wide mb-1.5">
                 Return Due Deadline
               </label>
               <div className="relative">
                 <Calendar
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[#1A365D] pointer-events-none"
+                  size={13}
                 />
                 <input
                   type="date"
@@ -519,11 +519,11 @@ export const TransactionModal = ({
                   min={minAllowedDate}
                   max={maxAllowedDate || undefined}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-canvas-dominant border border-slate-light/10 rounded-xl text-xs font-mono font-bold text-slate-800 outline-hidden focus:bg-card-bg focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all cursor-pointer"
+                  className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-mono font-bold text-[#2D3748] outline-hidden focus:border-[#2B6CB0] focus:ring-2 focus:ring-[#2B6CB0]/10 transition-all cursor-pointer"
                 />
               </div>
               {maxAllowedDate && (
-                <span className="text-[11px] text-rose-600 font-bold block mt-1 pl-1 uppercase tracking-wide">
+                <span className="text-[10px] text-rose-600 font-bold font-sans block mt-1 pl-1 uppercase tracking-wide">
                   * Tied to membership boundaries
                 </span>
               )}
@@ -531,18 +531,18 @@ export const TransactionModal = ({
           </div>
 
           {/* 4. MODAL ACTION BUTTONS TERMINAL */}
-          <div className="pt-4 flex justify-end gap-2.5 border-t border-slate-light/10">
+          <div className="pt-5 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-text-main transition-colors cursor-pointer"
+              className="px-4 py-2 text-xs font-bold text-slate-500 uppercase tracking-wider hover:bg-gray-50 border border-transparent hover:border-gray-200 rounded-xl transition-all cursor-pointer text-left sm:text-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmissionBlocked}
-              className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white bg-slate-900 hover:bg-slate-800 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed shadow-xs rounded-xl transition-all cursor-pointer"
+              className="px-5 py-2.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white text-xs font-bold rounded-full transition-all cursor-pointer shadow-sm text-center tracking-wide disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed whitespace-nowrap"
             >
               {editingRecord ? "Save Changes" : "Create Issue"}
             </button>

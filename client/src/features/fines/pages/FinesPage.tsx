@@ -13,19 +13,18 @@ import { RestoreFineModal } from "../components/RestoreFineModal";
 // Lucide Icons
 import {
   Search,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
   ShieldAlert,
+  ChevronDown,
   History,
   BookOpen,
   AlertCircle,
   AlertTriangle,
   RefreshCw,
+  RotateCcw,
+  // X,
   User,
   CreditCard,
   CheckCircle2,
-  RotateCcw,
 } from "lucide-react";
 
 interface AxiosErrorResponse {
@@ -40,6 +39,9 @@ export const FinesPage = () => {
   const queryClient = useQueryClient();
   const [selectedFine, setSelectedFine] = useState<FineRecord | null>(null);
   const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [activeHeaderDropdown, setActiveHeaderDropdown] = useState<
+  "delay" | null
+>(null);
 
   // Active View Tab Panel Layout Selector ("active" | "history")
   const [activeTab, setActiveTab] = useState<"active" | "history">("active");
@@ -178,14 +180,13 @@ export const FinesPage = () => {
   };
 
   return (
-    <div className="space-y-5 animate-fade-in pb-12 text-left font-sans text-xs sm:text-sm text-text-main">
-      {/* Dynamic Header View Deck */}
-      <div className="bg-card-bg p-5 rounded-2xl border border-border-main shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-bold text-text-main tracking-tight">
-            Fines Management Desk
+<div className="min-h-screen bg-white text-[#2D3748] antialiased pb-16 pt-10 px-8 lg:px-14 font-sans select-none">      {/* Dynamic Header View Deck */}
+  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
+      <div>
+          <h2 className="text-2xl font-bold tracking-tight text-[#1A365D]">
+              Fines Management Desk
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5 font-medium">
+          <p className="text-sm text-[#718096] mt-1">
             Realtime data syncing. Automatic accrual rates apply dynamically at
             12:00 AM nightly: Active Plans (₹10/day) | Expired Plans (₹20/day).
           </p>
@@ -198,7 +199,7 @@ export const FinesPage = () => {
             onClick={() => handleTabChange("active")}
             className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
               activeTab === "active"
-                ? "bg-card-bg text-text-main shadow-xs"
+                ? "bg-card-bg shadow-xs"
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -209,7 +210,7 @@ export const FinesPage = () => {
             onClick={() => handleTabChange("history")}
             className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
               activeTab === "history"
-                ? "bg-card-bg text-text-main shadow-xs"
+                ? "bg-card-bg shadow-xs"
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -245,66 +246,60 @@ export const FinesPage = () => {
       )}
 
       {/* Search Filter Control Grid */}
-      {/* Search Filter Control Grid */}
-      <div className="bg-card-bg p-4 rounded-2xl border border-border-main flex flex-col md:flex-row gap-3 items-center shadow-2xs">
-        {/* 🔍 Left Side: Dynamic Text Search Bar */}
-        <div className="relative w-full md:flex-1">
-          <input
-            type="text"
-            placeholder={
+      
+
+      {/* copy */}
+       <div className="flex items-center justify-between gap-4 mb-4 mt-4 h-9">
+      <div>        
+      </div>
+      <div className="flex items-center gap-3">   
+        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-sm focus-within:border-gray-300 focus-within:bg-white transition-all w-56">
+          <span className="text-gray-400 mr-2 shrink-0">
+                <Search size={16} />
+              </span>
+              <input
+                type="text"
+                placeholder={
               activeTab === "active"
                 ? "Search active balances by name or title strings..."
                 : "Search historical collections..."
             }
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-border-main rounded-xl text-xs sm:text-sm font-medium text-text-main placeholder:text-slate-400 outline-hidden focus:bg-card-bg focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
-          />
-          <Search
-            size={16}
-            className="text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
-          />
-        </div>
-
-        {/* 🎛️ Right Side: Filters and Reset Actions Group */}
-        {activeTab === "active" && (
-          <div className="flex gap-3 w-full md:w-auto items-center">
-            {/* 📋 Select Box Component Wrapper */}
-            <div className="w-full md:w-64 relative">
-              <select
-                value={delayIntervalFilter}
+                value={searchQuery}
                 onChange={(e) => {
-                  setDelayIntervalFilter(e.target.value);
+                  setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-border-main rounded-xl text-xs font-bold uppercase tracking-wider text-slate-800 appearance-none outline-hidden focus:bg-card-bg focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all cursor-pointer"
-              >
-                <option value="">All Overdue Invoices</option>
-                <option value="7">Critical (&gt; 7 Days)</option>
-                <option value="14">Severe (&gt; 14 Days)</option>
-                <option value="30">High Delinquency (&gt; 30 Days)</option>
-              </select>
-              <Filter
-                size={16}
-                className="text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                className="bg-transparent border-0 outline-hidden w-full text-xs font-medium text-[#1A365D] placeholder-[#A0AEC0] p-0 focus:ring-0 focus:outline-hidden"
               />
-              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-600 w-0 h-0" />
-            </div>
-
-            {/* 🔄 Reset Button - Safely Positioned to the Right Side */}
+          {/* {searchQuery && (
             <button
               type="button"
-              onClick={handleClearFilters}
-              className="px-4 py-2 h-8.5 text-xs font-bold text-slate-500 bg-slate-50 border border-border-main hover:bg-slate-100 hover:text-text-main rounded-xl cursor-pointer transition-all animate-fade-in text-center whitespace-nowrap flex items-center justify-center gap-1.5 uppercase shadow-3xs"
+              onClick={() => {
+                setSearchQuery("");
+                setCurrentPage(1);
+              }}
+              className="text-gray-400 hover:text-gray-600 ml-1 shrink-0"
             >
-              <RotateCcw size={12} /> Reset
+              <X size={11} />
             </button>
-          </div>
-        )}
-      </div>
+          )} */}
+        </div>
+
+        
+  <div className="w-px h-4 bg-gray-200" />
+         <button
+        type="button"
+        onClick={handleClearFilters}
+        className="p-1.5 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+        title="Reset Filters"
+      >
+        <RotateCcw size={13} />
+      </button>
+</div>
+    </div>
+      {/* pasted */}
+
+      
 
       {/* Central Interactive Data Core Grid Matrix */}
       {isLoading ? (
@@ -313,28 +308,117 @@ export const FinesPage = () => {
           Syncing Master Banking Ledger Channels...
         </div>
       ) : (
-        <div className="bg-card-bg rounded-2xl border border-border-main shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border-main text-[11px] font-bold text-slate-400 uppercase bg-slate-50 tracking-wider">
-                  <th className="py-3.5 px-5">
+      <div className="w-full">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse table-fixed">
+                <thead>
+                <tr className="border-b border-gray-200 text-[11px] font-bold text-[#718096] uppercase tracking-widest bg-transparent">
+                  <th className="py-3 px-4">
                     <User size={12} className="inline mr-1" />
                     Account Holder Member
                   </th>
-                  <th className="py-3.5 px-5">
+                  <th className="py-3 px-4">
                     <BookOpen size={12} className="inline mr-1" />
                     Media Asset Context
                   </th>
-                  <th className="py-3.5 px-5 text-center">
-                    {activeTab === "active" ? "Delayed Days" : "Settled Scope"}
-                  </th>
-                  <th className="py-3.5 px-5">Accrued Amount</th>
-                  <th className="py-3.5 px-5 text-center">Plan Clause</th>
+                  <th className="pb-3 px-4 text-center relative">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveHeaderDropdown(
+                            activeHeaderDropdown === "delay" ? null : "delay"
+                          );
+                        }}
+                        className={`inline-flex items-center justify-center gap-1 transition-colors uppercase tracking-widest text-[11px] font-bold hover:text-[#1A365D] ${
+                          delayIntervalFilter ? "text-[#2B6CB0]" : "text-[#718096]"
+                        }`}
+                      >
+                        Delayed Days
+                        {delayIntervalFilter ? ` (${delayIntervalFilter}+)` : ""}
+                        <ChevronDown
+                          size={11}
+                          className={`transition-transform duration-200 ${
+                            activeHeaderDropdown === "delay" ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {activeHeaderDropdown === "delay" && (
+                        <div
+                          className="absolute left-1/2 -translate-x-1/2 top-7 z-50 w-52 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 text-xs text-[#2D3748] font-medium normal-case tracking-normal"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDelayIntervalFilter("");
+                              setActiveHeaderDropdown(null);
+                              setCurrentPage(1);
+                            }}
+                            className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
+                              !delayIntervalFilter
+                                ? "bg-slate-50/80 text-[#2B6CB0] font-semibold"
+                                : ""
+                            }`}
+                          >
+                            All Delays
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDelayIntervalFilter("7");
+                              setActiveHeaderDropdown(null);
+                              setCurrentPage(1);
+                            }}
+                            className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
+                              delayIntervalFilter === "7"
+                                ? "bg-slate-50/80 text-[#2B6CB0] font-semibold"
+                                : ""
+                            }`}
+                          >
+                            Critical (&gt; 7 Days)
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDelayIntervalFilter("14");
+                              setActiveHeaderDropdown(null);
+                              setCurrentPage(1);
+                            }}
+                            className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
+                              delayIntervalFilter === "14"
+                                ? "bg-slate-50/80 text-[#2B6CB0] font-semibold"
+                                : ""
+                            }`}
+                          >
+                            Severe (&gt; 14 Days)
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDelayIntervalFilter("30");
+                              setActiveHeaderDropdown(null);
+                              setCurrentPage(1);
+                            }}
+                            className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
+                              delayIntervalFilter === "30"
+                                ? "bg-slate-50/80 text-[#2B6CB0] font-semibold"
+                                : ""
+                            }`}
+                          >
+                            High Delinquency (&gt; 30 Days)
+                          </button>
+                        </div>
+                      )}
+                    </th>
+                  <th className="py-3 px-4 text-center">Fine Amount</th>
+                  <th className="py-3 px-4 text-center">Plan Clause</th>
                 </tr>
               </thead>
-              <tbody className="text-xs sm:text-sm divide-y divide-slate-100 text-text-main">
-                {paginatedRowsData.length === 0 ? (
+              <tbody className="text-sm divide-y divide-gray-100 font-medium text-[#2D3748]">                {paginatedRowsData.length === 0 ? (
                   <tr>
                     <td
                       colSpan={5}
@@ -349,17 +433,16 @@ export const FinesPage = () => {
                     <tr
                       key={fine.fine_id}
                       onClick={() => setSelectedFine(fine)}
-                      className="hover:bg-slate-50/80 transition-colors cursor-pointer select-none"
-                    >
-                      <td className="py-3.5 px-5">
-                        <div className="font-bold text-text-main">
+                          className="transition-all duration-150 cursor-pointer border-l-4 border-l-transparent hover:bg-blue-50/40"                    >
+                      <td className="py-3 px-4">
+                        <div className="font-semibold text-[#1A365D]">
                           {fine.memberName}
                         </div>
                         <div className="text-xs font-mono text-slate-400 mt-0.5">
                           {fine.memberEmail}
                         </div>
                       </td>
-                      <td className="py-3.5 px-5 font-medium">
+                      <td className="py-3 px-4 font-medium">
                         <div className="flex items-center gap-1.5 text-slate-800">
                           <BookOpen
                             size={12}
@@ -367,44 +450,47 @@ export const FinesPage = () => {
                           />
                           <span>{fine.bookTitle}</span>
                         </div>
-                        <span className="block text-xs font-mono text-slate-400 pl-4.5 mt-0.5">
+                        <span className="block text-[11px] text-[#718096]">
                           Due Date:{" "}
                           {fine.actualReturnDueDate ||
                             fine.actualReturnDate ||
                             "N/A"}
                         </span>
                       </td>
-                      <td className="py-3.5 px-5 text-center font-bold">
+                      <td className="py-3 px-4 text-center">
                         {activeTab === "active" ? (
-                          <span className="text-amber-800 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md font-bold text-xs font-mono">
+                          <span className="text-amber-800  px-2 py-0.5 font-bold text-xs">
                             {fine.delayed_days} Days Overdue
                           </span>
                         ) : (
-                          <span className="text-emerald-700 text-xs font-bold bg-emerald-50 px-2 py-0.5 rounded-md uppercase tracking-wide border border-emerald-100 font-mono">
+                          <span className="text-emerald-700 text-xs bg-emerald-50 px-2 py-0.5 rounded-md uppercase tracking-wide border border-emerald-100">
                             Paid ({fine.paidDate || fine.paid_date || "Settled"}
                             )
                           </span>
                         )}
                       </td>
-                      <td className="py-3.5 px-5 font-mono font-bold text-text-main text-xs sm:text-sm">
+                      <td className="py-3 px-2 text-center text-text-main text-xs sm:text-sm">
                         ₹{fine.fine_amount}.00
                         {fine.paymentMethod && (
-                          <span className="text-xs text-slate-400 uppercase font-sans font-bold tracking-wider mt-0.5 flex items-center gap-1">
+                          <span className="justify-center text-xs text-slate-400 uppercase tracking-wider mt-0.5 flex items-center gap-1">
                             <CreditCard size={12} /> via {fine.paymentMethod}
                           </span>
                         )}
-                      </td>
-                      <td className="py-3.5 px-5 text-center">
+                      </td>                      
+                      <td className="py-3 px-4 text-center">
+                        <span className="inline-flex items-center gap-1.5 font-semibold text-xs select-none">
+                        <span className={`w-1.5 h-1.5 rounded-full ${fine.membershipActive ? "bg-emerald-500" : "bg-rose-500"}`} />
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase border ${
+                          className={`px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase ${
                             fine.membershipActive
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-100"
-                              : "bg-rose-50 text-rose-700 border-rose-100"
+                              ? "text-emerald-700"
+                              : "text-rose-700"
                           }`}
                         >
                           {fine.membershipActive
                             ? "Active Plan"
                             : "Plan Expired"}
+                        </span>
                         </span>
                       </td>
                     </tr>
@@ -415,35 +501,34 @@ export const FinesPage = () => {
           </div>
 
           {/* Pagination Command Module */}
-          <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
-            <span>
+<div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-2">            <span>
               Page {currentPage} / {totalPagesCount}{" "}
               <span className="text-slate-300 mx-2">|</span> Total{" "}
               {totalItemsCount} Fines
             </span>
             <div className="flex gap-1">
               <button
-                type="button"
-                disabled={currentPage === 1}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentPage((p) => p - 1);
-                }}
-                className="p-1.5 border border-border-main bg-card-bg hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-2xs"
-              >
-                <ChevronLeft size={14} />
-              </button>
-              <button
-                type="button"
-                disabled={currentPage === totalPagesCount}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentPage((p) => p + 1);
-                }}
-                className="p-1.5 border border-border-main bg-card-bg hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors shadow-2xs"
-              >
-                <ChevronRight size={14} />
-              </button>
+  type="button"
+  disabled={currentPage === 1}
+  onClick={(e) => {
+    e.stopPropagation();
+    setCurrentPage((p) => p - 1);
+  }}
+  className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+>
+  ← Previous
+</button>
+             <button
+  type="button"
+  disabled={currentPage === totalPagesCount}
+  onClick={(e) => {
+    e.stopPropagation();
+    setCurrentPage((p) => p + 1);
+  }}
+  className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+>
+  Next →
+</button>
             </div>
           </div>
         </div>

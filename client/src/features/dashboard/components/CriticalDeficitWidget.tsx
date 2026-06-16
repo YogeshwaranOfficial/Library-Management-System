@@ -8,19 +8,19 @@ interface DeficitItem {
 }
 
 export const CriticalDeficitWidget = ({ items }: { items: DeficitItem[] }) => (
-  <div className="bg-card-bg p-6 rounded-2xl border border-border-main/60 shadow-xs flex flex-col justify-between min-h-65 text-left font-sans">
+  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs flex flex-col justify-between min-h-65 text-left font-sans select-none">
     <div>
       <h3 className="text-[11px] font-bold text-rose-600 uppercase tracking-wider flex items-center gap-1.5">
         <AlertCircle size={14} className="text-rose-600" /> Procurement Alerts
       </h3>
-      <p className="text-xs text-slate-500 mt-1 leading-relaxed font-medium">
+      <p className="text-xs text-[#718096] mt-1 leading-relaxed font-medium">
         Critical titles with 0 copies remaining on the shelves.
       </p>
     </div>
 
     <div className="space-y-2.5 my-4 overflow-y-auto max-h-35 pr-1 flex-1">
       {items.length === 0 ? (
-        <p className="text-xs text-slate-400 italic py-6 text-center font-medium">
+        <p className="text-xs text-[#718096]/60 italic py-6 text-center font-medium">
           Zero inventory bottlenecks reported.
         </p>
       ) : (
@@ -30,7 +30,7 @@ export const CriticalDeficitWidget = ({ items }: { items: DeficitItem[] }) => (
             className="flex justify-between items-center bg-rose-50/40 border border-rose-100 p-2.5 rounded-xl transition-colors"
           >
             <span
-              className="text-xs font-bold text-slate-800 truncate max-w-35 sm:max-w-45"
+              className="text-xs font-bold text-[#2D3748] truncate max-w-35 sm:max-w-45"
               title={item.name}
             >
               {item.name}

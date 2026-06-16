@@ -45,3 +45,26 @@ export interface SearchMemberResult {
     isBlocked: boolean;
   };
 }
+
+// =========================================================
+// NEW: PLANS WITH METRICS DASHBOARD PAYLOAD CONTRACTS
+// =========================================================
+export interface PlanWithMetrics {
+  membership_plan_id: string;
+  plan_name: string;
+  price: number;
+  duration_days: number;
+  description?: string;
+  active_members_count: number;
+  inactive_members_count: number;
+  [key: string]: any; // Accommodates general Sequelize instance properties
+}
+
+export interface PlansDashboardResponse {
+  meta: {
+    total: number;
+    globalActiveMembers: number;
+    globalInactiveMembers: number;
+  };
+  data: PlanWithMetrics[];
+}
