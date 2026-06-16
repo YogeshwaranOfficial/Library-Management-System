@@ -51,7 +51,7 @@ export const RestoreFineModal = ({
         <button
           type="button"
           onClick={() => onConfirm(fine.fine_id)}
-          className="flex-1 py-2.5 bg-[#2B6CB0] hover:bg-amber-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm"
+          className="flex-1 py-2.5 bg-[#2B6CB0] hover:bg-[#205997] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-sm"
         >
           Restore Entry
         </button>

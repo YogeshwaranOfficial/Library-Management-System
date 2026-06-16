@@ -206,250 +206,238 @@ export const ReturnedBooks = () => {
     deleteSingleMutation.isPending ||
     clearAllHistoryMutation.isPending;
 
-  return (
-    <div className="flex flex-col min-h-screen w-full relative pb-16 pt-10 px-8 lg:px-14 font-sans select-none antialiased bg-white text-text-main text-left">
-      
-      {/* ==================== ZONE A & B: HEADER & GLOBAL CONTROLS ==================== */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
-        <div className="text-left">
-          <div className="flex items-center gap-2 text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1.5">
-            Returned Books Management Desk
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-text-main">
-            Returned Books Management Desk
-          </h1>
+ return (
+  <div className="min-h-screen bg-white text-[#2D3748] antialiased pb-16 pt-10 px-8 lg:px-14 font-sans select-none">
+    
+    {/* ==================== ZONES A & B: ALIGNED HEADER WITH METRIC STRIP / ACTIONS ==================== */}
+    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
+      <div>
+        <div className="flex items-center gap-2 text-[#718096] text-[11px] font-bold uppercase tracking-widest mb-1.5">
+          Returned Books Management Desk
         </div>
-        
-        <div className="flex items-center self-start md:self-end shrink-0">
-          {totalRecordsCount > 0 && (
-            <button
-              type="button"
-              onClick={handleClearAllHistory}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold tracking-wide rounded-full shadow-xs transition-all cursor-pointer whitespace-nowrap"
-            >
-              <Trash2 size={13} /> Clear Complete Log History
-            </button>
-          )}
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-[#1A365D]">
+          Returned Books Management Desk
+        </h1>
       </div>
-
-      <div className="h-px bg-slate-light/10 w-full mb-6" />
-
-      {/* ==================== ZONE C: UTILITIES FILTER ROW ==================== */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-4">
-        <div className="text-[10px] font-bold tracking-widest text-text-main uppercase self-center">
-          Circulation Archives
-        </div>
-
-        <div className="flex flex-wrap items-center justify-end gap-3 sm:w-auto w-full">
-          {/* Search Bar aligned to the right side */}
-          <div className="relative flex items-center bg-canvas-dominant border border-slate-light/10 rounded-full px-3 py-1 text-sm focus-within:border-sage-primary/40 focus-within:bg-white focus-within:ring-2 focus-within:ring-sage-primary/10 transition-all w-full sm:w-64">
-            <Search size={13} className="text-slate-400 mr-2 shrink-0" />
-            <input
-              type="text"
-              placeholder="Query history by book, author..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="bg-transparent border-0 outline-hidden w-full text-xs font-medium text-text-main placeholder-slate-400 p-0 focus:ring-0 focus:outline-hidden"
-            />
-          </div>
-
-          {/* Date Picker Input */}
-          <div className="relative flex items-center bg-canvas-dominant border border-slate-light/10 rounded-full px-3 py-1 focus-within:border-sage-primary/40 focus-within:bg-white transition-all w-full sm:w-40">
-            <Calendar size={13} className="text-slate-400 mr-2 shrink-0" />
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => {
-                setDateFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="bg-transparent border-0 outline-hidden w-full text-xs font-bold uppercase tracking-wider text-text-main p-0 focus:ring-0 focus:outline-hidden cursor-pointer"
-            />
-          </div>
-
-          {/* Reset Action Button */}
+      
+      {/* Dynamic Right-Aligned Global Actions Frame */}
+      <div className="flex items-center gap-10 select-none pb-0.5">
+        {totalRecordsCount > 0 && (
           <button
             type="button"
-            onClick={handleClearFilters}
-            className={`p-1.5 rounded-full transition-colors ${
-              searchQuery || dateFilter ? "text-rose-600 hover:bg-rose-50" : "text-slate-400 hover:bg-canvas-dominant"
-            }`}
-            title="Reset Filters"
+            onClick={handleClearAllHistory}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold tracking-wide rounded-full shadow-xs transition-all cursor-pointer whitespace-nowrap"
           >
-            <RotateCcw size={15} />
+            <Trash2 size={13} /> Clear Complete Log History
           </button>
-        </div>
+        )}
+      </div>
+    </div>
+
+    <div className="h-px bg-gray-200 w-full mb-6" />
+
+    {/* ==================== ZONE C: MINIMALIST UTILITIES SUB HEADER ==================== */}
+    <div className="flex items-center justify-between gap-4 mb-4 h-9">
+      <div className="text-[10px] font-bold tracking-widest text-[#1A365D] uppercase">
+        Circulation Archives
       </div>
 
-      {/* ==================== ZONE D: GRID DISPLAY TABLE ==================== */}
-
-<div className="w-full transition-all duration-300">
-  {isLoading ? (
-    <div className="py-24 text-xs font-semibold text-[#718096] tracking-widest uppercase animate-pulse">
-      Accessing historical records archives...
-    </div>
-  ) : (
-    <div className="w-full">
-      <div className="w-full">
-        <div className="overflow-visible w-full">
-          <table className="w-full text-left border-collapse table-fixed">
-            <thead>
-              <tr className="border-b border-gray-200 text-[11px] font-bold text-[#718096] uppercase tracking-widest bg-transparent select-none">
-                <th className="pb-3 pr-4 pl-3 font-bold tracking-widest">
-                  Issued Book Title
-                </th>
-                <th className="pb-3 px-4 font-bold tracking-widest">
-                  Borrower Name
-                </th>
-                <th className="pb-3 px-4 font-bold tracking-widest">
-                  Issued On
-                </th>
-                <th className="pb-3 px-4 font-bold tracking-widest">
-                  Target Due
-                </th>
-                <th className="pb-3 px-4 font-bold tracking-widest">
-                  Returned On
-                </th>
-              </tr>
-            </thead>
-
-            <tbody className="text-sm divide-y divide-gray-100 font-medium text-[#2D3748]">
-              {paginatedRecords.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="py-20 text-left text-sm text-[#718096] font-medium pl-3"
-                  >
-                    No historical book returns matching the selected filter criteria.
-                  </td>
-                </tr>
-              ) : (
-                paginatedRecords.map((record) => {
-                  return (
-                    <tr
-                      key={record.id}
-                      onClick={() => {
-                        setSelectedRecord(record);
-                        setIsDetailsOpen(true);
-                      }}
-                      className="transition-all duration-150 cursor-pointer border-l-4 border-l-transparent hover:bg-blue-50/40"
-                    >
-                      <td className="py-4 pr-4 pl-3 font-semibold text-[#1A365D]">
-                        <div className="font-semibold tracking-tight text-sm text-[#1A365D]">
-                          {record.bookTitle}
-                        </div>
-                        <span className="text-[11px] text-[#718096] font-normal mt-0.5 block">
-                          By {record.bookAuthor}
-                        </span>
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <div className="font-medium text-gray-700 text-sm">
-                          {record.memberName}
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <div className="font-medium text-gray-700 text-sm">
-                          {record.borrowedDate}
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <div className="font-medium text-gray-700 text-sm">
-                          {record.dueDate}
-                        </div>
-                      </td>
-
-                      <td className="py-4 px-4">
-                        <span className="inline-flex items-center gap-1.5 font-semibold text-xs text-emerald-700">
-                          {record.returnedDate}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      {/* Compact Right-Aligned Control Blocks */}
+      <div className="flex items-center gap-3">
+        
+        {/* Always-On Static Rounded Search Input Field Frame */}
+        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-sm focus-within:border-gray-300 focus-within:bg-white transition-all w-48 sm:w-64">
+          <Search size={13} className="text-gray-400 mr-2 shrink-0" />
+          <input
+            type="text"
+            placeholder="Query history by book, author..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="bg-transparent border-0 outline-hidden w-full text-xs font-medium text-[#1A365D] placeholder-[#A0AEC0] p-0 focus:ring-0 focus:outline-hidden"
+          />
         </div>
 
-        {totalPages > 0 && (
-          <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-2 select-none pl-3">
-            <span>
-              Page{" "}
-              <span className="font-semibold text-gray-800">
-                {currentPage}
-              </span>{" "}
-              of{" "}
-              <span className="font-semibold text-gray-800">
-                {totalPages}
-              </span>
-              <span className="mx-2">|</span>
-              Total{" "}
-              <span className="font-semibold text-gray-800">
-                {totalRecordsCount}
-              </span>{" "}
-              Books
-            </span>
+        {/* Date Picker Input matching Search Frame layout */}
+        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-full px-3 py-1 transition-all w-36">
+          <Calendar size={13} className="text-gray-400 mr-2 shrink-0" />
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => {
+              setDateFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="bg-transparent border-0 outline-hidden w-full text-xs font-bold uppercase tracking-wider text-[#1A365D] p-0 focus:ring-0 focus:outline-hidden cursor-pointer"
+          />
+        </div>
 
-            <div className="flex gap-4">
-              <button
-                type="button"
-                disabled={currentPage === 1}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentPage((p) => Math.max(1, p - 1));
-                }}
-                className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
-              >
-                ← Previous
-              </button>
+        {/* Always-On Persistent Filters Clear Action Icon Trigger */}
+        <button
+          type="button"
+          onClick={handleClearFilters}
+          className={`p-1.5 rounded-full transition-colors ${
+            searchQuery || dateFilter ? "text-rose-600 hover:bg-rose-50" : "text-gray-400 hover:bg-gray-100"
+          }`}
+          title="Reset Filters"
+        >
+          <RotateCcw size={15} />
+        </button>
+      </div>
+    </div>
 
-              <button
-                type="button"
-                disabled={currentPage === totalPages}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentPage((p) => Math.min(totalPages, p + 1));
-                }}
-                className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
-              >
-                Next →
-              </button>
+    {/* ==================== ZONE D: STATIC FULL-WIDTH TABLE DISPLAY ==================== */}
+    <div className="flex items-start gap-10 w-full transition-all duration-300">
+      <div className="w-full">
+        {isLoading ? (
+          <div className="py-24 text-xs font-semibold text-[#718096] tracking-widest uppercase animate-pulse">
+            Accessing historical records archives...
+          </div>
+        ) : (
+          <div className="w-full">
+            <div className="overflow-visible w-full">
+              <table className="w-full text-left border-collapse table-fixed">
+                <thead>
+                  <tr className="border-b border-gray-200 text-[11px] font-bold text-[#718096] uppercase tracking-widest bg-transparent select-none">
+                    <th className="pb-3 pr-4 font-bold tracking-widest pl-3 w-[28%]">Issued Book Title</th>
+                    <th className="pb-3 px-4 font-bold tracking-widest w-[18%]">Borrower Name</th>
+                    <th className="pb-3 px-4 font-bold tracking-widest text-center w-[18%]">Issued On</th>
+                    <th className="pb-3 px-4 font-bold tracking-widest text-center w-[18%]">Target Due</th>
+                    <th className="pb-3 px-4 font-bold tracking-widest text-center w-[18%]">Returned On</th>
+                  </tr>
+                </thead>
+
+                <tbody className="text-sm divide-y divide-gray-100 font-medium text-[#2D3748]">
+                  {paginatedRecords.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="py-20 text-left text-sm text-[#718096] font-medium pl-3"
+                      >
+                        No historical book returns matching the selected filter criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedRecords.map((record) => {
+                      return (
+                        <tr
+                          key={record.id}
+                          onClick={() => {
+                            setSelectedRecord(record);
+                            setIsDetailsOpen(true);
+                          }}
+                          className="transition-all duration-150 cursor-pointer border-l-4 hover:bg-blue-50/40 border-l-transparent"
+                        >
+                          {/* Column 1: Core Title Profile Info */}
+                          <td className="py-3.5 pr-4 pl-3 font-semibold text-[#1A365D] truncate">
+                            <div className="truncate">
+                              <div className="font-semibold tracking-tight text-sm truncate text-[#1A365D]">
+                                {record.bookTitle}
+                              </div>
+                              <span className="text-[11px] text-[#718096] font-normal mt-0.5 block truncate">
+                                By {record.bookAuthor}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Column 2: Borrower Identity Info */}
+                          <td className="py-3.5 px-4 truncate">
+                            <div className="font-medium text-gray-700 text-sm truncate">
+                              {record.memberName}
+                            </div>
+                          </td>
+
+                          {/* Column 3: Timeline Marker - Issued */}
+                          <td className="py-3.5 px-4 text-center truncate">
+                            <div className="font-medium text-gray-700 text-sm truncate">
+                              {record.borrowedDate}
+                            </div>
+                          </td>
+
+                          {/* Column 4: Timeline Marker - Due */}
+                          <td className="py-3.5 px-4 text-center truncate">
+                            <div className="font-medium text-gray-700 text-sm truncate">
+                              {record.dueDate}
+                            </div>
+                          </td>
+
+                          {/* Column 5: Timeline Marker - Return Action Status */}
+                          <td className="py-3.5 px-4 text-center truncate">
+                            <span className="inline-flex items-center gap-1.5 font-semibold text-xs text-emerald-700 truncate">
+                              {record.returnedDate}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
+
+            {/* Minimal Pagination Elements */}
+            {totalPages > 0 && (
+              <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-2 select-none pl-3">
+                <span>
+                  Page <span className="font-semibold text-gray-800">{currentPage}</span> of{" "}
+                  <span className="font-semibold text-gray-800">{totalPages}</span>
+                  <span className="mx-2">|</span>
+                  Total <span className="font-semibold text-gray-800">{totalRecordsCount}</span> Books
+                </span>
+
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentPage((p) => Math.max(1, p - 1));
+                    }}
+                    className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+                  >
+                    &larr; Previous
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentPage((p) => Math.min(totalPages, p + 1));
+                    }}
+                    className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+                  >
+                    Next &rarr;
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
     </div>
-  )}
-</div>
 
+    {/* History Details Lookup Modal */}
+    <ReturnedDetailsModal
+      isOpen={isDetailsOpen}
+      onClose={() => setIsDetailsOpen(false)}
+      record={selectedRecord}
+      onUndoReturn={(id) => handleUndoReturn(id)}
+      onDeletePermanent={(id) => handleDeleteSingle(id)}
+    />
 
-      {/* History Details Lookup Modal */}
-      <ReturnedDetailsModal
-        isOpen={isDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
-        record={selectedRecord}
-        onUndoReturn={(id) => handleUndoReturn(id)}
-        onDeletePermanent={(id) => handleDeleteSingle(id)}
-      />
-
-      {/* Unified Confirmation Modal Layer */}
-      <ConfirmationModal
-        isOpen={modalConfig.isOpen}
-        onClose={closeModal}
-        onConfirm={modalConfig.onConfirm}
-        title={modalConfig.title}
-        description={modalConfig.description}
-        confirmText={modalConfig.confirmText}
-        variant={modalConfig.variant}
-        isLoading={isActionLoading}
-      />
-    </div>
-  );
-};
+    {/* Unified Confirmation Modal Layer */}
+    <ConfirmationModal
+      isOpen={modalConfig.isOpen}
+      onClose={closeModal}
+      onConfirm={modalConfig.onConfirm}
+      title={modalConfig.title}
+      description={modalConfig.description}
+      confirmText={modalConfig.confirmText}
+      variant={modalConfig.variant}
+      isLoading={isActionLoading}
+    />
+  </div>
+);};

@@ -16,9 +16,9 @@ import {
   Search,
   RotateCcw,
   ChevronDown,
+  Layers,
   X,
   Plus,
-  RefreshCw,
   User,
   BookOpen,
   Calendar,
@@ -149,51 +149,57 @@ export const TransactionsPage = () => {
     );
   }, [allFilteredRecords, safeCurrentPage, rowsPerPage]);
 
- return (
+  return (
   <div className="min-h-screen bg-white text-[#2D3748] antialiased pb-16 pt-10 px-8 lg:px-14 font-sans select-none">
     
-    {/* Upper Control Bar Layout */}
+    {/* ==================== ZONES A & B: ALIGNED HEADER WITH METRIC STRIP ==================== */}
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
       <div>
-        <div className="flex items-center gap-2 text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1.5">
-            Lending Management Desk
-          </div>
-        <h2 className="text-2xl font-bold tracking-tight text-[#1A365D]">
+        <div className="flex items-center gap-2 text-[#718096] text-[11px] font-bold uppercase tracking-widest mb-1.5">
+          <Layers size={13} className="stroke-[2.5]" /> Lending Management Desk
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-[#1A365D]">
           Borrow & Return Desk
-        </h2>
+        </h1>
       </div>
 
-      <button
-        type="button"
-        onClick={() => {
-          setSelectedRecord(null);
-          setIsFormOpen(true);
-        }}
-        className="flex items-center justify-center p-1.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white rounded-full transition-all cursor-pointer shrink-0"
-      >
-        <Plus size={14} />
-      </button>
+      {/* Metric Tracker Stack */}
+      <div className="flex items-center gap-10 select-none pb-0.5">
+        <div>
+          <span className="block text-2xl font-bold text-[#1A365D] tracking-tight leading-none text-right">
+            {totalRecordsCount}
+          </span>
+          <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider mt-2 block">
+            Total Books
+          </span>
+        </div>
+      </div>
     </div>
 
-    {/* Search Bar Controls Section */}
+    <div className="h-px bg-gray-200 w-full mb-6" />
+
+    {/* ==================== ZONE C: MINIMALIST UTILITIES SUB HEADER ==================== */}
     <div className="flex items-center justify-between gap-4 mb-4 h-9">
-      <div>        
+      <div className="text-[10px] font-bold tracking-widest text-[#1A365D] uppercase">
+        Classification Ledger
       </div>
-      <div className="flex items-center gap-3">   
-        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-sm focus-within:border-gray-300 focus-within:bg-white transition-all w-56">
-          <span className="text-gray-400 mr-2 shrink-0">
-                <Search size={16} />
-              </span>
-              <input
-                type="text"
-                placeholder="Query active loans by member name or book title..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="bg-transparent border-0 outline-hidden w-full text-xs font-medium text-[#1A365D] placeholder-[#A0AEC0] p-0 focus:ring-0 focus:outline-hidden"
-              />
+
+      {/* Compact Right-Aligned Control Blocks */}
+      <div className="flex items-center gap-3">
+        
+        {/* Always-On Static Rounded Search Input Field Frame */}
+        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-sm focus-within:border-gray-300 focus-within:bg-white transition-all w-48">
+          <Search size={13} className="text-gray-400 mr-2 shrink-0" />
+          <input
+            type="text"
+            placeholder="Query active loans..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="bg-transparent border-0 outline-hidden w-full text-xs font-medium text-[#1A365D] placeholder-[#A0AEC0] p-0 focus:ring-0 focus:outline-hidden"
+          />
           {searchQuery && (
             <button
               type="button"
@@ -208,54 +214,59 @@ export const TransactionsPage = () => {
           )}
         </div>
 
-        
-  <div className="w-px h-4 bg-gray-200" />
-         <button
-        type="button"
-        onClick={handleClearFilters}
-        className="p-1.5 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-        title="Reset Filters"
-      >
-        <RotateCcw size={13} />
-      </button>
-</div>
+        {/* Always-On Persistent Filters Clear Action Icon Trigger */}
+        <button
+          type="button"
+          onClick={handleClearFilters}
+          className="p-1.5 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+          title="Reset Filters"
+        >
+          <RotateCcw size={15} />
+        </button>
+
+        <div className="w-px h-4 bg-gray-200 mx-0.5" />
+
+        {/* Streamlined Action Core Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedRecord(null);
+            setIsFormOpen(true);
+          }}
+          className="flex items-center justify-center p-1.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white rounded-full transition-all cursor-pointer shadow-2xs shrink-0"
+          title="Add New Issue"
+        >
+          <Plus size={16} strokeWidth={2.5} />
+        </button>
+      </div>
     </div>
 
-    {isLoading ? (
-      <div className="py-24 text-xs font-semibold text-[#718096] tracking-widest uppercase animate-pulse">
-        <RefreshCw size={20} className="animate-spin text-slate-300 inline mr-2" />
-        Syncing active book circulation ledgers...
-      </div>
-    ) : (
-      <div className="flex flex-col flex-1 space-y-5">
-
-        {/* Main List Workspace Table */}
-        <div className="w-full">
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse table-fixed">
-
-              <thead>
-                <tr className="border-b border-gray-200 text-[11px] font-bold text-[#718096] uppercase tracking-widest bg-transparent select-none">
-                  <th className="pb-3 px-4">
-                    <User size={12} className="inline mr-1" />
-                    Member Name
-                  </th>
-
-                  <th className="pb-3 px-4">
-                    <BookOpen size={12} className="inline mr-1" />
-                    Issued Book Title
-                  </th>
-
-                  <th className="pb-3 px-4">
-                    <Calendar size={12} className="inline mr-1" />
-                    Checkout Date
-                  </th>
-
-                  <th className="pb-3 px-4">
-                    Target Due Deadline
-                  </th>
-                    <th className="pb-3 px-4 text-center relative">
+    {/* ==================== ZONE D: STATIC FULL-WIDTH TABLE DISPLAY ==================== */}
+    <div className="flex items-start gap-10 w-full transition-all duration-300">
+      <div className="w-full">
+        {isLoading ? (
+          <div className="py-24 text-xs font-semibold text-[#718096] tracking-widest uppercase animate-pulse">
+            Syncing active book circulation ledgers...
+          </div>
+        ) : (
+          <div className="w-full">
+            <div className="overflow-visible w-full">
+              <table className="w-full text-left border-collapse table-fixed">
+                <thead>
+                  <tr className="border-b border-gray-200 text-[11px] font-bold text-[#718096] uppercase tracking-widest bg-transparent select-none">
+                    <th className="pb-3 pr-4 font-bold tracking-widest pl-3 w-[20%]">
+                      <User size={12} className="inline mr-1" /> Member Name
+                    </th>
+                    <th className="pb-3 px-4 font-bold tracking-widest w-[25%]">
+                      <BookOpen size={12} className="inline mr-1" /> Issued Book Title
+                    </th>
+                    <th className="pb-3 px-4 font-bold tracking-widest w-[20%]">
+                      <Calendar size={12} className="inline mr-1" /> Checkout Date
+                    </th>
+                    <th className="pb-3 px-4 font-bold tracking-widest w-[20%]">
+                      Target Due Deadline
+                    </th>
+                    <th className="pb-3 px-4 font-bold tracking-widest text-center relative w-[15%]">
                       <div className="relative inline-flex items-center justify-center">
                         <select
                           value={statusFilter}
@@ -271,126 +282,98 @@ export const TransactionsPage = () => {
                           <option value="BORROWED">Borrowed</option>
                           <option value="OVERDUE">Overdue</option>
                         </select>
-
                         <ChevronDown
                           size={11}
                           className="absolute right-0 text-[#718096] pointer-events-none"
                         />
                       </div>
                     </th>
-                </tr>
-              </thead>
-
-              <tbody className="text-sm divide-y divide-gray-100 font-medium text-[#2D3748]">
-                {paginatedRecords.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="py-20 text-left text-sm text-[#718096] font-medium pl-3"
-                    >
-                      No active out-of-building book logs registered on
-                      current indexing criteria.
-                    </td>
                   </tr>
-                ) : (
-                  paginatedRecords.map((record) => (
-                    <tr
-                      key={record.id}
-                      onClick={() => {
-                        setSelectedRecord(record);
-                        setIsDetailsOpen(true);
-                      }}
-                      className="transition-all duration-150 cursor-pointer border-l-4 border-l-transparent hover:bg-blue-50/40"
-                    >
-                      <td className="py-4 px-4 font-semibold text-[#1A365D]">
-                        {record.memberName}
-                      </td>
-
-                      <td className="py-4 px-4 font-medium text-gray-700 text-sm">
-                        {record.bookTitle}
-                      </td>
-
-                      <td className="py-4 px-4 text-[11px] text-[#718096] font-normal">
-                        {record.borrowedDate}
-                      </td>
-
-                      <td className="py-4 px-4 font-medium text-gray-700 text-sm">
-                        {record.dueDate}
-                      </td>
-
-                      <td className="py-4 px-4 text-center">
-                        <span
-                          className={`inline-flex items-center gap-1.5 font-semibold text-xs select-none ${
-                            record.computedStatus === "OVERDUE"
-                              ? "text-rose-700"
-                              : "text-emerald-700"
-                          }`}
-                        >
-                          {/* {record.computedStatus === "OVERDUE" && (
-                            <AlertCircle size={10} className="inline" />
-                          )} */}
-
-                          {record.computedStatus}
-                        </span>
+                </thead>
+                <tbody className="text-sm divide-y divide-gray-100 font-medium text-[#2D3748]">
+                  {paginatedRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-20 text-left text-sm text-[#718096] font-medium pl-3">
+                        No active out-of-building book logs registered on current indexing criteria.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {totalPages > 0 && (
-            <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-2 select-none">
-              <span>
-                Page{" "}
-                <span className="font-semibold text-gray-800">
-                  {currentPage}
-                </span>{" "}
-                of{" "}
-                <span className="font-semibold text-gray-800">
-                  {totalPages}
-                </span>
-
-                <span className="mx-2">|</span>
-
-                Total{" "}
-                <span className="font-semibold text-gray-800">
-                  {totalRecordsCount}
-                </span>{" "}
-                Books
-              </span>
-
-              <div className="flex gap-4">
-                <button
-                  type="button"
-                  disabled={currentPage === 1}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentPage((p) => Math.max(1, p - 1));
-                  }}
-                  className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
-                >
-                  ← Previous
-                </button>
-
-                <button
-                  type="button"
-                  disabled={currentPage === totalPages}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentPage((p) => Math.min(totalPages, p + 1));
-                  }}
-                  className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
-                >
-                  Next →
-                </button>
-              </div>
+                  ) : (
+                    paginatedRecords.map((record) => (
+                      <tr
+                        key={record.id}
+                        onClick={() => {
+                          setSelectedRecord(record);
+                          setIsDetailsOpen(true);
+                        }}
+                        className="transition-all duration-150 cursor-pointer border-l-4 hover:bg-blue-50/40 border-l-transparent"
+                      >
+                        <td className="py-3.5 pl-3 font-semibold text-[#1A365D] truncate">
+                          {record.memberName}
+                        </td>
+                        <td className="py-3.5 px-4 font-medium text-gray-700 text-sm truncate">
+                          {record.bookTitle}
+                        </td>
+                        <td className="py-3.5 px-4 text-[11px] text-[#718096] font-normal truncate">
+                          {record.borrowedDate}
+                        </td>
+                        <td className="py-3.5 px-4 font-medium text-gray-700 text-sm truncate">
+                          {record.dueDate}
+                        </td>
+                        <td className="py-3.5 px-4 text-center truncate">
+                          <span
+                            className={`inline-flex items-center gap-1.5 font-semibold text-xs select-none ${
+                              record.computedStatus === "OVERDUE" ? "text-rose-700" : "text-emerald-700"
+                            }`}
+                          >
+                            {record.computedStatus}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
+
+            {/* Minimal Pagination Elements */}
+            {totalPages > 0 && (
+              <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-2 select-none pl-3">
+                <span>
+                  Page <span className="font-semibold text-gray-800">{currentPage}</span> of{" "}
+                  <span className="font-semibold text-gray-800">{totalPages}</span>
+                  <span className="mx-2">|</span>
+                  Total <span className="font-semibold text-gray-800">{totalRecordsCount}</span> Books
+                </span>
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    disabled={currentPage === 1}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentPage((p) => Math.max(p - 1, 1));
+                    }}
+                    className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+                  >
+                    &larr; Previous
+                  </button>
+                  <button
+                    type="button"
+                    disabled={currentPage === totalPages}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentPage((p) => Math.min(p + 1, totalPages));
+                    }}
+                    className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+                  >
+                    Next &rarr;
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
-    )}
+    </div>
 
     {/* Modals Layers */}
     <TransactionModal
@@ -418,5 +401,4 @@ export const TransactionsPage = () => {
       }}
     />
   </div>
-);
-};
+);}
