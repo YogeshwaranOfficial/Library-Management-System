@@ -62,7 +62,7 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({
         {/* Navigation Action Strip */}
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-text-main transition-colors cursor-pointer group uppercase tracking-wider"
+          className="flex items-center gap-2 text-xs font-bold text-[#718096] hover:text-[#1A365D] transition-colors cursor-pointer group uppercase tracking-wider"
         >
           <ArrowLeft
             size={14}
@@ -72,10 +72,10 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({
         </button>
 
         {/* Identity Details Box */}
-        <div className="bg-card-bg rounded-2xl border border-slate-100 shadow-xl overflow-hidden">
-          {/* Banner Layout: Swapped to high-contrast dark signature panel */}
-          <div className="h-24 bg-slate-900 p-6 flex items-center justify-between border-b border-amber-100/20">
-            <span className="text-[10px] font-mono font-bold tracking-widest text-amber-50/60 uppercase">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
+          {/* Banner Layout: Deep Corporate Navy Signature Panel */}
+          <div className="h-24 bg-[#1A365D] p-6 flex items-center justify-between border-b border-gray-200/20">
+            <span className="text-[11px] font-sans font-bold tracking-wider text-slate-200 uppercase">
               System Node: Active Operator
             </span>
 
@@ -83,13 +83,13 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-card-bg/10 hover:bg-card-bg/20 text-amber-50 text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border border-white/5"
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border border-white/10"
               >
                 <Edit3 size={12} /> Edit Profile
               </button>
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-rose-500/20 hover:bg-rose-600 text-white text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border border-rose-500/10"
+                className="flex items-center gap-1.5 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border border-rose-600/10"
               >
                 <UserX size={12} /> Delete Account
               </button>
@@ -98,26 +98,26 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({
 
           <div className="p-6 relative">
             {/* Avatar block using core premium styling metrics */}
-            <div className="absolute -top-10 left-6 h-20 w-20 bg-slate-900 border-4 border-white text-amber-50 rounded-2xl flex items-center justify-center font-bold text-2xl uppercase shadow-md">
+            <div className="absolute -top-10 left-6 h-20 w-20 bg-[#1A365D] border-4 border-white text-white rounded-2xl flex items-center justify-center font-bold text-2xl uppercase shadow-md">
               {profile.name.slice(0, 2)}
             </div>
 
-            <div className="pt-12 md:flex md:items-center md:justify-between border-b border-slate-100 pb-6">
+            <div className="pt-12 md:flex md:items-center md:justify-between border-b border-gray-200 pb-6">
               <div>
-                <h2 className="text-2xl font-bold text-text-main tracking-tight">
+                <h2 className="text-xl font-bold text-[#1A365D] tracking-tight">
                   {profile.name}
                 </h2>
-                <p className="text-xs text-slate-600 font-medium mt-1 flex items-center gap-1.5">
-                  <ShieldCheck size={14} className="text-text-main" /> Assigned
+                <p className="text-xs text-[#718096] font-medium mt-1 flex items-center gap-1.5">
+                  <ShieldCheck size={14} className="text-[#1A365D]" /> Assigned
                   Library Officer
                 </p>
               </div>
 
-              <div className="mt-4 md:mt-0 bg-slate-50 border border-border-main/60 px-4 py-2 rounded-xl text-left md:text-right">
-                <p className="text-[9px] font-mono font-bold tracking-widest text-slate-400 uppercase">
+              <div className="mt-4 md:mt-0 bg-slate-50 border border-gray-200 px-4 py-2 rounded-xl text-left md:text-right">
+                <p className="text-[11px] font-bold tracking-wider text-[#718096] uppercase">
                   Account ID
                 </p>
-                <p className="text-xs text-text-main font-bold uppercase mt-0.5 tracking-wide">
+                <p className="text-sm text-[#2D3748] font-bold uppercase mt-0.5 tracking-wide">
                   LIB-{profile.user_id.slice(-6).toUpperCase()}
                 </p>
               </div>
@@ -126,31 +126,31 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({
             {/* Matrix Data Grid Fields */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                <label className="text-[11px] font-bold text-[#718096] uppercase tracking-wider block">
                   Email Address
                 </label>
-                <div className="flex items-center gap-2.5 text-sm text-text-main font-medium bg-slate-50 p-3 rounded-xl border border-border-main/60 select-all">
-                  <Mail size={15} className="text-slate-400" />
+                <div className="flex items-center gap-2.5 text-sm text-[#2D3748] font-medium bg-slate-50 p-3 rounded-xl border border-gray-200 select-all">
+                  <Mail size={15} className="text-[#718096]" />
                   <span>{profile.gmail}</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                <label className="text-[11px] font-bold text-[#718096] uppercase tracking-wider block">
                   Phone Number
                 </label>
-                <div className="flex items-center gap-2.5 text-sm text-text-main font-medium bg-slate-50 p-3 rounded-xl border border-border-main/60 select-all">
-                  <Phone size={15} className="text-slate-400" />
+                <div className="flex items-center gap-2.5 text-sm text-[#2D3748] font-medium bg-slate-50 p-3 rounded-xl border border-gray-200 select-all">
+                  <Phone size={15} className="text-[#718096]" />
                   <span>{profile.phone_number || "No Phone Registered"}</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                <label className="text-[11px] font-bold text-[#718096] uppercase tracking-wider block">
                   Registration Date
                 </label>
-                <div className="flex items-center gap-2.5 text-sm text-text-main font-medium bg-slate-50 p-3 rounded-xl border border-border-main/60">
-                  <Calendar size={15} className="text-slate-400" />
+                <div className="flex items-center gap-2.5 text-sm text-[#2D3748] font-medium bg-slate-50 p-3 rounded-xl border border-gray-200">
+                  <Calendar size={15} className="text-[#718096]" />
                   <span>
                     {new Date(profile.created_at).toLocaleDateString(
                       undefined,

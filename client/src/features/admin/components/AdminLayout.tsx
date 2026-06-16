@@ -1,5 +1,5 @@
-import React from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../../store/authStore";
 import { motion } from "framer-motion";
 
@@ -16,6 +16,18 @@ import {
 export const AdminLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // State engine managing navigation sidebar width expansion configuration matching the reference dashboard
+  const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(false);
+  const mainScrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Handle immediate viewport layout reset on route change
+  useEffect(() => {
+    if (mainScrollContainerRef.current) {
+      mainScrollContainerRef.current.scrollTop = 0;
+    }
+  }, [location.pathname]);
 
   const handleSignOut = () => {
     logout();
@@ -27,122 +39,147 @@ export const AdminLayout: React.FC = () => {
       name: "Admin Dashboard",
       path: "/admin/dashboard",
       icon: LayoutDashboard,
-      color: "text-blue-600",
     },
     {
       name: "Manage Users",
       path: "/admin/users",
       icon: Users,
-      color: "text-amber-700",
     },
     {
       name: "Manage Librarians",
       path: "/admin/librarians",
       icon: ShieldAlert,
-      color: "text-rose-600",
     },
   ];
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-amber-50/40 font-sans text-slate-800 antialiased selection:bg-amber-200">
-      {/* Sidebar Navigation - Warm Archival Minimalist Layout (Matching 72 width) */}
-      <aside className="w-72 bg-card-bg border-r border-amber-100 flex flex-col justify-between relative z-20 shadow-xs shrink-0">
-        <div className="p-6">
-          <div className="flex items-center gap-3.5 py-3 border-b border-slate-100 mb-6">
-            {/* Elegant Institutional Identity Icon */}
-            <div className="w-10 h-10 bg-slate-900 text-amber-100 rounded-lg flex items-center justify-center shadow-xs shrink-0">
-              <Library size={20} className="stroke-[2.2]" />
-            </div>
-
-            <div className="flex flex-col">
-              <span className="font-bold text-base tracking-tight text-text-main leading-tight">
-                LMS
-              </span>
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                Admin Portal
-              </span>
-            </div>
+    <div className="w-screen h-screen overflow-hidden flex flex-col bg-[#F7FAFC] font-sans text-[#2D3748] antialiased selection:bg-[#2B6CB0]/10 select-none">
+      
+      {/* Institutional Top Application Header Bar - Always visible, persistent foundation layout */}
+      <header className="h-20 w-full flex items-center justify-between px-5 bg-[#4b6993] border-b border-white/10 shadow-sm text-white shrink-0 z-40">
+        
+        {/* Core Navigation Brand Click Area */}
+        <div 
+          onClick={() => setSidebarExpanded(!sidebarExpanded)}
+          className="flex items-center gap-4 cursor-pointer group select-none"
+          title={sidebarExpanded ? "Collapse Navigation Menu" : "Expand Navigation Menu"}
+        >
+          <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center border border-white/10 group-hover:bg-white/15 transition-all duration-150">
+            <Library size={20} className="stroke-[2.2] text-[#ffffff]" />
           </div>
 
-          {/* Navigation links optimized with comfortable typography scales & indicators */}
-          <nav className="space-y-1.5">
-            {navItems.map((item) => {
-              const IconComponent = item.icon;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-semibold tracking-wide transition-all duration-150 ${
-                      isActive
-                        ? "bg-slate-100 text-slate-950 font-bold shadow-xs border-l-4 border-slate-900 rounded-l-none pl-3"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
-                    }`
-                  }
-                >
-                  <IconComponent
-                    size={18}
-                    className={`stroke-[2.2] shrink-0 ${item.color}`}
-                  />
-                  <span>{item.name}</span>
-                </NavLink>
-              );
-            })}
-          </nav>
+          <div className="flex flex-col">
+            <span className="font-bold text-base tracking-tight leading-tight text-white flex items-center gap-2">
+              LMS
+            </span>
+            <span className="text-xs font-semibold uppercase tracking-wider font-sans text-white/70">
+              Admin Portal
+            </span>
+          </div>
         </div>
 
-        {/* Sidebar Footer - Spacious Action Deck matches exactly */}
-        <div className="p-5 border-t border-slate-100 bg-slate-50/60">
-          <button
-            onClick={handleSignOut}
-            className="flex w-full items-center justify-center gap-2.5 px-4 py-3 rounded-lg text-sm font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200/60 transition-all cursor-pointer shadow-2xs"
-          >
-            <LogOut size={16} className="stroke-[2.5]" />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Structural Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header Frame - Formatted with identical Height h-22 and Side Padding */}
-        <header className="h-22 bg-card-bg border-b border-amber-100 flex items-center justify-between px-10 shadow-2xs shrink-0">
-          <div>
-            <h1 className="text-lg font-bold text-text-main tracking-tight">
-              Admin Dashboard
-            </h1>
-            <p className="text-sm text-slate-400 font-medium mt-0.5">
-              Core directory controls and active network administration
+        {/* User Identity Matrix */}
+        <div className="flex items-center gap-5">
+          <div className="text-right hidden sm:block">
+            <p className="text-xs font-semibold tracking-wide uppercase text-white/80">
+              ROLE: <span className="text-white font-bold">{user?.role || "ADMIN"}</span>
             </p>
           </div>
 
-          <div className="flex items-center gap-5">
-            <div className="text-right hidden sm:block">
-              <p className="text-xs text-slate-400 font-medium tracking-wide uppercase mt-1">
-                ROLE:{" "}
-                <span className="text-rose-600 font-bold">
-                  {user?.role || "ADMIN"}
-                </span>
-              </p>
-            </div>
-
-            {/* User Profile Avatar Frame */}
-            <div className="w-11 h-11 bg-slate-50 border border-border-main/60 text-text-main rounded-lg flex items-center justify-center shadow-2xs">
-              <User size={18} className="stroke-[2.2]" />
-            </div>
+          <div className="w-11 h-11 border border-white/10 bg-white/10 text-white rounded-lg flex items-center justify-center shadow-2xs">
+            <User size={18} className="stroke-[2.2]" />
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* Content View Injection Portal using your clean transition specs */}
-        <main className="flex-1 overflow-y-auto p-10 bg-transparent">
+      {/* Main Structural Application Framework Split */}
+      <div className="flex flex-1 w-full h-[calc(100vh-80px)] overflow-hidden">
+        
+        {/* Persistent Left Icon/Expanded Navigation Sidebar Tracking Shell */}
+        <motion.aside
+          animate={{ width: sidebarExpanded ? 288 : 80 }}
+          transition={{ type: "spring", damping: 28, stiffness: 240 }}
+          className="h-full bg-[#1A365D] border-r border-white/10 shadow-md flex flex-col justify-between p-4 text-white shrink-0 z-30"
+        >
+          <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden no-scrollbar">
+            {/* Navigation Routing Links */}
+            <nav className="space-y-1.5 flex-1">
+              {navItems.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      /* ALIGNMENT FIX: Added border-l-4 border-transparent to the base layout so text content doesn't shift 4px left/right on active change toggle */
+                      `flex items-center rounded-lg text-sm font-medium tracking-wide transition-all duration-150 h-12 overflow-hidden border-l-4 ${
+                        isActive
+                          ? "bg-white/10 text-white font-bold border-l-[#D69E2E] rounded-l-none shadow-2xs"
+                          : "text-white/70 hover:bg-white/5 hover:text-white border-l-transparent"
+                      }`
+                    }
+                  >
+                    {/* Centered box icon wrapper to protect collapse alignments */}
+                    <div className="w-11 h-full flex items-center justify-center shrink-0">
+                      <IconComponent size={18} className="stroke-[2.2]" />
+                    </div>
+                    {sidebarExpanded && (
+                      <motion.span 
+                        initial={{ opacity: 0, x: -4 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="truncate pl-1 pr-4"
+                      >
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Action Area Sidebar Footer */}
+          <div className="pt-4 border-t border-white/10 bg-[#1A365D] shrink-0 overflow-hidden">
+            <button
+              onClick={handleSignOut}
+              /* ALIGNMENT FIX: Dynamic flex row centering adjustments based on collapse layout context to lock the icon perfectly dead-center */
+              className={`flex items-center rounded-lg text-xs font-bold text-white bg-[#4b6993] hover:bg-[#2B6CB0]/90 border border-transparent transition-all cursor-pointer shadow-sm uppercase tracking-wider h-11 w-full ${
+                sidebarExpanded ? "justify-start" : "justify-center"
+              }`}
+              title="Logout Account"
+            >
+              {/* ALIGNMENT FIX: Balanced inner icon structural frame sizing */}
+              <div className={`${sidebarExpanded ? "w-11" : "w-auto"} h-full flex items-center justify-center shrink-0`}>
+                <LogOut size={14} className="stroke-[2.5]" />
+              </div>
+              {sidebarExpanded && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="truncate pr-4 pl-1"
+                >
+                  Logout
+                </motion.span>
+              )}
+            </button>
+          </div>
+        </motion.aside>
+
+        {/* Workspace Canvas Container Block */}
+        <main 
+          ref={mainScrollContainerRef}
+          className="flex-1 overflow-y-auto bg-transparent relative"
+        >
           <motion.div
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
+            className="h-full w-full"
           >
             <Outlet />
           </motion.div>
         </main>
+
       </div>
     </div>
   );

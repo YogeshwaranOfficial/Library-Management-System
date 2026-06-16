@@ -3,13 +3,10 @@ import {
   User,
   Mail,
   Phone,
-  Calendar,
-  Shield,
   Edit2,
   Trash2,
   Check,
   RotateCcw,
-  KeyRound,
 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
@@ -48,7 +45,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
   const [name, setName] = useState(user?.name || "");
   const [gmail, setGmail] = useState(user?.gmail || "");
   const [phoneNumber, setPhoneNumber] = useState(user?.phone_number || "");
-  const [password, setPassword] = useState(user?.password || "");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // 1. UPDATE MUTATION
@@ -64,6 +60,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       toast.success("User account information synchronized successfully.");
       queryClient.invalidateQueries({ queryKey: ["adminUsersMasterFeed"] });
       setIsEditing(false);
+      onClose();
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
       toast.error(
@@ -110,14 +107,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       localErrors.phoneNumber = "Must be a 10-digit numeric character lineup.";
     }
 
-    if (!password) {
-      localErrors.password =
-        "Security credential string allocation is required.";
-    } else if (password.length < 6) {
-      localErrors.password =
-        "Security strings must be at least 6 characters long.";
-    }
-
     setErrors(localErrors);
     return Object.keys(localErrors).length === 0;
   };
@@ -129,7 +118,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
       name: name.trim(),
       gmail: gmail.trim().toLowerCase(),
       phone_number: phoneNumber,
-      password: password,
     });
   };
 
@@ -137,7 +125,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     setName(user.name);
     setGmail(user.gmail);
     setPhoneNumber(user.phone_number);
-    setPassword(user.password || "");
     setErrors({});
     setIsEditing(false);
   };
@@ -149,16 +136,16 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
   return (
     <>
-      {/* High contrast layout backdrop with frosting filter matching MemberDetailsModal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs font-sans">
-        <div className="w-full max-w-xl rounded-2xl bg-card-bg shadow-xl transition-all overflow-hidden border border-amber-100 flex flex-col max-h-[90vh]">
-          {/* Header Grid Framework - Clean Bright Banner matching screen formats */}
-          <div className="flex items-center justify-between border-b border-slate-100 p-5 bg-slate-900">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm font-sans select-none">
+        <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl transition-all overflow-hidden border border-gray-200 flex flex-col max-h-[90vh]">
+          
+          {/* Header Framework */}
+          <div className="flex items-center justify-between border-b border-gray-200 p-5 bg-white">
             <div>
-              <h3 className="text-xl font-bold text-white tracking-tight">
+              <h3 className="text-lg font-bold text-[#1A365D] tracking-tight">
                 {isEditing ? "Edit User Profile" : "User Account Information"}
               </h3>
-              <p className="text-[11px] text-slate-400 mt-0.5 font-bold tracking-wide uppercase">
+              <p className="text-[11px] text-[#718096] font-bold mt-1 tracking-wider uppercase">
                 ID: USR-
                 {user.user_id
                   ? user.user_id.split("-").pop()?.slice(-4).toUpperCase()
@@ -168,40 +155,40 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
             <button
               type="button"
               onClick={handleMasterClose}
-              className="text-slate-400 hover:text-white transition-colors text-base font-bold cursor-pointer p-1.5 hover:bg-slate-800 rounded-lg"
+              className="text-[#718096] hover:text-[#1A365D] hover:bg-gray-100 transition-all text-xs font-bold cursor-pointer p-1.5 rounded-full"
             >
               ✕
             </button>
           </div>
 
           {/* Content Box Switcher Container */}
-          <div className="p-6 overflow-y-auto space-y-6 flex-1 text-text-main">
-            {/* Input fields / View Data fields container stack */}
-            <div className="space-y-5">
+          <div className="p-6 overflow-y-auto space-y-6 flex-1 text-[#2D3748]">
+            <div className="space-y-6">
+              
               {/* Full Name Section */}
-              <div className="space-y-1.5">
-                <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">
+              <div>
+                <span className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest mb-1">
                   Full Name
                 </span>
                 {isEditing ? (
-                  <div className="relative">
+                  <div className="relative mt-1">
                     <User
-                      className="absolute left-3.5 top-3 text-slate-400"
+                      className="absolute left-3.5 top-3 text-gray-400"
                       size={15}
                     />
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
+                      className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
                         errors.name
                           ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
-                          : "border-border-main text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
+                          : "border-gray-200 text-[#2D3748] focus:ring-slate-900/5 focus:border-slate-400"
                       }`}
                     />
                   </div>
                 ) : (
-                  <span className="font-bold text-text-main block text-base pl-1">
+                  <span className="font-bold text-[#1A365D] block text-base pt-0.5">
                     {user.name}
                   </span>
                 )}
@@ -212,36 +199,36 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 )}
               </div>
 
-              {isEditing && <hr className="border-slate-100" />}
+              <hr className="border-gray-100" />
 
-              {/* Dynamic Interactive Input Grid Setup */}
+              {/* Dynamic Interactive Grid Layout */}
               <div
-                className={`grid grid-cols-1 ${isEditing ? "sm:grid-cols-1 gap-y-5" : "sm:grid-cols-2 gap-y-5 gap-x-6"} text-sm`}
+                className={`grid grid-cols-1 ${isEditing ? "sm:grid-cols-2 gap-y-5 gap-x-6" : "sm:grid-cols-2 gap-y-5 gap-x-6"} text-sm`}
               >
                 {/* Email Entry Section */}
-                <div className="space-y-1.5">
-                  <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">
+                <div>
+                  <span className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest mb-1">
                     Email Address
                   </span>
                   {isEditing ? (
-                    <div className="relative">
+                    <div className="relative mt-1">
                       <Mail
-                        className="absolute left-3.5 top-3 text-slate-400"
+                        className="absolute left-3.5 top-3 text-gray-400"
                         size={15}
                       />
                       <input
                         type="text"
                         value={gmail}
                         onChange={(e) => setGmail(e.target.value)}
-                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
+                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
                           errors.gmail
                             ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
-                            : "border-border-main text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
+                            : "border-gray-200 text-[#2D3748] focus:ring-slate-900/5 focus:border-slate-400"
                         }`}
                       />
                     </div>
                   ) : (
-                    <span className="font-semibold text-text-main mt-1 block select-all text-base pl-1">
+                    <span className="font-semibold text-[#1A365D] mt-1 block select-all text-sm">
                       {user.gmail}
                     </span>
                   )}
@@ -253,14 +240,14 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                 </div>
 
                 {/* Phone Number Entry Section */}
-                <div className="space-y-1.5">
-                  <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">
+                <div>
+                  <span className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest mb-1">
                     Phone Number
                   </span>
                   {isEditing ? (
-                    <div className="relative">
+                    <div className="relative mt-1">
                       <Phone
-                        className="absolute left-3.5 top-3 text-slate-400"
+                        className="absolute left-3.5 top-3 text-gray-400"
                         size={15}
                       />
                       <input
@@ -270,16 +257,16 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                         onChange={(e) =>
                           setPhoneNumber(e.target.value.replace(/\D/g, ""))
                         }
-                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
+                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-white focus:ring-4 ${
                           errors.phoneNumber
                             ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
-                            : "border-border-main text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
+                            : "border-gray-200 text-[#2D3748] focus:ring-slate-900/5 focus:border-slate-400"
                         }`}
                       />
                     </div>
                   ) : (
-                    <span className="font-semibold text-text-main mt-1 block select-all text-base pl-1">
-                      {user.phone_number || "No Verified Phone"}
+                    <span className="font-semibold text-[#1A365D] mt-1 block select-all text-sm">
+                      {user.phone_number || "—"}
                     </span>
                   )}
                   {errors.phoneNumber && (
@@ -289,93 +276,58 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   )}
                 </div>
 
-                {/* Password Configuration String Row */}
-                <div className="space-y-1.5">
-                  <span className="block text-xs font-bold text-slate-400 uppercase tracking-wide">
-                    Password
-                  </span>
-                  {isEditing ? (
-                    <div className="relative">
-                      <KeyRound
-                        className="absolute left-3.5 top-3 text-slate-400"
-                        size={15}
-                      />
-                      <input
-                        type="text"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Assign new plain text system credential mapping"
-                        className={`w-full pl-10 pr-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-semibold transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
-                          errors.password
-                            ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
-                            : "border-border-main text-slate-800 focus:ring-slate-900/5 focus:border-slate-400"
-                        }`}
-                      />
-                    </div>
-                  ) : (
-                    <span className="font-mono font-semibold text-text-main mt-1 block select-all text-base tracking-wide pl-1">
-                      {user.password || "••••••••"}
+                {/* Password Section - Only rendered when read-only */}
+                {!isEditing && (
+                  <div>
+                    <span className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest mb-1">
+                      Password
                     </span>
-                  )}
-                  {errors.password && (
-                    <p className="text-xs text-rose-700 font-bold mt-1 pl-1">
-                      {errors.password}
-                    </p>
-                  )}
-                </div>
+                    <span className="font-mono font-semibold text-[#2D3748] mt-1 block select-all text-sm tracking-wide">
+                      ••••••••
+                    </span>
+                  </div>
+                )}
               </div>
 
               {!isEditing && (
                 <>
-                  <hr className="border-slate-100" />
-
-                  {/* Immutable Metadata Dashboard Blocks */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="bg-slate-50 border border-border-main/40 p-4 rounded-xl flex items-center gap-3">
-                      <Shield
-                        size={18}
-                        className="text-slate-500 stroke-[2.2]"
-                      />
-                      <div>
-                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                          Security Role Status
-                        </span>
-                        <span className="text-sm font-bold text-slate-800">
+                  <hr className="border-gray-100" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6 text-sm">
+                    <div>
+                      <span className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest">
+                        Security Role Status
+                      </span>
+                      <div className="mt-1.5">
+                        <span className="inline-block px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-100 text-[#2D3748] border border-gray-200">
                           {user.role}
                         </span>
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 border border-border-main/40 p-4 rounded-xl flex items-center gap-3">
-                      <Calendar
-                        size={18}
-                        className="text-slate-500 stroke-[2.2]"
-                      />
-                      <div>
-                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                          System Enrollment Date
-                        </span>
-                        <span className="text-sm font-bold text-slate-800">
-                          {new Date(user.created_at).toLocaleDateString(
-                            undefined,
-                            { year: "numeric", month: "long", day: "numeric" },
-                          )}
-                        </span>
-                      </div>
+                    <div>
+                      <span className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest">
+                        System Enrollment Date
+                      </span>
+                      <span className="font-semibold text-[#2D3748] mt-1.5 block text-sm">
+                        {new Date(user.created_at).toLocaleDateString(
+                          undefined,
+                          { year: "numeric", month: "long", day: "numeric" },
+                        )}
+                      </span>
                     </div>
                   </div>
                 </>
               )}
             </div>
 
-            {/* Operations Actions Layout Interface Tray Footer */}
-            <div className="pt-5 border-t border-slate-100 flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3">
+            {/* Tray Footer Operations Actions */}
+            <div className="pt-5 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
               {isEditing ? (
                 <>
                   <button
                     type="button"
                     onClick={handleRevert}
-                    className="px-4 py-3 bg-slate-50 border border-border-main text-text-main text-xs font-bold uppercase tracking-wide rounded-xl transition-all hover:bg-slate-100 cursor-pointer flex items-center justify-center gap-1.5"
+                    className="px-4 py-2 text-xs font-bold text-[#718096] uppercase tracking-wider hover:bg-gray-50 border border-transparent hover:border-gray-200 rounded-xl transition-all cursor-pointer text-left sm:text-center flex items-center justify-center gap-1.5"
                   >
                     <RotateCcw size={14} /> Revert Changes
                   </button>
@@ -383,7 +335,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     type="button"
                     onClick={handleUpdateSubmit}
                     disabled={updateMutation.isPending}
-                    className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-amber-50 text-xs font-bold uppercase tracking-wide rounded-xl transition-all disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
+                    className="px-5 py-2.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white text-xs font-bold rounded-full transition-all cursor-pointer shadow-sm text-center tracking-wide flex items-center justify-center gap-1.5"
                   >
                     <Check size={14} />{" "}
                     {updateMutation.isPending
@@ -392,11 +344,11 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   </button>
                 </>
               ) : (
-                <div className="flex flex-col sm:flex-row justify-between w-full items-stretch sm:items-center gap-3">
+                <>
                   <button
                     type="button"
                     onClick={() => setIsDeleteModalOpen(true)}
-                    className="px-4 py-2.5 text-xs font-bold text-rose-700 uppercase tracking-wide hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-xl transition-all cursor-pointer text-left sm:text-center flex items-center justify-center sm:justify-start gap-1.5"
+                    className="px-4 py-2 text-xs font-bold text-rose-600 uppercase tracking-wider hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-xl transition-all cursor-pointer text-left sm:text-center flex items-center justify-center sm:justify-start gap-1.5"
                   >
                     <Trash2 size={14} /> Delete User Profile
                   </button>
@@ -404,18 +356,17 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="px-5 py-3.5 bg-slate-900 hover:bg-slate-800 text-amber-50 text-sm font-bold rounded-xl transition-all cursor-pointer shadow-sm text-center flex items-center justify-center gap-1.5"
+                    className="px-5 py-2.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white text-xs font-bold rounded-full transition-all cursor-pointer shadow-sm text-center tracking-wide flex items-center justify-center gap-1.5"
                   >
                     <Edit2 size={14} /> Edit User Details
                   </button>
-                </div>
+                </>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Secure Action Delete Confirmation Sub-modal stack overlay */}
       <DeleteUserModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}

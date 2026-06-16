@@ -8,9 +8,7 @@ import {
   Mail,
   Phone,
   ArrowRight,
-  UserPlus,
-  ChevronLeft,
-  ChevronRight,
+  Plus
 } from "lucide-react";
 
 interface UserRecord {
@@ -65,8 +63,8 @@ export const ManageLibrarians: React.FC = () => {
     : Array.isArray(responsePayload)
       ? responsePayload
       : responsePayload &&
-          "data" in responsePayload &&
-          Array.isArray(responsePayload.data)
+        "data" in responsePayload &&
+        Array.isArray(responsePayload.data)
         ? responsePayload.data
         : [];
 
@@ -81,7 +79,7 @@ export const ManageLibrarians: React.FC = () => {
   // 💡 FIXED: If a librarian card has been clicked, display their profile views context immediately
   if (selectedLibrarian) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="max-w-6xl mx-auto px-6 py-6">
         <LibrarianProfile
           profile={selectedLibrarian}
           onBack={() => setSelectedLibrarian(null)}
@@ -90,132 +88,138 @@ export const ManageLibrarians: React.FC = () => {
     );
   }
 
-  return (
-    <div className="flex flex-col min-h-[calc(100vh-6rem)] max-w-6xl relative animate-fade-in font-sans">
-      {/* HEADER CONTROLS */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-card-bg p-5 mb-6 rounded-2xl border border-slate-100 shadow-xs shrink-0">
+ return (
+    /* ALIGNMENT FIX: Swapped max-w-6xl out for w-full to make the workspace fill the right canvas completely */
+    <div className="min-h-full w-full flex flex-col bg-white text-[#2D3748] antialiased pb-16 pt-10 px-8 relative font-sans select-none text-left">
+      
+      {/* HEADER CONTROLS - Realigned to match structural institutional headers */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-6">
         <div>
-          <h2 className="text-xl font-bold text-text-main tracking-tight">
+          <h2 className="text-2xl font-bold tracking-tight text-[#1A365D]">
             Library Operators
           </h2>
-          <p className="text-xs text-slate-400 font-medium mt-0.5">
-            Manage staff terminals, clearance logs, and authority
-            configurations.
+          <p className="text-xs text-[#718096] mt-1.5 font-semibold max-w-2xl leading-relaxed">
+            Manage staff terminals, clearance logs, and authority configurations.
           </p>
         </div>
+        
+        {/* Exact standardized institutional button alignment framework styling */}
         <button
           type="button"
           onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-slate-900 hover:bg-slate-800 text-amber-50 text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-sm cursor-pointer"
+          className="flex items-center justify-center p-1.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white rounded-full transition-all cursor-pointer shadow-2xs shrink-0 self-start sm:self-auto mb-1 mx-1"
+          title="Add Librarian"
         >
-          <UserPlus size={14} />
-          Add Librarian
+          <Plus size={16} strokeWidth={2.5} />
         </button>
       </div>
 
+      <div className="h-px bg-gray-200 w-full mb-6" />
+
       {isLoading ? (
-        <div className="text-center py-20 text-xs text-slate-400 font-bold animate-pulse flex-1">
-          Sifting team allocation profiles...
+        <div className="py-24 text-xs font-semibold text-[#718096] tracking-widest uppercase animate-pulse flex-1 text-center">
+          Syncing Team Allocation Profiles...
         </div>
       ) : (
         <div className="flex flex-col flex-1 justify-between">
+          
           {/* SCROLLABLE GRID AREA */}
           <div className="pb-8 flex-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
               {librariansList.length === 0 ? (
-                <div className="col-span-full bg-card-bg text-center py-12 text-sm text-slate-400 border rounded-2xl border-dashed border-border-main">
-                  No registered operator accounts tracked on this network.
+                <div className="col-span-full py-20 text-left text-sm text-[#718096] font-medium">
+                  No registered operator accounts tracked on server indexing.
                 </div>
               ) : (
-                librariansList.map((librarian: UserRecord) => (
-                  <div
-                    key={librarian.user_id}
-                    onClick={() => setSelectedLibrarian(librarian)}
-                    className="group bg-card-bg p-5 rounded-2xl border border-slate-100 shadow-xs hover:shadow-md hover:border-border-main transition-all cursor-pointer flex flex-col justify-between"
-                  >
-                    <div>
-                      <div className="flex justify-between items-start mb-4">
-                        <div className="h-10 w-10 bg-slate-900 text-amber-50 rounded-xl flex items-center justify-center font-bold text-sm uppercase">
-                          {librarian.name.slice(0, 2)}
+                librariansList.map((librarian: UserRecord) => {
+                  return (
+                    <div
+                      key={librarian.user_id}
+                      onClick={() => setSelectedLibrarian(librarian)}
+                      className="group transition-all duration-150 cursor-pointer border border-gray-100 border-l-4 bg-white hover:bg-blue-50/40 border-l-transparent hover:border-l-blue-500 p-5 rounded-md flex flex-col justify-between h-44 shadow-xs hover:shadow-2xs"
+                    >
+                      <div className="w-full">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="w-7 h-7 bg-slate-100 text-[#1A365D] font-semibold text-xs rounded-md flex items-center justify-center shrink-0 uppercase">
+                            {librarian.name ? librarian.name.slice(0, 2).toUpperCase() : "LB"}
+                          </div>
+                          
+                          <span className="font-mono text-[10px] font-bold text-[#718096] uppercase tracking-wide">
+                            OP-{librarian.user_id.slice(-4).toUpperCase()}
+                          </span>
                         </div>
-                        <span className="text-[9px] font-mono font-bold tracking-widest text-text-main bg-slate-100 px-2.5 py-1 rounded-md uppercase border border-border-main/40">
-                          OP-{librarian.user_id.slice(-4).toUpperCase()}
+
+                        <h3 className="font-bold text-[#1A365D] text-sm truncate group-hover:text-[#2B6CB0] transition-colors tracking-tight">
+                          {librarian.name}
+                        </h3>
+
+                        <div className="mt-2 space-y-1 text-xs text-slate-800 font-medium w-full">
+                          <p className="flex items-center gap-2 select-all font-semibold text-[#2D3748] truncate">
+                            <Mail size={12} className="text-gray-400 shrink-0" />{" "}
+                            {librarian.gmail}
+                          </p>
+                          <p className="flex items-center gap-2 select-all text-[11px] font-medium text-slate-500 truncate">
+                            <Phone size={12} className="text-gray-400 shrink-0" />{" "}
+                            {librarian.phone_number || "No Phone Registered"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-auto pt-2.5 border-t border-gray-100 flex items-center justify-between text-[10px] font-bold text-[#718096] uppercase tracking-wider group-hover:text-slate-900 transition-colors">
+                        <span className="tracking-widest">
+                          View Operator Profile
                         </span>
-                      </div>
-
-                      <h3 className="font-bold text-base text-text-main group-hover:text-slate-800 transition-colors tracking-tight">
-                        {librarian.name}
-                      </h3>
-
-                      <div className="mt-3 space-y-1.5 text-xs text-slate-500 font-medium">
-                        <p className="flex items-center gap-2 select-all">
-                          <Mail size={13} className="text-slate-400" />{" "}
-                          {librarian.gmail}
-                        </p>
-                        <p className="flex items-center gap-2 select-all">
-                          <Phone size={13} className="text-slate-400" />{" "}
-                          {librarian.phone_number || "No Phone Registered"}
-                        </p>
+                        <ArrowRight
+                          size={12}
+                          className="transform group-hover:translate-x-1 transition-transform stroke-[2.5]"
+                        />
                       </div>
                     </div>
-
-                    <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-text-main transition-colors">
-                      <span className="uppercase tracking-wide text-[10px]">
-                        View Full Operator Profile
-                      </span>
-                      <ArrowRight
-                        size={14}
-                        className="transform group-hover:translate-x-1 transition-transform"
-                      />
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
 
           {/* STICKY FIXED PAGINATION BAR */}
-          <div className="sticky bottom-4 left-0 right-0 z-10 mt-auto px-5 py-4 border border-slate-100 rounded-2xl bg-slate-50/50 backdrop-blur-xs flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg transition-all">
-            <div className="text-sm text-slate-500 font-medium">
+          {totalPages > 0 && (
+            <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-auto select-none bg-white w-full">
               <span>
-                Page {currentPage} / {totalPages}{" "}
-                <span className="text-slate-300 mx-2">|</span> Total{" "}
-                {totalCount} Librarians
+                Page <span className="font-semibold text-gray-800">{currentPage}</span> of <span className="font-semibold text-gray-800">{totalPages}</span>
+                <span className="text-slate-300 mx-2">|</span> Total <span className="font-semibold text-gray-800">{totalCount}</span> Librarians
               </span>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  disabled={currentPage === 1 || totalPages <= 1}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentPage((prev) => Math.max(prev - 1, 1));
+                  }}
+                  className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+                >
+                  ← Previous
+                </button>
+                <button
+                  type="button"
+                  disabled={currentPage === totalPages || totalPages <= 1}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+                  }}
+                  className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+                >
+                  Next →
+                </button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={currentPage === 1 || totalPages <= 1}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentPage((prev) => Math.max(prev - 1, 1));
-                }}
-                className="p-2 border border-border-main bg-card-bg hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
-              >
-                <ChevronLeft size={14} />
-              </button>
-              <button
-                type="button"
-                disabled={currentPage === totalPages || totalPages <= 1}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-                }}
-                className="p-2 border border-border-main bg-card-bg hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
-      {/* CREATION FILE OVERLAY PORTAL CONTAINER */}
       <LibrarianModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
       />
     </div>
-  );
-};
+  );}

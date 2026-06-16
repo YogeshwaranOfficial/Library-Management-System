@@ -53,7 +53,7 @@ export const DeleteConfirmationModal = ({
           <button
             type="button"
             onClick={onConfirm}
-className="px-5 py-2.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white rounded-full transition-all cursor-pointer shadow-sm tracking-wide"          >
+            className="px-5 py-2.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white rounded-full transition-all cursor-pointer shadow-sm tracking-wide"          >
             Confirm Deletion
           </button>
         </div>
