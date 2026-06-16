@@ -141,7 +141,7 @@ export const ManagePlan = () => {
               {plansPayload?.globalActiveMembers ?? 0}
             </span>
             <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider mt-2 block">
-              Active Plans
+              Active Members
             </span>
           </div>
           <div className="w-px h-6 bg-gray-200 self-end mb-0.5" />
@@ -150,7 +150,7 @@ export const ManagePlan = () => {
               {plansPayload?.globalInactiveMembers ?? 0}
             </span>
             <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider mt-2 block">
-              Inactive Plans
+              Inactive Members
             </span>
           </div>
         </div>

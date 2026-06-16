@@ -176,7 +176,8 @@ import {
   getMemberFinesController,
   payFineController,
   purgeFineController,
-  restoreFineController         // Added for manual invoice clearing
+  restoreFineController,
+  fineController       // Added for manual invoice clearing
 } from "./fine.controller.js";
 import { payFineSchema, restoreFineSchema, purgeFineSchema, getMemberFinesSchema } from "./fine.validation.js";
 
@@ -199,6 +200,9 @@ router.get("/member/:memberId", auth, validate(getMemberFinesSchema), getMemberF
 
 // Example: In your fine.routes.ts
 router.patch("/restore/:id", auth, validate(restoreFineSchema), restoreFineController);
+
+// Add a POST or PATCH endpoint specifically for manual sync triggers
+router.patch("/recalculate-ledger", fineController.triggerForceRecalculate);
 
 // 🟢 Added to handle the purgeFineMutation soft/hard delete manual overrides
 router.delete("/:id", auth, validate(purgeFineSchema) ,purgeFineController);

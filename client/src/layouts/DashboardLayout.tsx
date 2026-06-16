@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 // Lucide Icons with balanced stroke weight for clean, institutional clarity
 import { 
@@ -16,7 +16,6 @@ import {
   LogOut, 
   Library,
   User,
-  Menu,
 } from "lucide-react";
 
 export const DashboardLayout = () => {
@@ -24,31 +23,10 @@ export const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // State engine managing navigation flyout and dashboard scroll adjustments
-  const [menuOpen, setMenuOpen] = useState<boolean>(false);
-  const [isScrolled, setIsScrolled] = useState<boolean>(false);
+  // State engine managing navigation side bar width expansion configuration
+  const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(false);
   
   const mainScrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Layout Rule: Transparent header states apply only at zero-scroll offset on the primary dashboard
-  const isDashboardPage = location.pathname === "/dashboard" || location.pathname === "/";
-
-  // Watch scroll container progression to toggle header canvas states dynamically
-  useEffect(() => {
-    const scrollEl = mainScrollContainerRef.current;
-    if (!scrollEl) return;
-
-    const handleScrollUpdate = () => {
-      if (scrollEl.scrollTop > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    scrollEl.addEventListener("scroll", handleScrollUpdate);
-    return () => scrollEl.removeEventListener("scroll", handleScrollUpdate);
-  }, [location.pathname]);
 
   // Handle immediate viewport layout reset on route change
   useEffect(() => {
@@ -73,37 +51,27 @@ export const DashboardLayout = () => {
     { name: "Fines & Payments", path: "/fines", icon: Receipt },
   ];
 
-  // Configure operational header styling based on page context and scroll threshold
-  const getHeaderStyles = () => {
-    if (isDashboardPage) {
-      return isScrolled
-        ? "fixed top-0 left-0 right-0 bg-[#1A365D] border-b border-[#E2E8F0]/10 shadow-sm text-white"
-        : "absolute top-0 left-0 right-0 bg-transparent border-b border-transparent text-white";
-    }
-    return "relative bg-[#1A365D] border-b border-[#E2E8F0]/10 shadow-sm text-white";
-  };
-
   return (
-    <div className="w-screen h-screen overflow-hidden flex flex-col bg-[#F7FAFC] font-sans text-[#2D3748] antialiased selection:bg-[#2B6CB0]/10 relative">
+    <div className="w-screen h-screen overflow-hidden flex flex-col bg-[#F7FAFC] font-sans text-[#2D3748] antialiased selection:bg-[#2B6CB0]/10 select-none">
       
-      {/* Institutional Top Application Header Bar */}
-      <header className={`h-20 w-full flex items-center justify-between px-8 z-40 transition-all duration-300 select-none ${getHeaderStyles()}`}>
+      {/* Institutional Top Application Header Bar - Always visible, persistent foundation layout */}
+      <header className="h-20 w-full flex items-center justify-between px-5 bg-[#4b6993] border-b border-white/10 shadow-sm text-white shrink-0 z-40">
         
-        {/* Core Navigation Cluster */}
-        <div className="flex items-center gap-5">
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="p-2 rounded-lg border flex items-center justify-center transition-all cursor-pointer shadow-2xs bg-white/10 hover:bg-white/20 border-white/10 text-white"
-            title="Toggle System Directory"
-          >
-            <Menu size={18} className="stroke-[2.2]" />
-          </button>
+        {/* Core Navigation Brand Click Area */}
+        <div 
+          onClick={() => setSidebarExpanded(!sidebarExpanded)}
+          className="flex items-center gap-4 cursor-pointer group select-none"
+          title={sidebarExpanded ? "Collapse Navigation Menu" : "Expand Navigation Menu"}
+        >
+          <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center border border-white/10 group-hover:bg-white/15 transition-all duration-150">
+            <Library size={20} className="stroke-[2.2] text-[#ffffff]" />
+          </div>
 
           <div className="flex flex-col">
-            <span className="font-bold text-base tracking-tight leading-tight text-white">
+            <span className="font-bold text-base tracking-tight leading-tight text-white flex items-center gap-2">
               LMS
             </span>
-            <span className="text-xs font-semibold uppercase tracking-wider mt-0.5 font-sans text-[#D69E2E]">
+            <span className="text-xs font-semibold uppercase tracking-wider font-sans text-white/70">
               Library Management System
             </span>
           </div>
@@ -113,7 +81,7 @@ export const DashboardLayout = () => {
         <div className="flex items-center gap-5">
           <div className="text-right hidden sm:block">
             <p className="text-xs font-semibold tracking-wide uppercase text-white/80">
-              ROLE: <span className="text-[#D69E2E] font-bold">{user?.role || "LIBRARIAN"}</span>
+              ROLE: <span className="text-white font-bold">{user?.role || "LIBRARIAN"}</span>
             </p>
           </div>
 
@@ -123,92 +91,90 @@ export const DashboardLayout = () => {
         </div>
       </header>
 
-      {/* Slideout Shell Menu System */}
-      <AnimatePresence>
-        {menuOpen && (
-          <>
-            {/* Structural Backdrop Dimmer Mask */}
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setMenuOpen(false)}
-              className="absolute inset-0 bg-[#1A365D]/30 backdrop-blur-xs z-40 cursor-pointer"
-            />
-
-            {/* Main Full-Height Left Drawer Panel */}
-            <motion.div
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", damping: 26, stiffness: 220 }}
-              className="absolute left-0 top-0 bottom-0 h-screen w-80 bg-[#1A365D] border-r border-[#E2E8F0]/10 shadow-2xl z-50 p-6 flex flex-col justify-between text-white"
-            >
-              <div className="flex flex-col h-full overflow-y-auto no-scrollbar">
-                
-                {/* Drawer Branding Header Section */}
-                <div className="flex items-center gap-3 pb-5 border-b border-white/10 mb-5 shrink-0">
-                  <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center border border-white/10">
-                    <Library size={18} className="stroke-[2.2] text-[#D69E2E]" />
-                  </div>
-                  <span className="font-bold text-sm tracking-tight text-white">System Directory</span>
-                </div>
-
-                {/* Navigation Routing Links: Anchored on Navy with clean Accent Gold active lines */}
-                <nav className="space-y-1 flex-1">
-                  {navItems.map((item) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <NavLink
-                        key={item.path}
-                        to={item.path}
-                        onClick={() => setMenuOpen(false)}
-                        className={({ isActive }) =>
-                          `flex items-center gap-4 px-4 py-3.5 rounded-md text-sm font-medium tracking-wide transition-all duration-150 ${
-                            isActive
-                              ? "bg-white/10 text-white font-bold border-l-4 border-[#D69E2E] rounded-l-none pl-3 shadow-2xs"
-                              : "text-white/70 hover:bg-white/5 hover:text-white"
-                          }`
-                        }
-                      >
-                        <IconComponent size={18} className="stroke-[2.2] shrink-0" />
-                        <span>{item.name}</span>
-                      </NavLink>
-                    );
-                  })}
-                </nav>
-              </div>
-
-              {/* Action Area Drawer Footer with crisp institutional action styling */}
-              <div className="pt-4 border-t border-white/10 bg-[#1A365D] shrink-0">
-                <button
-                  onClick={() => { setMenuOpen(false); handleSignOut(); }}
-                  className="flex w-full items-center justify-center gap-2 px-4 py-3.5 rounded-lg text-xs font-bold text-white bg-[#2B6CB0] hover:bg-[#2B6CB0]/90 border border-transparent transition-all cursor-pointer shadow-sm uppercase tracking-wider"
-                >
-                  <LogOut size={14} className="stroke-[2.5]" />
-                  <span>Logout Account</span>
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Main Document / Workspace Framework Interface Content Slot */}
-      <main 
-        ref={mainScrollContainerRef}
-        className="flex-1 overflow-y-auto bg-transparent relative"
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          className="h-full w-full"
+      {/* Main Structural Application Framework Split */}
+      <div className="flex flex-1 w-full h-[calc(100vh-80px)] overflow-hidden">
+        
+        {/* Persistent Left Icon/Expanded Navigation Sidebar Tracking Shell */}
+        <motion.aside
+          animate={{ width: sidebarExpanded ? 288 : 80 }}
+          transition={{ type: "spring", damping: 28, stiffness: 240 }}
+          className="h-full bg-[#1A365D] border-r border-white/10 shadow-md flex flex-col justify-between p-4 text-white shrink-0 z-30"
         >
-          <Outlet />
-        </motion.div>
-      </main>
+          <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden no-scrollbar">
+            {/* Navigation Routing Links */}
+            <nav className="space-y-1.5 flex-1">
+              {navItems.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `flex items-center rounded-lg text-sm font-medium tracking-wide transition-all duration-150 h-12 overflow-hidden ${
+                        isActive
+                          ? "bg-white/10 text-white font-bold border-l-4 border-[#D69E2E] rounded-l-none shadow-2xs"
+                          : "text-white/70 hover:bg-white/5 hover:text-white"
+                      }`
+                    }
+                  >
+                    {/* Centered box icon wrapper to protect collapse alignments */}
+                    <div className="w-11 h-full flex items-center justify-center shrink-0">
+                      <IconComponent size={18} className="stroke-[2.2]" />
+                    </div>
+                    {sidebarExpanded && (
+                      <motion.span 
+                        initial={{ opacity: 0, x: -4 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="truncate pl-1 pr-4"
+                      >
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </nav>
+          </div>
 
+          {/* Action Area Sidebar Footer */}
+          <div className="pt-4 border-t border-white/10 bg-[#1A365D] shrink-0 overflow-hidden">
+            <button
+              onClick={handleSignOut}
+              className="flex items-center justify-center rounded-lg text-xs font-bold text-white bg-[#4b6993] hover:bg-[#2B6CB0]/90 border border-transparent transition-all cursor-pointer shadow-sm uppercase tracking-wider h-11 w-full"
+              title="Logout Account"
+            >
+              <div className="w-11 flex items-center justify-center shrink-0">
+                <LogOut size={14} className="stroke-[2.5]" />
+              </div>
+              {sidebarExpanded && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="truncate pr-4"
+                >
+                  Logout
+                </motion.span>
+              )}
+            </button>
+          </div>
+        </motion.aside>
+
+        {/* Workspace Canvas Container Block */}
+        <main 
+          ref={mainScrollContainerRef}
+          className="flex-1 overflow-y-auto bg-transparent relative"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="h-full w-full"
+          >
+            <Outlet />
+          </motion.div>
+        </main>
+
+      </div>
     </div>
   );
 };

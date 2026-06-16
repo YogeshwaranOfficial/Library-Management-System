@@ -155,13 +155,12 @@ export const TransactionsPage = () => {
     {/* Upper Control Bar Layout */}
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
       <div>
+        <div className="flex items-center gap-2 text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1.5">
+            Lending Management Desk
+          </div>
         <h2 className="text-2xl font-bold tracking-tight text-[#1A365D]">
           Borrow & Return Desk
         </h2>
-        <p className="text-sm text-[#718096] mt-1">
-          Manage real-time out-of-building media assets, process drop-offs,
-          and track compliance.
-        </p>
       </div>
 
       <button
@@ -256,29 +255,29 @@ export const TransactionsPage = () => {
                   <th className="pb-3 px-4">
                     Target Due Deadline
                   </th>
-<th className="pb-3 px-4 text-center relative">
-  <div className="relative inline-flex items-center justify-center">
-    <select
-      value={statusFilter}
-      onChange={(e) => {
-        setStatusFilter(e.target.value);
-        setCurrentPage(1);
-      }}
-      className={`appearance-none bg-transparent cursor-pointer uppercase tracking-widest text-[11px] font-bold transition-colors pr-4 text-center hover:text-[#1A365D] focus:outline-none ${
-        statusFilter ? "text-[#2B6CB0]" : "text-[#718096]"
-      }`}
-    >
-      <option value="">Status</option>
-      <option value="BORROWED">Borrowed</option>
-      <option value="OVERDUE">Overdue</option>
-    </select>
+                    <th className="pb-3 px-4 text-center relative">
+                      <div className="relative inline-flex items-center justify-center">
+                        <select
+                          value={statusFilter}
+                          onChange={(e) => {
+                            setStatusFilter(e.target.value);
+                            setCurrentPage(1);
+                          }}
+                          className={`appearance-none bg-transparent cursor-pointer uppercase tracking-widest text-[11px] font-bold transition-colors pr-4 text-center hover:text-[#1A365D] focus:outline-none ${
+                            statusFilter ? "text-[#2B6CB0]" : "text-[#718096]"
+                          }`}
+                        >
+                          <option value="">Status</option>
+                          <option value="BORROWED">Borrowed</option>
+                          <option value="OVERDUE">Overdue</option>
+                        </select>
 
-    <ChevronDown
-      size={11}
-      className="absolute right-0 text-[#718096] pointer-events-none"
-    />
-  </div>
-</th>
+                        <ChevronDown
+                          size={11}
+                          className="absolute right-0 text-[#718096] pointer-events-none"
+                        />
+                      </div>
+                    </th>
                 </tr>
               </thead>
 
@@ -303,23 +302,23 @@ export const TransactionsPage = () => {
                       }}
                       className="transition-all duration-150 cursor-pointer border-l-4 border-l-transparent hover:bg-blue-50/40"
                     >
-                      <td className="py-3.5 px-4 font-semibold text-[#1A365D]">
+                      <td className="py-4 px-4 font-semibold text-[#1A365D]">
                         {record.memberName}
                       </td>
 
-                      <td className="py-3.5 px-4 font-medium text-gray-700 text-sm">
+                      <td className="py-4 px-4 font-medium text-gray-700 text-sm">
                         {record.bookTitle}
                       </td>
 
-                      <td className="py-3.5 px-4 text-[11px] text-[#718096] font-normal">
+                      <td className="py-4 px-4 text-[11px] text-[#718096] font-normal">
                         {record.borrowedDate}
                       </td>
 
-                      <td className="py-3.5 px-4 font-medium text-gray-700 text-sm">
+                      <td className="py-4 px-4 font-medium text-gray-700 text-sm">
                         {record.dueDate}
                       </td>
 
-                      <td className="py-3.5 px-4 text-center">
+                      <td className="py-4 px-4 text-center">
                         <span
                           className={`inline-flex items-center gap-1.5 font-semibold text-xs select-none ${
                             record.computedStatus === "OVERDUE"

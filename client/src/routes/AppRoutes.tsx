@@ -7,7 +7,7 @@ import { Login } from "../features/auth/pages/Login";
 import { MembersPage } from "../features/members/pages/MembersPage";
 import { BooksPage } from "../features/books/pages/BooksPage";
 import { TransactionsPage } from "../features/issues/pages/TransactionsPage";
-import { FinesPage } from "../features/fines/pages/FinesPage";
+import { FinePage } from "../features/fines/pages/FinesPage";
 import { ReturnedBooks } from "../features/returnedbooks/pages/ReturnedBooks";
 import { ManageCategories } from "../features/categories/pages/ManageCategories";
 
@@ -38,7 +38,7 @@ export const AppRoutes = () => {
             <Route path="/books" element={<BooksPage />} />
             <Route path="/categories" element={<ManageCategories />} />
             <Route path="/transactions" element={<TransactionsPage />} />
-            <Route path="/fines" element={<FinesPage />} />
+            <Route path="/fines" element={<FinePage />} />
             <Route path="/returnedbooks" element={<ReturnedBooks />} />
           </Route>
 

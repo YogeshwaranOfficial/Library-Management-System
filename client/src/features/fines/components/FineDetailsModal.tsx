@@ -114,7 +114,7 @@ export const FineDetailsModal = ({
                 </div>
                 <div>
                   <span className="text-[#718096] block text-[11px] uppercase font-bold tracking-wide mb-0.5">
-                    Checkout Trigger Date
+                    Borrowed Date
                   </span>
                   <span className="font-semibold text-[#2D3748]">
                     {fine.borrowedDate}
@@ -140,7 +140,7 @@ export const FineDetailsModal = ({
                   <tbody className="divide-y divide-gray-100 font-medium text-[#2D3748]">
                     <tr>
                       <td className="py-3 px-4 font-semibold text-[#1A365D]">
-                        Standard Plan Rate
+                        Plan Active
                       </td>
                       <td className="py-3 px-4 text-center font-bold">
                         {breakdown.withinPlanDays}d
@@ -152,7 +152,7 @@ export const FineDetailsModal = ({
                     {breakdown.outsidePlanDays > 0 && (
                       <tr className="bg-rose-50/40">
                         <td className="py-3 px-4 text-rose-700 font-bold flex items-center gap-1.5">
-                          Out-of-Plan Climax
+                          Plan Expired
                         </td>
                         <td className="py-3 px-4 text-center text-rose-700 font-bold">
                           {breakdown.outsidePlanDays}d

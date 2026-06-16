@@ -74,7 +74,7 @@ export const MembersPage = () => {
       const res = await axiosClient.get("/members", {
         params: {
           page: currentPage,
-          limit: 1000,
+          limit: 10,
           search: searchTerm || undefined,
           plan: tierFilter || undefined,
           status: statusFilter || undefined,

@@ -218,9 +218,6 @@ export const ReturnedBooks = () => {
           <h1 className="text-2xl font-bold tracking-tight text-text-main">
             Returned Books Management Desk
           </h1>
-          <p className="text-xs text-slate-400 font-medium mt-1 max-w-2xl">
-            Review completed book returns, manage archiving, and track overdue fine status ledgers.
-          </p>
         </div>
         
         <div className="flex items-center self-start md:self-end shrink-0">
@@ -341,7 +338,7 @@ export const ReturnedBooks = () => {
                       }}
                       className="transition-all duration-150 cursor-pointer border-l-4 border-l-transparent hover:bg-blue-50/40"
                     >
-                      <td className="py-3.5 pr-4 pl-3 font-semibold text-[#1A365D]">
+                      <td className="py-4 pr-4 pl-3 font-semibold text-[#1A365D]">
                         <div className="font-semibold tracking-tight text-sm text-[#1A365D]">
                           {record.bookTitle}
                         </div>
@@ -350,25 +347,25 @@ export const ReturnedBooks = () => {
                         </span>
                       </td>
 
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-4">
                         <div className="font-medium text-gray-700 text-sm">
                           {record.memberName}
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-4">
                         <div className="font-medium text-gray-700 text-sm">
                           {record.borrowedDate}
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-4">
                         <div className="font-medium text-gray-700 text-sm">
                           {record.dueDate}
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4">
+                      <td className="py-4 px-4">
                         <span className="inline-flex items-center gap-1.5 font-semibold text-xs text-emerald-700">
                           {record.returnedDate}
                         </span>
