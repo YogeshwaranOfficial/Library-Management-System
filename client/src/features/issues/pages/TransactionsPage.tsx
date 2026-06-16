@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
 import { TransactionModal } from "../components/TransactionModal";
@@ -34,11 +34,32 @@ export const TransactionsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
 
+  // Clean UI state parameters matching Members layout
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BookIssueRecord | null>(
     null,
   );
+
+  // Refs for tracking outside dropdown clicks
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close interactive headers if clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        isStatusDropdownOpen &&
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [isStatusDropdownOpen]);
 
   // Fetch Master Feed Data Ledger
   const { data: rawIssues = [], isLoading } = useQuery<BookIssueRecord[]>({
@@ -192,7 +213,7 @@ export const TransactionsPage = () => {
           <Search size={13} className="text-gray-400 mr-2 shrink-0" />
           <input
             type="text"
-            placeholder="Query active loans..."
+            placeholder="Search book or member..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -266,27 +287,72 @@ export const TransactionsPage = () => {
                     <th className="pb-3 px-4 font-bold tracking-widest w-[20%]">
                       Target Due Deadline
                     </th>
-                    <th className="pb-3 px-4 font-bold tracking-widest text-center relative w-[15%]">
-                      <div className="relative inline-flex items-center justify-center">
-                        <select
-                          value={statusFilter}
-                          onChange={(e) => {
-                            setStatusFilter(e.target.value);
-                            setCurrentPage(1);
-                          }}
-                          className={`appearance-none bg-transparent cursor-pointer uppercase tracking-widest text-[11px] font-bold transition-colors pr-4 text-center hover:text-[#1A365D] focus:outline-none ${
-                            statusFilter ? "text-[#2B6CB0]" : "text-[#718096]"
-                          }`}
-                        >
-                          <option value="">Status</option>
-                          <option value="BORROWED">Borrowed</option>
-                          <option value="OVERDUE">Overdue</option>
-                        </select>
+                    <th className="pb-3 px-4 font-bold tracking-widest relative w-[15%]">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsStatusDropdownOpen(!isStatusDropdownOpen);
+                        }}
+                        className={`inline-flex items-center gap-1 hover:text-[#1A365D] transition-colors uppercase tracking-widest text-[11px] font-bold ${
+                          statusFilter ? "text-[#2B6CB0]" : ""
+                        }`}
+                      >
+                        Status {statusFilter ? `(${statusFilter})` : ""}
                         <ChevronDown
                           size={11}
-                          className="absolute right-0 text-[#718096] pointer-events-none"
+                          className={`transition-transform duration-200 ${
+                            isStatusDropdownOpen ? "rotate-180" : ""
+                          }`}
                         />
-                      </div>
+                      </button>
+
+                      {isStatusDropdownOpen && (
+                        <div
+                          ref={statusDropdownRef}
+                          className="absolute left-4 top-7 z-50 w-36 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 text-xs text-[#2D3748] font-medium normal-case tracking-normal text-left"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStatusFilter("");
+                              setIsStatusDropdownOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
+                              !statusFilter ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""
+                            }`}
+                          >
+                            All Statuses
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStatusFilter("BORROWED");
+                              setIsStatusDropdownOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
+                              statusFilter === "BORROWED" ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""
+                            }`}
+                          >
+                            Borrowed
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStatusFilter("OVERDUE");
+                              setIsStatusDropdownOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
+                              statusFilter === "OVERDUE" ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""
+                            }`}
+                          >
+                            Overdue
+                          </button>
+                        </div>
+                      )}
                     </th>
                   </tr>
                 </thead>
@@ -319,12 +385,13 @@ export const TransactionsPage = () => {
                         <td className="py-3.5 px-4 font-medium text-gray-700 text-sm truncate">
                           {record.dueDate}
                         </td>
-                        <td className="py-3.5 px-4 text-center truncate">
+                        <td className="py-3.5 px-4 text-left truncate">
                           <span
                             className={`inline-flex items-center gap-1.5 font-semibold text-xs select-none ${
                               record.computedStatus === "OVERDUE" ? "text-rose-700" : "text-emerald-700"
                             }`}
                           >
+                            <span className={`w-1.5 h-1.5 rounded-full ${record.computedStatus === "OVERDUE" ? "bg-rose-500" : "bg-emerald-500"}`} />
                             {record.computedStatus}
                           </span>
                         </td>
@@ -401,4 +468,5 @@ export const TransactionsPage = () => {
       }}
     />
   </div>
-);}
+  );
+};

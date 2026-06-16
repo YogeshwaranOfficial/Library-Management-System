@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react"; 
-import { useLocation, useNavigate } from "react-router-dom"; // 👈 Added useNavigate
+import { useState, useEffect, useRef } from "react"; 
+import { useLocation, useNavigate } from "react-router-dom"; 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
 import type { FineRecord } from "../../../types/fines";
@@ -36,10 +36,10 @@ interface AxiosErrorResponse {
 export const FinePage = () => {
   const queryClient = useQueryClient();
   const location = useLocation(); 
-  const navigate = useNavigate(); // 👈 Initialized hook instance
+  const navigate = useNavigate(); 
 
   const [selectedFine, setSelectedFine] = useState<FineRecord | null>(null);
-  const [showRestoreModal, setShowRestoreModal] = useState(false); // 👈 Now actively used below
+  const [showRestoreModal, setShowRestoreModal] = useState(false); 
   const [activeHeaderDropdown, setActiveHeaderDropdown] = useState<"delay" | null>(null);
 
   // Active View Tab Panel Layout Selector ("active" | "history")
@@ -56,6 +56,24 @@ export const FinePage = () => {
   // Modals Core Management States
   const [selectedFineForSettlement, setSelectedFineForSettlement] = useState<FineRecord | null>(null);
 
+  // Ref tracking node for catching outside clicks on table header elements
+  const delayDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Global Outside Dropdown Click Catcher Hook
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        activeHeaderDropdown === "delay" &&
+        delayDropdownRef.current &&
+        !delayDropdownRef.current.contains(event.target as Node)
+      ) {
+        setActiveHeaderDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [activeHeaderDropdown]);
+
   // 🟢 NEW MUTATION NODE: Forces dynamic backend recalculation on mount
   const syncLedgerMutation = useMutation({
     mutationFn: async () => {
@@ -64,7 +82,6 @@ export const FinePage = () => {
     },
     onSuccess: (res) => {
       console.log(`[Sync Engine] ${res.message || "Metrics synchronized successfully."}`, res.data);
-      // Cleanly invalidate matching queries to download the newly computed numbers
       queryClient.invalidateQueries({ queryKey: ["finesMasterLedgerFeed"] });
     },
     onError: () => {
@@ -77,7 +94,7 @@ export const FinePage = () => {
     console.log("⚡ Fines Management Desk Mounted. Dispatching master calculation tool...");
     syncLedgerMutation.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Fires exactly once per unique view load event
+  }, []); 
 
   // 1. Fetch Data Stream conditionally depending on active tab view layouts
   const { data: finesFeedPayload = [], isLoading: isQueryLoading } = useQuery<FineRecord[]>({
@@ -124,7 +141,6 @@ export const FinePage = () => {
             setActiveTab("active");
           }
 
-          // 💡 FIXED: Clean state variables inside React Router history memory safely
           navigate(location.pathname, { replace: true, state: null });
         }, 0);
 
@@ -135,7 +151,7 @@ export const FinePage = () => {
         );
       }
     }
-  }, [location.state, finesFeedPayload, navigate, location.pathname]); // Added strict dependencies
+  }, [location.state, finesFeedPayload, navigate, location.pathname]); 
 
   const restoreFineMutation = useMutation({
     mutationFn: async (id: string) => await axiosClient.patch(`/fines/restore/${id}`),
@@ -264,7 +280,7 @@ export const FinePage = () => {
             type="button"
             onClick={() => handleTabChange("active")}
             className={`flex items-center gap-1.5 px-3.5 py-4 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-              activeTab === "active" ? "bg-card-bg shadow-xs" : "text-slate-500 hover:text-slate-800"
+              activeTab === "active" ? "bg-white shadow-xs text-[#1A365D]" : "text-slate-500 hover:text-slate-800"
             }`}
           >
             <ShieldAlert size={14} /> Active Defaulters
@@ -274,7 +290,7 @@ export const FinePage = () => {
             onClick={() => handleTabChange("history")}
             className={`flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
               activeTab === "history"
-                ? "bg-card-bg shadow-xs"
+                ? "bg-white shadow-xs text-[#1A365D]"
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
@@ -318,7 +334,7 @@ export const FinePage = () => {
               type="text"
               placeholder={
                 activeTab === "active"
-                  ? "Search active balances by name or title strings..."
+                  ? "Search by book or member..."
                   : "Search historical collections..."
               }
               value={searchQuery}
@@ -354,15 +370,15 @@ export const FinePage = () => {
             <table className="w-full text-left border-collapse table-fixed">
               <thead>
                 <tr className="border-b border-gray-200 text-[11px] font-bold text-[#718096] uppercase tracking-widest bg-transparent">
-                  <th className="py-3 px-4">
+                  <th className="py-3 px-4 w-[25%]">
                     <User size={12} className="inline mr-1" />
-                    Memeber info
+                    Member info
                   </th>
-                  <th className="py-3 px-4">
+                  <th className="py-3 px-4 w-[30%]">
                     <BookOpen size={12} className="inline mr-1" />
                     Media Asset Context
                   </th>
-                  <th className="py-3 px-4 text-center relative">
+                  <th className="py-3 px-4 text-center relative w-[18%]">
                     <button
                       type="button"
                       onClick={(e) => {
@@ -386,7 +402,10 @@ export const FinePage = () => {
                     </button>
 
                     {activeHeaderDropdown === "delay" && (
-                      <div className="absolute left-1/2 -translate-x-1/2 top-7 z-50 w-52 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 text-xs text-[#2D3748] font-medium normal-case tracking-normal">
+                      <div
+                        ref={delayDropdownRef}
+                        className="absolute left-1/2 -translate-x-1/2 top-7 z-50 w-52 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 text-xs text-[#2D3748] font-medium normal-case tracking-normal text-left"
+                      >
                         <button
                           type="button"
                           onClick={() => {
@@ -445,8 +464,8 @@ export const FinePage = () => {
                       </div>
                     )}
                   </th>
-                  <th className="py-3 px-4 text-center">Fine Amount</th>
-                  <th className="py-3 px-4 text-center">Plan Clause</th>
+                  <th className="py-3 px-4 text-center w-[12%]">Fine Amount</th>
+                  <th className="py-3 px-4 text-center w-[15%]">Plan Clause</th>
                 </tr>
               </thead>
               <tbody className="text-sm divide-y divide-gray-100 font-medium text-[#2D3748]">
@@ -463,7 +482,7 @@ export const FinePage = () => {
                       onClick={() => {
                         setSelectedFine(fine);
                         if (activeTab === "history") {
-                          setShowRestoreModal(true); // 👈 Added execution hook triggers
+                          setShowRestoreModal(true); 
                         }
                       }}
                       className="transition-all duration-150 cursor-pointer border-l-4 border-l-transparent hover:bg-blue-50/40"
@@ -537,23 +556,22 @@ export const FinePage = () => {
                 disabled={currentPage === 1}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setCurrentPage((p) => p - 1);
+                  setCurrentPage((p) => Math.max(p - 1, 1));
                 }}
                 className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
               >
-                ← Previous
+                &larr; Previous
               </button>
               <button
                 type="button"
                 disabled={currentPage === totalPagesCount}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setCurrentPage((p) => p - 1);
-                  setCurrentPage((p) => p + 1);
+                  setCurrentPage((p) => Math.min(p + 1, totalPagesCount));
                 }}
                 className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
               >
-                Next →
+                Next &rarr;
               </button>
             </div>
           </div>
@@ -582,7 +600,7 @@ export const FinePage = () => {
 
       {/* 2. Collected History Tab Restoration Modal */}
       <RestoreFineModal
-        isOpen={activeTab === "history" && showRestoreModal && !!selectedFine} // 👈 Added state hook binding control
+        isOpen={activeTab === "history" && showRestoreModal && !!selectedFine} 
         fine={selectedFine}
         onClose={() => {
           setSelectedFine(null);

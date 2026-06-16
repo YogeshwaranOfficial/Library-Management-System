@@ -268,7 +268,7 @@ export const MembersPage = () => {
             <Search size={13} className="text-gray-400 mr-2 shrink-0" />
             <input
               type="text"
-              placeholder="Search..."
+              placeholder="Search Members..."
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               className="bg-transparent border-0 outline-hidden w-full text-xs font-medium text-[#1A365D] placeholder-[#A0AEC0] p-0 focus:ring-0 focus:outline-hidden"
