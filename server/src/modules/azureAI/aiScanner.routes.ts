@@ -14,7 +14,7 @@ const upload = multer({
 // 🛡️ ACCIDENT/CREDIT SAFEGUARD: Blocks any infinite testing loop scenarios
 const aiScanLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 Minute lock window
-  max: 10,                  // 🛑 Max 10 executions total before block across tests
+  max: 50,                  // 🛑 Max 50 executions total before block across tests
   message: {
     success: false,
     message: "Safeguard Triggered: Testing scan tier threshold reached (10 items max).",
