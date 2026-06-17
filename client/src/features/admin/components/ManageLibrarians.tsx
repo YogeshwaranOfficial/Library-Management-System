@@ -4,12 +4,7 @@ import { axiosClient } from "../../../api/axiosClient";
 import { useAuthStore } from "../../../store/authStore";
 import { LibrarianProfile } from "./LibrarianProfile";
 import { LibrarianModal } from "./LibrarianModal";
-import {
-  Mail,
-  Phone,
-  ArrowRight,
-  Plus
-} from "lucide-react";
+import { Mail, Phone, ArrowRight, Plus } from "lucide-react";
 
 interface UserRecord {
   user_id: string;
@@ -33,9 +28,7 @@ interface ServerApiResponse {
 
 export const ManageLibrarians: React.FC = () => {
   const token = useAuthStore((state) => state.token);
-  const [selectedLibrarian, setSelectedLibrarian] = useState<UserRecord | null>(
-    null,
-  );
+  const [selectedLibrarian, setSelectedLibrarian] = useState<UserRecord | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,34 +69,28 @@ export const ManageLibrarians: React.FC = () => {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
 
-  // 💡 FIXED: If a librarian card has been clicked, display their profile views context immediately
   if (selectedLibrarian) {
     return (
       <div className="max-w-6xl mx-auto px-6 py-6">
         <LibrarianProfile
           profile={selectedLibrarian}
           onBack={() => setSelectedLibrarian(null)}
+          onSaveSuccess={() => setSelectedLibrarian(null)} // ✨ Closes profile view on save to refresh dashboard view automatically
         />
       </div>
     );
   }
 
- return (
-    /* ALIGNMENT FIX: Swapped max-w-6xl out for w-full to make the workspace fill the right canvas completely */
+  return (
     <div className="min-h-full w-full flex flex-col bg-white text-[#2D3748] antialiased pb-16 pt-10 px-8 relative font-sans select-none text-left">
-      
-      {/* HEADER CONTROLS - Realigned to match structural institutional headers */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-[#1A365D]">
-            Library Operators
-          </h2>
+          <h2 className="text-2xl font-bold tracking-tight text-[#1A365D]">Library Operators</h2>
           <p className="text-xs text-[#718096] mt-1.5 font-semibold max-w-2xl leading-relaxed">
             Manage staff terminals, clearance logs, and authority configurations.
           </p>
         </div>
         
-        {/* Exact standardized institutional button alignment framework styling */}
         <button
           type="button"
           onClick={() => setIsCreateModalOpen(true)}
@@ -122,8 +109,6 @@ export const ManageLibrarians: React.FC = () => {
         </div>
       ) : (
         <div className="flex flex-col flex-1 justify-between">
-          
-          {/* SCROLLABLE GRID AREA */}
           <div className="pb-8 flex-1">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
               {librariansList.length === 0 ? (
@@ -155,24 +140,17 @@ export const ManageLibrarians: React.FC = () => {
 
                         <div className="mt-2 space-y-1 text-xs text-slate-800 font-medium w-full">
                           <p className="flex items-center gap-2 select-all font-semibold text-[#2D3748] truncate">
-                            <Mail size={12} className="text-gray-400 shrink-0" />{" "}
-                            {librarian.gmail}
+                            <Mail size={12} className="text-gray-400 shrink-0" /> {librarian.gmail}
                           </p>
                           <p className="flex items-center gap-2 select-all text-[11px] font-medium text-slate-500 truncate">
-                            <Phone size={12} className="text-gray-400 shrink-0" />{" "}
-                            {librarian.phone_number || "No Phone Registered"}
+                            <Phone size={12} className="text-gray-400 shrink-0" /> {librarian.phone_number || "No Phone Registered"}
                           </p>
                         </div>
                       </div>
 
                       <div className="mt-auto pt-2.5 border-t border-gray-100 flex items-center justify-between text-[10px] font-bold text-[#718096] uppercase tracking-wider group-hover:text-slate-900 transition-colors">
-                        <span className="tracking-widest">
-                          View Operator Profile
-                        </span>
-                        <ArrowRight
-                          size={12}
-                          className="transform group-hover:translate-x-1 transition-transform stroke-[2.5]"
-                        />
+                        <span className="tracking-widest">View Librarian Profile</span>
+                        <ArrowRight size={12} className="transform group-hover:translate-x-1 transition-transform stroke-[2.5]" />
                       </div>
                     </div>
                   );
@@ -181,7 +159,6 @@ export const ManageLibrarians: React.FC = () => {
             </div>
           </div>
 
-          {/* STICKY FIXED PAGINATION BAR */}
           {totalPages > 0 && (
             <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-auto select-none bg-white w-full">
               <span>
@@ -222,4 +199,5 @@ export const ManageLibrarians: React.FC = () => {
         onClose={() => setIsCreateModalOpen(false)}
       />
     </div>
-  );}
+  );
+};

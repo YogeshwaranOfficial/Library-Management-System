@@ -225,7 +225,7 @@ export const BooksPage = () => {
               {displayTotal}
             </span>
             <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider mt-2 block">
-              {hasActiveFilters ? "Matched Volumes" : "Total Titles"}
+              {hasActiveFilters ? "Matched Books" : "Total Books"}
             </span>
           </div>
           <div className="w-px h-6 bg-gray-200 self-end mb-0.5" />

@@ -100,7 +100,7 @@ export const UnpaidFineAlertModal = ({
               }}
               className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              Collect Fine Counter <ArrowRight className="w-3 h-3" />
+              Collect Fine<ArrowRight className="w-3 h-3" />
             </button>
           )}
         </div>

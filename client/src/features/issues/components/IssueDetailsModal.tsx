@@ -284,7 +284,7 @@ export const IssueDetailsModal = ({
                 }}
                 className="px-5 py-2.5 bg-[#2B6CB0] hover:bg-[#18579a] text-white text-xs font-bold rounded-full transition-all cursor-pointer shadow-sm text-center tracking-wide inline-flex items-center gap-1.5"
               >
-                Collect Fine Counter <ArrowRight className="w-3 h-3" />
+                Collect Fine <ArrowRight className="w-3 h-3" />
               </button>
             </div>
 

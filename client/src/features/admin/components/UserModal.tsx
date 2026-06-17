@@ -128,7 +128,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, initialDa
       name: name.trim(),
       gmail: gmail.trim().toLowerCase(),
       phone_number: phoneNumber,
-      role: "OPERATOR", // Set dynamically to match management panel requirement contexts
+      role: "READER", // Set dynamically to match management panel requirement contexts
     };
 
     if (!isEditMode) {
@@ -305,7 +305,7 @@ export const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, initialDa
           {/* Enforced Parameters Box */}
           <div className="flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-[#718096] select-none">
             <ShieldCheck size={16} className="text-gray-400 stroke-[2.2]" />
-            <span>Enforced Account Context : OPERATIONS PORTAL ACCESS</span>
+            <span>Enforced Account Context : READER</span>
           </div>
 
           {/* Action Footer Frame */}

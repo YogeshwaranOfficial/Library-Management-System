@@ -24,18 +24,18 @@ interface LibrarianModalProps {
   isOpen: boolean;
   onClose: () => void;
   librarianToEdit?: UserRecord | null;
+  onSaveSuccess?: () => void; // ✨ Added callback hook
 }
 
 export const LibrarianModal: React.FC<LibrarianModalProps> = ({
   isOpen,
   onClose,
   librarianToEdit,
+  onSaveSuccess,
 }) => {
   const queryClient = useQueryClient();
   const isEditMode = !!librarianToEdit;
 
-  // 💡 FIXED: Initialize state directly from props.
-  // Combined with the unique layout `key`, this renders cleanly without a useEffect loop.
   const [name, setName] = useState(librarianToEdit?.name || "");
   const [gmail, setGmail] = useState(librarianToEdit?.gmail || "");
   const [password, setPassword] = useState("");
@@ -77,6 +77,7 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
       );
       queryClient.invalidateQueries({ queryKey: ["adminUsersMasterFeed"] });
       handleResetAndClose();
+      if (onSaveSuccess) onSaveSuccess(); // ✨ Return immediately to dashboard page
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
       toast.error(
@@ -142,10 +143,9 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
 
   if (!isOpen) return null;
 
- return (
+  return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans select-none">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-200">
-        {/* Header Layout Block */}
         <div className="bg-white border-b border-gray-200 p-5 flex justify-between items-center">
           <div>
             <h3 className="text-lg text-[#1A365D] font-bold tracking-tight">
@@ -166,18 +166,13 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
           </button>
         </div>
 
-        {/* Input Form Fields Wrapper */}
         <form onSubmit={handleSubmission} className="p-6 space-y-5 text-[#2D3748]">
-          {/* Name Field */}
           <div>
             <label className="text-[11px] font-bold text-[#718096] uppercase tracking-widest block mb-1.5">
               Official Handle Name
             </label>
             <div className="relative">
-              <User
-                className="absolute left-3.5 top-3 text-gray-400"
-                size={15}
-              />
+              <User className="absolute left-3.5 top-3 text-gray-400" size={15} />
               <input
                 type="text"
                 placeholder="Marcus Vance"
@@ -191,22 +186,16 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
               />
             </div>
             {errors.name && (
-              <p className="text-xs text-rose-600 mt-1.5 font-semibold">
-                {errors.name}
-              </p>
+              <p className="text-xs text-rose-600 mt-1.5 font-semibold">{errors.name}</p>
             )}
           </div>
 
-          {/* Email Field */}
           <div>
             <label className="text-[11px] font-bold text-[#718096] uppercase tracking-widest block mb-1.5">
               System Routing Address
             </label>
             <div className="relative">
-              <Mail
-                className="absolute left-3.5 top-3 text-gray-400"
-                size={15}
-              />
+              <Mail className="absolute left-3.5 top-3 text-gray-400" size={15} />
               <input
                 type="text"
                 placeholder="marcus.vance@gmail.com"
@@ -220,13 +209,10 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
               />
             </div>
             {errors.gmail && (
-              <p className="text-xs text-rose-600 mt-1.5 font-semibold">
-                {errors.gmail}
-              </p>
+              <p className="text-xs text-rose-600 mt-1.5 font-semibold">{errors.gmail}</p>
             )}
           </div>
 
-          {/* Password Field */}
           <div>
             <label className="text-[11px] font-bold text-[#718096] uppercase tracking-widest block mb-1.5 leading-snug">
               {isEditMode
@@ -234,10 +220,7 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
                 : "Terminal Assignment Password"}
             </label>
             <div className="relative">
-              <Lock
-                className="absolute left-3.5 top-3 text-gray-400"
-                size={15}
-              />
+              <Lock className="absolute left-3.5 top-3 text-gray-400" size={15} />
               <input
                 type="text"
                 placeholder={isEditMode ? "••••••••" : "e.g., ClearanceKey99"}
@@ -251,30 +234,22 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
               />
             </div>
             {errors.password && (
-              <p className="text-xs text-rose-600 mt-1.5 font-semibold">
-                {errors.password}
-              </p>
+              <p className="text-xs text-rose-600 mt-1.5 font-semibold">{errors.password}</p>
             )}
           </div>
 
-          {/* Phone Number Field */}
           <div>
             <label className="text-[11px] font-bold text-[#718096] uppercase tracking-widest block mb-1.5">
               Secure Mobile String
             </label>
             <div className="relative">
-              <Phone
-                className="absolute left-3.5 top-3 text-gray-400"
-                size={15}
-              />
+              <Phone className="absolute left-3.5 top-3 text-gray-400" size={15} />
               <input
                 type="text"
                 maxLength={10}
                 placeholder="9876543210"
                 value={phoneNumber}
-                onChange={(e) =>
-                  setPhoneNumber(e.target.value.replace(/\D/g, ""))
-                }
+                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
                 className={`w-full pl-10 pr-4 py-2.5 bg-gray-50 border rounded-xl text-xs font-semibold transition-all outline-hidden focus:bg-white focus:border-gray-300 focus:ring-0 ${
                   errors.phoneNumber
                     ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
@@ -283,13 +258,10 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
               />
             </div>
             {errors.phoneNumber && (
-              <p className="text-xs text-rose-600 mt-1.5 font-semibold">
-                {errors.phoneNumber}
-              </p>
+              <p className="text-xs text-rose-600 mt-1.5 font-semibold">{errors.phoneNumber}</p>
             )}
           </div>
 
-          {/* Configuration Alert Badge */}
           <div className="flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-[#718096] select-none">
             <ShieldCheck size={16} className="text-gray-400 stroke-[2.2]" />
             <span className="text-[11px] uppercase tracking-wide">
@@ -297,7 +269,6 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
             </span>
           </div>
 
-          {/* Action Footer Buttons */}
           <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 text-xs font-bold tracking-wide">
             <button
               type="button"

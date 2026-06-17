@@ -191,7 +191,7 @@ export const TransactionsPage = () => {
             {totalRecordsCount}
           </span>
           <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider mt-2 block">
-            Total Books
+            Total Issued Books
           </span>
         </div>
       </div>

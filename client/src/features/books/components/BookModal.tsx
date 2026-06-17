@@ -301,7 +301,7 @@ export const BookModal = ({
 
                 <div>
                   <label className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest mb-1">
-                    Language Spec
+                    Language
                   </label>
                   {/* Fixed: outline-none replaces custom token constraints */}
                   <input

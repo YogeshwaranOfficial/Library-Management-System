@@ -283,7 +283,7 @@ export const FinePage = () => {
               activeTab === "active" ? "bg-white shadow-xs text-[#1A365D]" : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            <ShieldAlert size={14} /> Active Defaulters
+            <ShieldAlert size={14} /> Active Fines
           </button>
           <button
             type="button"
@@ -294,7 +294,7 @@ export const FinePage = () => {
                 : "text-slate-500 hover:text-slate-800"
             }`}
           >
-            <History size={14} /> Collected History
+            <History size={14} /> Collected Fines
           </button>
         </div>
       </div>
@@ -465,7 +465,7 @@ export const FinePage = () => {
                     )}
                   </th>
                   <th className="py-3 px-4 text-center w-[12%]">Fine Amount</th>
-                  <th className="py-3 px-4 text-center w-[15%]">Plan Clause</th>
+                  <th className="py-3 px-4 text-center w-[15%]">Plan Status</th>
                 </tr>
               </thead>
               <tbody className="text-sm divide-y divide-gray-100 font-medium text-[#2D3748]">

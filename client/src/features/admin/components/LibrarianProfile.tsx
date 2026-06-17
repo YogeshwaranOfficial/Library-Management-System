@@ -26,17 +26,18 @@ interface UserRecord {
 interface LibrarianProfileProps {
   profile: UserRecord;
   onBack: () => void;
+  onSaveSuccess?: () => void; // ✨ Added callback prop
 }
 
 export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({
   profile,
   onBack,
+  onSaveSuccess,
 }) => {
   const queryClient = useQueryClient();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  // PURGE MUTATION EXECUTION LINK
   const deleteMutation = useMutation({
     mutationFn: async () => {
       const response = await axiosClient.delete(
@@ -59,27 +60,20 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({
   return (
     <>
       <div className="space-y-6 max-w-4xl animate-fade-in font-sans">
-        {/* Navigation Action Strip */}
         <button
           onClick={onBack}
           className="flex items-center gap-2 text-xs font-bold text-[#718096] hover:text-[#1A365D] transition-colors cursor-pointer group uppercase tracking-wider"
         >
-          <ArrowLeft
-            size={14}
-            className="transform group-hover:-translate-x-0.5 transition-transform"
-          />
+          <ArrowLeft size={14} className="transform group-hover:-translate-x-0.5 transition-transform" />
           Back
         </button>
 
-        {/* Identity Details Box */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
-          {/* Banner Layout: Deep Corporate Navy Signature Panel */}
           <div className="h-24 bg-[#1A365D] p-6 flex items-center justify-between border-b border-gray-200/20">
             <span className="text-[11px] font-sans font-bold tracking-wider text-slate-200 uppercase">
               System Node: Active Operator
             </span>
 
-            {/* FLOATING ACTION MANAGEMENT SYSTEM PORTAL BUTTONS */}
             <div className="flex items-center gap-2.5">
               <button
                 onClick={() => setIsEditModalOpen(true)}
@@ -97,38 +91,29 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({
           </div>
 
           <div className="p-6 relative">
-            {/* Avatar block using core premium styling metrics */}
             <div className="absolute -top-10 left-6 h-20 w-20 bg-[#1A365D] border-4 border-white text-white rounded-2xl flex items-center justify-center font-bold text-2xl uppercase shadow-md">
               {profile.name.slice(0, 2)}
             </div>
 
             <div className="pt-12 md:flex md:items-center md:justify-between border-b border-gray-200 pb-6">
               <div>
-                <h2 className="text-xl font-bold text-[#1A365D] tracking-tight">
-                  {profile.name}
-                </h2>
+                <h2 className="text-xl font-bold text-[#1A365D] tracking-tight">{profile.name}</h2>
                 <p className="text-xs text-[#718096] font-medium mt-1 flex items-center gap-1.5">
-                  <ShieldCheck size={14} className="text-[#1A365D]" /> Assigned
-                  Library Officer
+                  <ShieldCheck size={14} className="text-[#1A365D]" /> Assigned Library Officer
                 </p>
               </div>
 
               <div className="mt-4 md:mt-0 bg-slate-50 border border-gray-200 px-4 py-2 rounded-xl text-left md:text-right">
-                <p className="text-[11px] font-bold tracking-wider text-[#718096] uppercase">
-                  Account ID
-                </p>
+                <p className="text-[11px] font-bold tracking-wider text-[#718096] uppercase">Account ID</p>
                 <p className="text-sm text-[#2D3748] font-bold uppercase mt-0.5 tracking-wide">
                   LIB-{profile.user_id.slice(-6).toUpperCase()}
                 </p>
               </div>
             </div>
 
-            {/* Matrix Data Grid Fields */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#718096] uppercase tracking-wider block">
-                  Email Address
-                </label>
+                <label className="text-[11px] font-bold text-[#718096] uppercase tracking-wider block">Email Address</label>
                 <div className="flex items-center gap-2.5 text-sm text-[#2D3748] font-medium bg-slate-50 p-3 rounded-xl border border-gray-200 select-all">
                   <Mail size={15} className="text-[#718096]" />
                   <span>{profile.gmail}</span>
@@ -136,9 +121,7 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#718096] uppercase tracking-wider block">
-                  Phone Number
-                </label>
+                <label className="text-[11px] font-bold text-[#718096] uppercase tracking-wider block">Phone Number</label>
                 <div className="flex items-center gap-2.5 text-sm text-[#2D3748] font-medium bg-slate-50 p-3 rounded-xl border border-gray-200 select-all">
                   <Phone size={15} className="text-[#718096]" />
                   <span>{profile.phone_number || "No Phone Registered"}</span>
@@ -146,16 +129,15 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#718096] uppercase tracking-wider block">
-                  Registration Date
-                </label>
+                <label className="text-[11px] font-bold text-[#718096] uppercase tracking-wider block">Registration Date</label>
                 <div className="flex items-center gap-2.5 text-sm text-[#2D3748] font-medium bg-slate-50 p-3 rounded-xl border border-gray-200">
                   <Calendar size={15} className="text-[#718096]" />
                   <span>
-                    {new Date(profile.created_at).toLocaleDateString(
-                      undefined,
-                      { year: "numeric", month: "long", day: "numeric" },
-                    )}
+                    {new Date(profile.created_at).toLocaleDateString(undefined, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
                   </span>
                 </div>
               </div>
@@ -164,12 +146,12 @@ export const LibrarianProfile: React.FC<LibrarianProfileProps> = ({
         </div>
       </div>
 
-      {/* OVERLAY LAYERS MODAL PORTALS CONTAINER */}
       <LibrarianModal
         key={isEditModalOpen ? `edit-${profile.user_id}` : "closed"}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         librarianToEdit={profile}
+        onSaveSuccess={onSaveSuccess} // ✨ Pass callback directly down to the save operation
       />
 
       <DeleteLibrarianProfile

@@ -227,7 +227,7 @@ export const PlanModal = ({ isOpen, mode, plan, onClose }: PlanModalProps) => {
                 className="px-6 py-3 bg-[#2B6CB0] hover:bg-[#1A365D] text-white text-xs font-bold rounded-full transition-all cursor-pointer shadow-sm disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <Save size={14} />
-                {planMutation.isPending ? "Syncing..." : "Confirm Subscription"}
+                {planMutation.isPending ? "Syncing..." : "Create Plan"}
               </button>
             </div>
           </form>

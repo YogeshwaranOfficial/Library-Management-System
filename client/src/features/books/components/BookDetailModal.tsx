@@ -27,8 +27,6 @@ export const BookDetailModal = ({
     year: "numeric",
     month: "long",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 
   const handleConfirmDeletion = () => {
