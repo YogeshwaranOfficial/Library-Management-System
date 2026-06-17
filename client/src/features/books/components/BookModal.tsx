@@ -65,14 +65,26 @@ export const BookModal = ({
           categoryId: editingBook.categoryId,
         });
       } else {
-        reset({ title: "", author: "", language: "", totalCopies: 1, categoryId: "" });
+        reset({
+          title: "",
+          author: "",
+          language: "",
+          totalCopies: 1,
+          categoryId: "",
+        });
       }
     }
   }, [editingBook, isOpen, reset]);
 
   const handleCloseModal = () => {
     setAiInsights(null);
-    reset({ title: "", author: "", language: "", totalCopies: 1, categoryId: "" });
+    reset({
+      title: "",
+      author: "",
+      language: "",
+      totalCopies: 1,
+      categoryId: "",
+    });
     onClose();
   };
 
@@ -113,10 +125,10 @@ export const BookModal = ({
         setValue("title", payload.title || "");
         setValue("author", payload.author || "");
         setValue("language", payload.language || "");
-        
+
         if (payload.category) {
           const matchedCat = categories.find(
-            (c) => c.name.toLowerCase() === payload.category.toLowerCase()
+            (c) => c.name.toLowerCase() === payload.category.toLowerCase(),
           );
           if (matchedCat) {
             setValue("categoryId", matchedCat.id);
@@ -135,10 +147,12 @@ export const BookModal = ({
       }
     } catch (error) {
       console.error(error);
-      const isAxiosError = error && typeof error === "object" && "code" in error;
-      const errorMsg = isAxiosError && (error as { code: string }).code === "ECONNABORTED"
-        ? "Request timeout! AI process layer took too long."
-        : "Error communicating with AI parser layer.";
+      const isAxiosError =
+        error && typeof error === "object" && "code" in error;
+      const errorMsg =
+        isAxiosError && (error as { code: string }).code === "ECONNABORTED"
+          ? "Request timeout! AI process layer took too long."
+          : "Error communicating with AI parser layer.";
 
       toast.error(errorMsg, { id: "azure-scan" });
     } finally {
@@ -152,8 +166,11 @@ export const BookModal = ({
     if (!text) return null;
 
     // Splits content cleanly by finding keywords or explicit newlines
-    const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
-    
+    const lines = text
+      .split(/\n+/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+
     // Fixed: 'const' instead of 'let' to satisfy ESLint prefer-const rule
     const details: string[] = [];
     let summaryText = "";
@@ -180,10 +197,17 @@ export const BookModal = ({
               const label = detail.substring(0, splitIdx).trim();
               const val = detail.substring(splitIdx + 1).trim();
               return (
-                <div key={idx} className="flex items-start text-[13px] text-slate-700 font-semibold leading-tight">
+                <div
+                  key={idx}
+                  className="flex items-start text-[13px] text-slate-700 font-semibold leading-tight"
+                >
                   {/* Fixed: Upgraded arbitrary 'min-w-[140px]' to canonical Tailwind v4 'min-w-35' */}
-                  <span className="text-slate-400 font-bold min-w-35 block">{label}:</span>
-                  <span className="text-slate-800 font-medium flex-1">{val}</span>
+                  <span className="text-slate-400 font-bold min-w-35 block">
+                    {label}:
+                  </span>
+                  <span className="text-slate-800 font-medium flex-1">
+                    {val}
+                  </span>
                 </div>
               );
             }
@@ -219,7 +243,6 @@ export const BookModal = ({
       >
         {/* LEFT COMPONENT: Primary Form Input Layout */}
         <div className="flex-1 overflow-y-auto flex flex-col">
-          
           {/* Header Framework */}
           <div className="flex items-center justify-between border-b border-gray-200 p-5 bg-white shrink-0">
             <div>
@@ -227,7 +250,9 @@ export const BookModal = ({
                 {editingBook ? "Modify Details" : "Add New Book"}
               </h3>
               <p className="text-[11px] text-[#718096] font-bold mt-1 tracking-wider uppercase">
-                {editingBook ? "Update Existing Record" : "Create New Inventory Registry"}
+                {editingBook
+                  ? "Update Existing Record"
+                  : "Create New Inventory Registry"}
               </p>
             </div>
             <button
@@ -240,7 +265,6 @@ export const BookModal = ({
           </div>
 
           <div className="p-6 overflow-y-auto space-y-6 flex-1 text-[#2D3748]">
-            
             {/* Intelligent OCR Scanning Engine Header Frame */}
             {!editingBook && (
               <div className="p-4 bg-gray-100 border border-dashed border-gray-200 rounded-xl space-y-2.5">
@@ -249,7 +273,7 @@ export const BookModal = ({
                     <Sparkles size={12} className="text-[#2B6CB0]" />{" "}
                     Intelligent OCR Engine
                   </label>
-                  <span className="text-[10px] font-mono font-bold bg-gray-200 text-[#2B6CB0] px-2 py-0.5 rounded-md">
+                  <span className="text-[10px]  font-bold bg-gray-200 text-[#2B6CB0] px-2 py-0.5 rounded-md">
                     Scans: {scanCounter}/50
                   </span>
                 </div>
@@ -371,14 +395,16 @@ export const BookModal = ({
         {!editingBook && aiInsights && (
           <div className="w-full md:w-96 bg-slate-50 border-t md:border-t-0 md:border-l border-gray-200 p-5 overflow-y-auto max-h-[45vh] md:max-h-full flex flex-col shrink-0">
             <h4 className="text-[11px] font-bold text-[#1A365D] uppercase tracking-wider flex items-center gap-1.5 mb-3">
-              <Sparkles size={12} className="text-[#2B6CB0]" /> AI Scanner Insights
+              <Sparkles size={12} className="text-[#2B6CB0]" /> AI Scanner
+              Insights
             </h4>
-            
+
             <div className="space-y-4">
               {/* Category Badge Block */}
               <div className="p-3.5 bg-white rounded-xl border border-gray-200 shadow-2xs">
                 <div className="flex items-center gap-2 text-[10px] font-bold text-[#718096] uppercase tracking-wider mb-1">
-                  <Layers size={12} className="text-[#2B6CB0]" /> Detected Category
+                  <Layers size={12} className="text-[#2B6CB0]" /> Detected
+                  Category
                 </div>
                 <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-800 text-xs font-extrabold rounded-lg border border-emerald-200/60 mt-1 uppercase tracking-wide">
                   {aiInsights.category}

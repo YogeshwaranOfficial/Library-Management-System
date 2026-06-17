@@ -38,7 +38,7 @@ export const PeakHoursChart = ({
       </div>
 
       {/* Bar Chart Section */}
-      <div className="relative flex items-end justify-between h-40 pt-8 px-4 bg-slate-50 border border-slate-300 rounded-xl gap-1 mt-4">
+      <div className="relative flex items-end justify-between h-55 pt-8 px-4 pb-2 bg-slate-50 border border-slate-300 rounded-xl gap-1">
         
         {/* Background reference tracks */}
         <div className="absolute inset-x-0 bottom-12 border-t border-slate-200/40 pointer-events-none border-dashed" />
@@ -51,7 +51,7 @@ export const PeakHoursChart = ({
             <div key={item.day} className="flex flex-col items-center group w-full relative z-10 h-full justify-end">
               
               {/* High Contrast Tooltip popup indicator */}
-              <div className="absolute -top-1 text-[10px] font-mono font-bold text-white bg-slate-900 px-1.5 py-0.5 rounded opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-150 pointer-events-none shadow-sm mb-1">
+              <div className="absolute -top-1 text-[10px]  font-bold text-white bg-slate-900 px-1.5 py-0.5 rounded opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-150 pointer-events-none shadow-sm mb-1">
                 {item.count}
               </div>
 
@@ -68,7 +68,7 @@ export const PeakHoursChart = ({
               />
 
               {/* Day Label with conditional size/weight based on activity */}
-              <span className={`text-[10px] font-mono mt-2 uppercase tracking-wider
+              <span className={`text-[10px]  mt-2 uppercase tracking-wider
                 ${isPeak ? 'text-slate-900 font-bold' : 'text-slate-400 font-medium'}`}>
                 {item.day.slice(0, 3)}
               </span>

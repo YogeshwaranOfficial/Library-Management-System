@@ -15,20 +15,25 @@ interface CategoryItem {
   color: string;
 }
 
-export const CategoryTreeMap = ({ categories }: { categories: CategoryItem[] }) => {
+export const CategoryTreeMap = ({
+  categories,
+}: {
+  categories: CategoryItem[];
+}) => {
   const totalValue = categories.reduce((sum, c) => sum + c.value, 0) || 1;
 
   return (
     <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs flex flex-col justify-between h-full text-left font-sans text-slate-800 select-none">
-      
       {/* 👋 HIDDEN COMPILER HOOK: Prevents asset pruning */}
-      <span className="hidden">{Object.keys(tailwindColorSafelist).length}</span>
+      <span className="hidden">
+        {Object.keys(tailwindColorSafelist).length}
+      </span>
 
       {/* HEADER BLOCK: Premium Swiss Editorial Hierarchy */}
       <div className="border-b border-slate-100 pb-3.5 mb-4">
-        <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 font-mono">
-          <Layers size={12} className="text-indigo-600" /> 
-           Categories
+        <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 ">
+          <Layers size={12} className="text-indigo-600" />
+          Categories
         </h3>
         <h4 className="text-lg font-black text-slate-900 tracking-tight mt-1">
           Top 4 categories
@@ -50,9 +55,9 @@ export const CategoryTreeMap = ({ categories }: { categories: CategoryItem[] }) 
             >
               {/* Overlay highlight */}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
-              
+
               {/* Dynamic CSS Popover Tooltip */}
-              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px] font-mono font-bold px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-md whitespace-nowrap z-10">
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-slate-900 text-white text-[10px]  font-bold px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-md whitespace-nowrap z-10">
                 {cat.name}: {itemPct}% ({cat.value})
               </div>
             </div>
@@ -72,10 +77,13 @@ export const CategoryTreeMap = ({ categories }: { categories: CategoryItem[] }) 
                 className={`w-2.5 h-2.5 rounded-full ${cat.color} shrink-0 mt-1 ring-4 ring-white shadow-2xs`}
               />
               <div className="flex flex-col min-w-0">
-                <span className="text-xs font-bold text-slate-900 truncate" title={cat.name}>
+                <span
+                  className="text-xs font-bold text-slate-900 truncate"
+                  title={cat.name}
+                >
                   {cat.name}
                 </span>
-                <span className="text-[10px] font-bold font-mono text-slate-700 mt-0.5">
+                <span className="text-[10px] font-bold  text-slate-700 mt-0.5">
                   {cat.value.toLocaleString()} Books
                 </span>
               </div>
@@ -83,9 +91,6 @@ export const CategoryTreeMap = ({ categories }: { categories: CategoryItem[] }) 
           );
         })}
       </div>
-
-  
-
     </div>
   );
 };

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
 import type { BookIssueRecord } from "../../../types/transactions";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 
 import {
   AlertTriangle,
@@ -68,7 +68,6 @@ export const IssueDetailsModal = ({
       {/* Primary Issue Details Window */}
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm font-sans select-none text-left">
         <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl transition-all overflow-hidden border border-gray-200 flex flex-col max-h-[90vh]">
-          
           <div className="flex items-center justify-between border-b border-gray-200 p-5 bg-white">
             <div>
               <h3 className="text-lg font-bold text-[#1A365D] tracking-tight">
@@ -89,7 +88,6 @@ export const IssueDetailsModal = ({
 
           <div className="p-6 overflow-y-auto space-y-6 flex-1 text-[#2D3748]">
             <div className="space-y-6">
-              
               {/* Member Profile */}
               <div className="bg-slate-50 p-4 rounded-xl border border-gray-200 space-y-1.5">
                 <div className="flex items-center gap-1.5 mb-1">
@@ -141,7 +139,7 @@ export const IssueDetailsModal = ({
               </div>
 
               {/* Timeline Grid */}
-              <div className="grid grid-cols-2 gap-4 border-t border-b border-gray-100 py-3 font-mono text-xs bg-slate-50/50 px-2 rounded-xl">
+              <div className="grid grid-cols-2 gap-4 border-t border-b border-gray-100 py-3  text-xs bg-slate-50/50 px-2 rounded-xl">
                 <div>
                   <div className="flex items-center gap-1 mb-1">
                     <Calendar size={13} className="text-[#718096]" />
@@ -192,7 +190,6 @@ export const IssueDetailsModal = ({
                   </button>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
@@ -202,7 +199,6 @@ export const IssueDetailsModal = ({
       {showFineBlockModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm font-sans select-none text-left">
           <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-gray-200 flex flex-col overflow-hidden">
-            
             <div className="flex items-center justify-between border-b border-gray-200 p-5 bg-white">
               <div>
                 <h3 className="text-lg font-bold text-[#1A365D] tracking-tight">
@@ -251,7 +247,7 @@ export const IssueDetailsModal = ({
                   <span className="text-rose-700 font-bold uppercase text-[11px] tracking-wide flex items-center gap-1">
                     <AlertTriangle className="w-3.5 h-3.5" /> Overdue Debt:
                   </span>
-                  <span className="text-base font-bold font-mono text-[#2D3748]">
+                  <span className="text-base font-bold  text-[#2D3748]">
                     ₹{record.fineAmount}
                   </span>
                 </div>
@@ -262,8 +258,9 @@ export const IssueDetailsModal = ({
                   Policy Rule Verification
                 </span>
                 <p className="text-xs text-rose-800 leading-relaxed font-medium">
-                  Outstanding debt liabilities must clear through the cash registration counter desk 
-                  before restoring book items back into system catalog slots.
+                  Outstanding debt liabilities must clear through the cash
+                  registration counter desk before restoring book items back
+                  into system catalog slots.
                 </p>
               </div>
             </div>
@@ -279,15 +276,21 @@ export const IssueDetailsModal = ({
               </button>
               <button
                 type="button"
-               onClick={() => { setShowFineBlockModal(false); onClose();
-                  navigate("/fines", { state: { autoOpenIssueId: record.id, autoOpenSettlement: true } });
+                onClick={() => {
+                  setShowFineBlockModal(false);
+                  onClose();
+                  navigate("/fines", {
+                    state: {
+                      autoOpenIssueId: record.id,
+                      autoOpenSettlement: true,
+                    },
+                  });
                 }}
                 className="px-5 py-2.5 bg-[#2B6CB0] hover:bg-[#18579a] text-white text-xs font-bold rounded-full transition-all cursor-pointer shadow-sm text-center tracking-wide inline-flex items-center gap-1.5"
               >
                 Collect Fine <ArrowRight className="w-3 h-3" />
               </button>
             </div>
-
           </div>
         </div>
       )}

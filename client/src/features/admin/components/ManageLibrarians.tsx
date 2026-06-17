@@ -28,7 +28,9 @@ interface ServerApiResponse {
 
 export const ManageLibrarians: React.FC = () => {
   const token = useAuthStore((state) => state.token);
-  const [selectedLibrarian, setSelectedLibrarian] = useState<UserRecord | null>(null);
+  const [selectedLibrarian, setSelectedLibrarian] = useState<UserRecord | null>(
+    null,
+  );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,8 +58,8 @@ export const ManageLibrarians: React.FC = () => {
     : Array.isArray(responsePayload)
       ? responsePayload
       : responsePayload &&
-        "data" in responsePayload &&
-        Array.isArray(responsePayload.data)
+          "data" in responsePayload &&
+          Array.isArray(responsePayload.data)
         ? responsePayload.data
         : [];
 
@@ -85,12 +87,15 @@ export const ManageLibrarians: React.FC = () => {
     <div className="min-h-full w-full flex flex-col bg-white text-[#2D3748] antialiased pb-16 pt-10 px-8 relative font-sans select-none text-left">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-[#1A365D]">Library Operators</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-[#1A365D]">
+            Library Operators
+          </h2>
           <p className="text-xs text-[#718096] mt-1.5 font-semibold max-w-2xl leading-relaxed">
-            Manage staff terminals, clearance logs, and authority configurations.
+            Manage staff terminals, clearance logs, and authority
+            configurations.
           </p>
         </div>
-        
+
         <button
           type="button"
           onClick={() => setIsCreateModalOpen(true)}
@@ -126,10 +131,12 @@ export const ManageLibrarians: React.FC = () => {
                       <div className="w-full">
                         <div className="flex justify-between items-start mb-3">
                           <div className="w-7 h-7 bg-slate-100 text-[#1A365D] font-semibold text-xs rounded-md flex items-center justify-center shrink-0 uppercase">
-                            {librarian.name ? librarian.name.slice(0, 2).toUpperCase() : "LB"}
+                            {librarian.name
+                              ? librarian.name.slice(0, 2).toUpperCase()
+                              : "LB"}
                           </div>
-                          
-                          <span className="font-mono text-[10px] font-bold text-[#718096] uppercase tracking-wide">
+
+                          <span className=" text-[10px] font-bold text-[#718096] uppercase tracking-wide">
                             OP-{librarian.user_id.slice(-4).toUpperCase()}
                           </span>
                         </div>
@@ -140,17 +147,30 @@ export const ManageLibrarians: React.FC = () => {
 
                         <div className="mt-2 space-y-1 text-xs text-slate-800 font-medium w-full">
                           <p className="flex items-center gap-2 select-all font-semibold text-[#2D3748] truncate">
-                            <Mail size={12} className="text-gray-400 shrink-0" /> {librarian.gmail}
+                            <Mail
+                              size={12}
+                              className="text-gray-400 shrink-0"
+                            />{" "}
+                            {librarian.gmail}
                           </p>
                           <p className="flex items-center gap-2 select-all text-[11px] font-medium text-slate-500 truncate">
-                            <Phone size={12} className="text-gray-400 shrink-0" /> {librarian.phone_number || "No Phone Registered"}
+                            <Phone
+                              size={12}
+                              className="text-gray-400 shrink-0"
+                            />{" "}
+                            {librarian.phone_number || "No Phone Registered"}
                           </p>
                         </div>
                       </div>
 
                       <div className="mt-auto pt-2.5 border-t border-gray-100 flex items-center justify-between text-[10px] font-bold text-[#718096] uppercase tracking-wider group-hover:text-slate-900 transition-colors">
-                        <span className="tracking-widest">View Librarian Profile</span>
-                        <ArrowRight size={12} className="transform group-hover:translate-x-1 transition-transform stroke-[2.5]" />
+                        <span className="tracking-widest">
+                          View Librarian Profile
+                        </span>
+                        <ArrowRight
+                          size={12}
+                          className="transform group-hover:translate-x-1 transition-transform stroke-[2.5]"
+                        />
                       </div>
                     </div>
                   );
@@ -162,8 +182,19 @@ export const ManageLibrarians: React.FC = () => {
           {totalPages > 0 && (
             <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-auto select-none bg-white w-full">
               <span>
-                Page <span className="font-semibold text-gray-800">{currentPage}</span> of <span className="font-semibold text-gray-800">{totalPages}</span>
-                <span className="text-slate-300 mx-2">|</span> Total <span className="font-semibold text-gray-800">{totalCount}</span> Librarians
+                Page{" "}
+                <span className="font-semibold text-gray-800">
+                  {currentPage}
+                </span>{" "}
+                of{" "}
+                <span className="font-semibold text-gray-800">
+                  {totalPages}
+                </span>
+                <span className="text-slate-300 mx-2">|</span> Total{" "}
+                <span className="font-semibold text-gray-800">
+                  {totalCount}
+                </span>{" "}
+                Librarians
               </span>
               <div className="flex gap-4">
                 <button

@@ -13,7 +13,6 @@ export const RetentionAnalytics = ({
 
   return (
     <div className="bg-white p-2 rounded-2xl flex flex-col justify-start h-full text-left font-sans select-none">
-      
       {/* HEADER BLOCK: Distinct label hierarchies */}
       <div>
         <div className="flex items-center justify-between">
@@ -24,11 +23,12 @@ export const RetentionAnalytics = ({
             </span>
           ) : (
             <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400 py-0.5 rounded-md">
-              <CheckCircle2 size={10} className="text-emerald-500"/>Optimal
+              <CheckCircle2 size={10} className="text-emerald-500" />
+              Optimal
             </span>
           )}
         </div>
-        
+
         <h4 className="text-lg font-black text-slate-900 tracking-tight mt-1">
           Retention Lifetime
         </h4>
@@ -43,16 +43,16 @@ export const RetentionAnalytics = ({
           <span className="text-5xl font-black text-slate-900 tracking-tighter block">
             {avg}
           </span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono block mt-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest  block mt-1">
             Mean Turnaround
           </span>
         </div>
-        
+
         <div className="text-right mt-10">
           <span className="text-xl font-bold text-slate-800 tracking-tight block">
             {maxLimit} Days
           </span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono block mt-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest  block mt-1">
             Max Policy Cap
           </span>
         </div>
@@ -62,7 +62,7 @@ export const RetentionAnalytics = ({
       {/* <div className="space-y-2 pt-1">
         <div className="flex justify-between items-center text-[11px]">
           <span className="text-slate-500 font-medium">Lending Window Allocation</span>
-          <span className={`font-mono font-bold ${isCloseToThreshold ? "text-amber-600" : "text-blue-900"}`}>
+          <span className={` font-bold ${isCloseToThreshold ? "text-amber-600" : "text-blue-900"}`}>
             {percentageUsed.toFixed(0)}% Exhausted
           </span>
         </div>
@@ -91,7 +91,6 @@ export const RetentionAnalytics = ({
           }
         </p>
       </div> */}
-
     </div>
   );
 };

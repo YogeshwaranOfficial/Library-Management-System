@@ -32,7 +32,7 @@ export const AmnestySimulator = ({
           <span className="text-[#2D3748] tracking-wide">
             Relief Rate: {discount}%
           </span>
-          <span className="text-amber-700 font-mono">
+          <span className="text-amber-700 ">
             Projected Cash Collection: ₹{projectedRecovery}
           </span>
         </div>

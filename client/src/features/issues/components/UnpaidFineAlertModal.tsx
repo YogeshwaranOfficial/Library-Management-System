@@ -66,7 +66,7 @@ export const UnpaidFineAlertModal = ({
               <span className="text-rose-700 font-bold uppercase text-[11px] tracking-wide flex items-center gap-1">
                 <AlertTriangle className="w-3.5 h-3.5" /> Overdue Debt:
               </span>
-              <span className="text-base font-bold font-mono text-text-main">
+              <span className="text-base font-bold  text-text-main">
                 {fineAmount && fineAmount > 0
                   ? `₹${fineAmount}.00`
                   : "Calculated at Desk"}
@@ -100,7 +100,8 @@ export const UnpaidFineAlertModal = ({
               }}
               className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              Collect Fine<ArrowRight className="w-3 h-3" />
+              Collect Fine
+              <ArrowRight className="w-3 h-3" />
             </button>
           )}
         </div>

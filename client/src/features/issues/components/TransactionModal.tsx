@@ -241,7 +241,7 @@ export const TransactionModal = ({
     });
   };
 
- return (
+  return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans select-none text-left animate-fade-in">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-200 flex flex-col max-h-[90vh] transition-all">
         {/* HEADER BLOCK BRANDED SYSTEM - Matched with reference framework layout */}
@@ -263,7 +263,10 @@ export const TransactionModal = ({
           </button>
         </div>
 
-        <form onSubmit={handleFormSubmit} className="p-6 overflow-y-auto space-y-6 flex-1 text-[#2D3748]">
+        <form
+          onSubmit={handleFormSubmit}
+          className="p-6 overflow-y-auto space-y-6 flex-1 text-[#2D3748]"
+        >
           {/* 1. MEMBER LOOKUP INPUT SECTION */}
           <div className="relative">
             <label className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest mb-1.5">
@@ -324,7 +327,7 @@ export const TransactionModal = ({
                           >
                             {m.name}
                           </span>
-                          <span className="text-[#718096] font-mono text-[11px] font-medium">
+                          <span className="text-[#718096]  text-[11px] font-medium">
                             📞 {m.phone_number || "No Contact Profile"}
                           </span>
                         </div>
@@ -374,7 +377,7 @@ export const TransactionModal = ({
                   `✓ Active operational context verified. Authorized for custom parameters.`}
               </p>
               {maxAllowedDate && (
-                <p className="text-[11px] text-rose-600 font-mono font-bold uppercase tracking-wider pt-2 mt-1 border-t border-gray-200">
+                <p className="text-[11px] text-rose-600  font-bold uppercase tracking-wider pt-2 mt-1 border-t border-gray-200">
                   📅 Plan Expiration Boundary: {maxAllowedDate}
                 </p>
               )}
@@ -482,7 +485,7 @@ export const TransactionModal = ({
           )}
 
           {/* 3. CALENDAR WORK PERIOD SETTINGS */}
-          <div className="grid grid-cols-2 gap-4 border-t border-b border-gray-100 py-4 font-mono text-xs bg-slate-50/50 px-2 rounded-xl">
+          <div className="grid grid-cols-2 gap-4 border-t border-b border-gray-100 py-4  text-xs bg-slate-50/50 px-2 rounded-xl">
             <div>
               <label className="block text-[11px] font-bold text-[#718096] uppercase font-sans tracking-wide mb-1.5">
                 Borrow Signature
@@ -500,7 +503,7 @@ export const TransactionModal = ({
                       ? formatToISODate(editingRecord.borrowedDate)
                       : getTodayString()
                   }
-                  className="w-full pl-9 pr-3 py-2 bg-slate-100 border border-gray-200 rounded-xl text-xs font-mono font-bold text-[#718096] outline-hidden select-none"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-100 border border-gray-200 rounded-xl text-xs  font-bold text-[#718096] outline-hidden select-none"
                 />
               </div>
             </div>
@@ -519,7 +522,7 @@ export const TransactionModal = ({
                   min={minAllowedDate}
                   max={maxAllowedDate || undefined}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-mono font-bold text-[#2D3748] outline-hidden focus:border-[#2B6CB0] focus:ring-2 focus:ring-[#2B6CB0]/10 transition-all cursor-pointer"
+                  className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-xs  font-bold text-[#2D3748] outline-hidden focus:border-[#2B6CB0] focus:ring-2 focus:ring-[#2B6CB0]/10 transition-all cursor-pointer"
                 />
               </div>
               {maxAllowedDate && (
