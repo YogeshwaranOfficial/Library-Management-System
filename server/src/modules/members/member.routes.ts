@@ -236,14 +236,10 @@
  *         description: Membership plans fetched successfully
  */
 
-
-import { Router } from "express";
-
+import { Router, Request, Response } from "express";
 import auth from "../../middlewares/auth.js";
 import validate from "../../middlewares/validate.js";
 import MembershipPlan from "../../database/models/MembershipPlan.js";
-import asyncHandler from "../../utils/asyncHandler.js";
-import { Request, Response } from "express";
 
 import {
   createMemberController,
@@ -252,14 +248,16 @@ import {
   getMemberByIdController,
   updateMemberController,
   getAvailableUsersController,
-  searchMembersByNameController // ✨ NEW: Import the search controller
+  searchMembersByNameController,
+  getAllPlansWithMetricsController // 💡 ADDED: Imported the plans dashboard controller
 } from "./member.controller.js";
 
 import {
   createMemberValidation,
   updateMemberValidation,
   getMembersQueryValidation,
-  searchMembersQueryValidation
+  searchMembersQueryValidation,
+  getPlansQueryValidation // 💡 ADDED: Imported the query parameter validator schema
 } from "./member.validation.js";
 
 const router = Router();
@@ -271,14 +269,44 @@ router.get(
   getAvailableUsersController
 );
 
-// 2. Lookup active membership plan structures
-router.get("/plans", auth, asyncHandler(async (req: Request, res: Response) => {
-  const plans = await MembershipPlan.findAll();
-  res.status(200).json({
-    success: true,
-    data: plans
-  });
-}));
+/**
+ * @route   GET /api/plans/dropdown
+ * @desc    Fetch all available membership plans for UI dropdown selections
+ * @access  Public / Protected (Depending on your middleware)
+ */router.get("/dropdown", async (req: Request, res: Response): Promise<any> => {
+  try {
+    // 1. Fetching from database
+    const plans = await MembershipPlan.findAll({
+      order: [["plan_name", "ASC"]],
+    });
+
+    // 2. Sending successful response
+    return res.status(200).json({
+      success: true,
+      message: "Membership plans retrieved successfully.",
+      data: plans,
+    });
+  } catch (error) {
+    // 🌟 Look at your terminal console running the server to see the exact database error!
+    console.error("====== DROPDOWN CRASH LOG ======", error);
+    
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error while syncing data ledger sequences.",
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+// 2. Lookup active membership plan structures with dashboard aggregation metrics
+router.get(
+  "/plans", 
+  auth, 
+  validate(getPlansQueryValidation), // 💡 ADDED: Validates query parameters securely
+  getAllPlansWithMetricsController   // 💡 ADDED: Routes payload logic down the architecture pipeline
+);
+
+
 
 // ⭐ NEW: Search directory matching frontend type-ahead bars
 // 🛡️ CRITICAL PLACEMENT: Located ABOVE /:id to prevent UUID type-casting crashes!
@@ -326,5 +354,7 @@ router.delete(
   auth,
   deleteMemberController
 );
+
+
 
 export default router;

@@ -113,3 +113,24 @@ export const restoreFineController = asyncHandler(
     });
   }
 );
+
+export const fineController = {
+  async triggerForceRecalculate(req: Request, res: Response) {
+    try {
+      console.log("🔔 Manual API request received: Force sync master fine metrics...");
+      const result = await fineService.forceRecalculateAllExistingFines();
+      
+      return res.status(200).json({
+        success: true,
+        message: "Master banking ledger metrics recalculated successfully.",
+        data: result
+      });
+    } catch (error: any) {
+      console.error("❌ Failed to force recalculate ledger matrices:", error);
+      return res.status(500).json({
+        success: false,
+        message: error.message || "Internal server error execution lock fault."
+      });
+    }
+  }
+};

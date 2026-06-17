@@ -18,6 +18,15 @@ jest.unstable_mockModule("./plans.repository.js", () => ({
 }));
 
 jest.unstable_mockModule(
+  "../../database/models/Member.js",
+  () => ({
+    default: {
+      update: jest.fn(),
+    },
+  })
+);
+
+jest.unstable_mockModule(
   "../../database/models/MembershipPlan.js",
   () => ({
     default: {
@@ -36,6 +45,12 @@ const { default: MembershipPlan } = await import(
   "../../database/models/MembershipPlan.js"
 );
 
+const { default: Member } = await import(
+  "../../database/models/Member.js"
+);
+
+const mockMember = Member as any;
+
 const mockMembershipPlan = MembershipPlan as any;
 
 // ============================================================================
@@ -53,10 +68,13 @@ const samplePlan = {
 describe("PlansService Unit Tests", () => {
   let plansService: any;
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    plansService = new PlansService();
-  });
+ beforeEach(() => {
+  jest.clearAllMocks();
+
+  mockMember.update.mockResolvedValue([1]);
+
+  plansService = new PlansService();
+});
 
   // ==========================================================================
   // listAllPlans
@@ -165,6 +183,10 @@ describe("PlansService Unit Tests", () => {
       mockRepository.updatePlan.mockResolvedValue([
         1,
       ]);
+
+      mockMember.update.mockResolvedValueOnce([1])
+                        .mockResolvedValueOnce([1])
+                        .mockResolvedValueOnce([1]);
 
       const result =
         await plansService.editPlan(

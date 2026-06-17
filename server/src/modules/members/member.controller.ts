@@ -10,6 +10,7 @@ import {
   updateMemberService,
   searchMembersByNameService,
   getEligibleUsersForMemberService, // 💡 Imported the missing service engine link
+  getAllPlansWithMetricsService,    // 💡 ADDED: Importing the plans metric service link
 } from "./member.service.js";
 
 // 💡 FEATURE UPDATED: Refactored to leverage clean service-to-repo patterns with explicit READER filter constraints
@@ -125,5 +126,21 @@ export const searchMembersByNameController = asyncHandler(async (req: Request, r
     statusCode: 200,
     message: "Library member directory queried successfully matching criteria.",
     data: detailedMatches,
+  });
+});
+
+// =========================================================
+// NEW: GET ALL PLANS METRICS CONTROLLER
+// =========================================================
+export const getAllPlansWithMetricsController = asyncHandler(async (req: Request, res: Response) => {
+  const searchTerm = req.query.search as string;
+
+  const result = await getAllPlansWithMetricsService(searchTerm);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Membership plans analytics dashboard matrices structural feed compiled.",
+    data: result, // Contains data: plans[], meta: { total, globalActiveMembers, globalInactiveMembers }
   });
 });

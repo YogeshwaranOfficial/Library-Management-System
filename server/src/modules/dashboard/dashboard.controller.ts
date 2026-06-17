@@ -14,7 +14,6 @@ export const getDashboardSummaryController = asyncHandler(
   async (req: Request, res: Response): Promise<Response> => {
     // 💡 Executing the centralized class instance method
     const result: CompleteDashboardSummaryResponse = await dashboardService.getDashboardSummaryService();
-
     // Return formatted using JSend convention format to feed TanStack query smoothly
     return res.status(200).json({
       success: true,

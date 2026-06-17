@@ -12,6 +12,41 @@ jest.unstable_mockModule("./fine.repository.js", () => ({
   },
 }));
 
+jest.unstable_mockModule("../../database/index.js", () => ({
+  sequelize: {
+    transaction: jest.fn(),
+  },
+}));
+
+jest.unstable_mockModule(
+  "../../database/models/Issue.js",
+  () => ({
+    default: {
+      findByPk: jest.fn(),
+      update: jest.fn(),
+    },
+  })
+);
+
+jest.unstable_mockModule(
+  "../../database/models/Book.js",
+  () => ({
+    default: {
+      increment: jest.fn(),
+      decrement: jest.fn(),
+    },
+  })
+);
+
+jest.unstable_mockModule(
+  "../../database/models/Fine.js",
+  () => ({
+    default: {
+      update: jest.fn(),
+    },
+  })
+);
+
 const { default: fineService } =
   await import("./fine.service.js");
 
@@ -21,10 +56,32 @@ const { default: fineRepository } =
 const mockFineRepository =
   fineRepository as any;
 
+const { sequelize } =
+  await import("../../database/index.js");
+
+const { default: Fine } =
+  await import("../../database/models/Fine.js");
+
+const { default: Issue } =
+  await import("../../database/models/Issue.js");
+
+const { default: Book } =
+  await import("../../database/models/Book.js");
+
+const mockSequelize = sequelize as any;
+const mockFineModel = Fine as any;
+const mockIssueModel = Issue as any;
+const mockBookModel = Book as any;
+
 describe("FineService Unit Tests", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+beforeEach(() => {
+  jest.clearAllMocks();
+
+  mockSequelize.transaction.mockResolvedValue({
+    commit: jest.fn(),
+    rollback: jest.fn(),
   });
+});
 
   const fineRecord = {
     fine_id: "fine-1",
@@ -162,33 +219,54 @@ describe("FineService Unit Tests", () => {
 
   describe("payFine", () => {
     it("should pay fine successfully", async () => {
-      const paidFine = {
-        ...fineRecord,
-        paid_status: true,
-      };
+  const transaction = {
+    commit: jest.fn(),
+    rollback: jest.fn(),
+  };
 
-      mockFineRepository
-        .getFineById
-        .mockResolvedValue(fineRecord);
+  mockSequelize.transaction.mockResolvedValue(
+    transaction
+  );
 
-      mockFineRepository
-        .payFine
-        .mockResolvedValue(paidFine);
-
-      const result =
-        await fineService.payFine(
-          "fine-1",
-          "2026-01-10",
-          "UPI"
-        );
-
-      expect(
-        mockFineRepository.payFine
-      ).toHaveBeenCalled();
-
-      expect(result.paid_status)
-        .toBe(true);
+  mockFineRepository.getFineById
+    .mockResolvedValueOnce(fineRecord)
+    .mockResolvedValueOnce({
+      ...fineRecord,
+      paid_status: true,
     });
+
+  mockFineModel.update.mockResolvedValue([1]);
+
+  mockIssueModel.findByPk.mockResolvedValue({
+    issue_id: "issue-1",
+    issue_status: "OVERDUE",
+    book_id: "book-1",
+  });
+
+  mockIssueModel.update.mockResolvedValue([1]);
+
+  mockBookModel.increment.mockResolvedValue(
+    [1]
+  );
+
+  const result =
+    await fineService.payFine(
+      "fine-1",
+      "2026-01-10",
+      "UPI"
+    );
+
+  expect(
+    mockFineModel.update
+  ).toHaveBeenCalled();
+
+  expect(
+    transaction.commit
+  ).toHaveBeenCalled();
+
+  expect(result.paid_status)
+    .toBe(true);
+});
 
     it("should use current date when paidDate is null", async () => {
       const paidFine = {
@@ -211,8 +289,8 @@ describe("FineService Unit Tests", () => {
       );
 
       expect(
-        mockFineRepository.payFine
-      ).toHaveBeenCalled();
+  mockFineModel.update
+).toHaveBeenCalled();
     });
 
     it("should throw when fine not found", async () => {
@@ -325,38 +403,52 @@ describe("FineService Unit Tests", () => {
 
   describe("restoreFine", () => {
     it("should restore fine successfully", async () => {
-      mockFineRepository
-        .getFineById
-        .mockResolvedValue(fineRecord);
+  const transaction = {
+    commit: jest.fn(),
+    rollback: jest.fn(),
+  };
 
-      mockFineRepository
-        .restoreFine
-        .mockResolvedValue([1]);
+  mockSequelize.transaction.mockResolvedValue(
+    transaction
+  );
 
-      mockFineRepository
-        .getFineById
-        .mockResolvedValueOnce(
-          fineRecord
-        )
-        .mockResolvedValueOnce({
-          ...fineRecord,
-          paid_status: false,
-        });
-
-      const result =
-        await fineService.restoreFine(
-          "fine-1"
-        );
-
-      expect(
-        mockFineRepository.restoreFine
-      ).toHaveBeenCalledWith(
-        "fine-1"
-      );
-
-      expect(result.paid_status)
-        .toBe(false);
+  mockFineRepository.getFineById
+    .mockResolvedValueOnce(fineRecord)
+    .mockResolvedValueOnce({
+      ...fineRecord,
+      paid_status: false,
     });
+
+  mockFineModel.update.mockResolvedValue([1]);
+
+  mockIssueModel.findByPk.mockResolvedValue({
+    issue_id: "issue-1",
+    issue_status: "RETURNED",
+    book_id: "book-1",
+  });
+
+  mockIssueModel.update.mockResolvedValue([1]);
+
+  mockBookModel.decrement.mockResolvedValue(
+    [1]
+  );
+
+  const result =
+    await fineService.restoreFine(
+      "fine-1"
+    );
+
+  expect(
+    mockFineModel.update
+  ).toHaveBeenCalled();
+
+  expect(
+    transaction.commit
+  ).toHaveBeenCalled();
+
+  expect(result.paid_status)
+    .toBe(false);
+});
 
     it("should throw when fine id missing", async () => {
       await expect(
@@ -387,11 +479,9 @@ describe("FineService Unit Tests", () => {
         .getFineById
         .mockResolvedValue(fineRecord);
 
-      mockFineRepository
-        .restoreFine
-        .mockRejectedValue(
-          new Error("DB Failure")
-        );
+     mockFineModel.update.mockRejectedValue(
+  new Error("DB Failure")
+);
 
       await expect(
         fineService.restoreFine(

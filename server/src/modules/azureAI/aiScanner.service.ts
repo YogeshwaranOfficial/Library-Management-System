@@ -8,7 +8,6 @@ const aiEndpoint = process.env.AZURE_AI_ENDPOINT || "";
 const aiRegion = process.env.AZURE_AI_REGION || "centralindia";
 const geminiApiKey = process.env.GEMINI_API_KEY || "";
 
-// 2️⃣ SDK Factory Allocations
 const credential = new AzureKeyCredential(aiKey);
 const getVisionClientFactory = () => {
   const mod = AzureVisionModule as any;
@@ -23,18 +22,10 @@ const translationClient = createTextTranslationClient("https://api.cognitive.mic
   region: aiRegion,
 });
 
-// Initialize Gemini SDK Client
 const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
-export interface ScoredLine {
-  originalText: string;
-  translatedText: string;
-  category: "green" | "yellow" | "red";
-  reason: string;
-}
-
 export const processBookCoverAI = async (imageBuffer: Buffer) => {
-  // 🟢 STEP 1: Azure Vision OCR Scan
+  // 🟢 STEP 1: Global Azure Vision OCR Scan
   const visionResponse = await visionClient.path("/imageanalysis:analyze").post({
     body: imageBuffer,
     contentType: "application/octet-stream",
@@ -55,89 +46,109 @@ export const processBookCoverAI = async (imageBuffer: Buffer) => {
     });
   }
 
-  if (extractedLines.length === 0) {
-    return { success: false, title: "Unknown Title", author: "Unknown Author", alternativeLines: [] };
-  }
-
- // 🟢 STEP 2: Azure Translation Bulk Normalization
+  // 🟢 STEP 2: Azure Translation Bulk Normalization
   const translationInputs = extractedLines.map(line => ({ text: line, targets: [{ language: "en" }] }));
   let englishLines: string[] = [...extractedLines];
+  let azureDetectedLangCode = "en"; 
 
-  try {
-    const translateResponse = await translationClient.path("/translate").post({
-      body: {
-        inputs: translationInputs // ✅ FIXED: Wrapped inside the 'inputs' key to satisfy TranslateBody type
-      }
-    });
-    const translationData = translateResponse.body as any;
-    if (Array.isArray(translationData)) {
-      englishLines = extractedLines.map((rawLine, index) => {
-        return translationData[index]?.translations?.[0]?.text || rawLine;
+  if (extractedLines.length > 0) {
+    try {
+      const translateResponse = await translationClient.path("/translate").post({
+        body: { inputs: translationInputs }
       });
+      const translationData = translateResponse.body as any;
+      if (Array.isArray(translationData)) {
+        englishLines = extractedLines.map((rawLine, index) => {
+          if (translationData[index]?.detectedLanguage?.language && translationData[index].detectedLanguage.language !== "en") {
+            azureDetectedLangCode = translationData[index].detectedLanguage.language;
+          }
+          return translationData[index]?.translations?.[0]?.text || rawLine;
+        });
+      }
+    } catch (err) {
+      console.error("Translation Layer Failed:", err);
     }
-  } catch (err) {
-    console.error("Translation Layer Failed:", err);
   }
 
-  // Compile full array map for UI alternative sidebar diagnostics mapping
-  const alternativeLines: ScoredLine[] = extractedLines.map((raw, idx) => ({
-    originalText: raw,
-    translatedText: englishLines[idx] || raw,
-    category: "yellow", 
-    reason: "Raw extracted line element from layout pipeline"
-  }));
+  const textContextPayload = extractedLines.map(
+    (raw, idx) => `- OCR Extracted: "${raw}" | Translated Target: "${englishLines[idx] || raw}"`
+  ).join("\n");
 
-  // 🟢 STEP 3: Gemini LLM Contextual Reasoning
+  // 🟢 STEP 3: Gemini Multimodal Vision & Contextual Verification
   let bestTitle = "";
   let bestAuthor = "";
+  let bestLanguage = "";
+  let detectedCategory = "Non-Fiction";
+  let overviewText = "";
 
   try {
-    const textContextPayload = alternativeLines.map(
-      (line) => `- Original: "${line.originalText}" | Translated English: "${line.translatedText}"`
-    ).join("\n");
+  const systemInstruction = 
+    "You are an expert global library management automation engine. Your job is to accurately extract structural properties and analyze contextual metadata from a book cover.\n\n" +
+    "CRITICAL CORRECTION & EXTRACTION RULES:\n" +
+    "1. You are provided BOTH an OCR transcript string and the direct raw book cover image.\n" +
+    "2. If the OCR transcript contains gibberish or misspelled text due to script misidentification, analyze the image directly to visually verify the original characters, author name, and correct language.\n" +
+    "3. Return Title and Author in clean English Title Case format. Identify and return the true, full native language name capitalized dynamically based on the source material.\n" +
+    "4. CATEGORY RULES: Classify the book into exactly ONE generic core global category name that best reflects its actual shelf classification in modern library standards globally. Do not restrict yourself to a predefined list—accurately capture the true primary vertical of the book.\n" +
+    "5. OVERVIEW PANEL RULES: Generate a clean, highly readable layout for the librarian. Do not write a continuous block of mixed paragraphs. Instead, format the text explicitly into the following structure:\n" +
+    "   - Book Name: [True Title]\n" +
+    "   - Author Name: [True Author Name]\n" +
+    "   - Book Published Year: [Original Publication Year or Estimated Era]\n" +
+    "   - Genre: [Specific structural sub-genre tag]\n" +
+    "   - Global Readers: [Brief indicator of its readership status, impact, or global distribution market]\n" +
+    "   - Native Language: [The original language of publication]\n" +
+    "   \n" +
+    "   Summary:\n" +
+    "   [Provide a standalone, engaging 2-to-3 line objective description about the book content, plot, or core thesis alone.]";
 
-    const systemInstruction = 
-      "You are an expert library management automation engine. Your task is to look at messy text segments extracted from a book cover via OCR, analyze semantic relationships, and deduce the definitive Book Title and primary Author Name.\n\n" +
-      "CRITICAL RULES:\n" +
-      "1. Ignore structural descriptions, validation indicators, translation meta tags (e.g., 'Hindi translation of...'), promotional clutter ('bestseller', 'million copies sold'), or year milestones.\n" +
-      "2. Return the Book Title and Author Name clearly in standard English Title Case format.\n" +
-      "3. If text contains both native script and English translations, extract the cleanest, most recognizable standard book details (prefer English translations if available).";
+   const imagePart = {
+      inlineData: {
+        data: imageBuffer.toString("base64"),
+        mimeType: "image/jpeg"
+      }
+    };
 
-    // ✅ FIXED: Correct config validation mapping syntax structure for GoogleGenAI SDK instances
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
-      contents: `Here are the extracted lines from the book cover layout:\n\n${textContextPayload}\n\nAnalyze these items and extract the true title and author.`,
+      contents: [
+        imagePart,
+        `Azure AI Detected Code Hint: ${azureDetectedLangCode}\n\nExtracted Line Text Metadata:\n${textContextPayload}\n\nAnalyze the image and structural text details to resolve the attributes.`
+      ],
       config: {
         systemInstruction: systemInstruction,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            title: { type: Type.STRING, description: "The definitive title of the book in English Title Case." },
-            author: { type: Type.STRING, description: "The definitive primary author name in English Title Case." },
+            title: { type: Type.STRING, description: "Definitive book title in English Title Case." },
+            author: { type: Type.STRING, description: "Definitive primary author name in English Title Case." },
+            language: { type: Type.STRING, description: "Full capitalized language string name (e.g., 'Japanese', 'Kannada')." },
+            category: { type: Type.STRING, description: "A single broad category categorization tag (e.g., 'Money', 'Fiction', 'Self-Help')." },
+            overview: { type: Type.STRING, description: "A comprehensive, 3 to 4 lines description summary context about the book and author." }
           },
-          required: ["title", "author"],
+          required: ["title", "author", "language", "category", "overview"],
         },
       },
     });
 
-    // Handle extraction safely
     const responseText = response.text ? response.text.trim() : "";
     if (responseText) {
       const parsedLLMResult = JSON.parse(responseText);
       bestTitle = parsedLLMResult.title;
       bestAuthor = parsedLLMResult.author;
+      bestLanguage = parsedLLMResult.language;
+      detectedCategory = parsedLLMResult.category;
+      overviewText = parsedLLMResult.overview;
     }
   } catch (llmError) {
-    console.error("Gemini Reasoning Layer Crash:", llmError);
+    console.error("Gemini Multimodal Reasoning Layer Crash:", llmError);
   }
 
-  // ✅ FIXED: Safer baseline recovery fallback block. 
-  // If Gemini completely goes offline or times out, it won't send weird, un-parsed array indices to the client input fields.
   return {
     success: true,
-    title: bestTitle || "Rich Dad Poor Dad", 
-    author: bestAuthor || "Robert T. Kiyosaki",
-    alternativeLines 
+    title: bestTitle || "Unknown Title", 
+    author: bestAuthor || "Unknown Author",
+    language: bestLanguage || "English",
+    category: detectedCategory || "Non-Fiction",
+    overview: overviewText || "No overview available for this item."
   };
 };

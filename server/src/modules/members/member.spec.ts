@@ -9,6 +9,7 @@ jest.unstable_mockModule("./member.repository.js", () => ({
   deleteMemberRepository: jest.fn(),
   searchMembersByNameRepository: jest.fn(),
   getEligibleUsersForMemberRepository: jest.fn(),
+  getAllPlansWithMetrics: jest.fn(), // NEW
 }));
 
 jest.unstable_mockModule("../../database/models/Member.js", () => ({
@@ -45,6 +46,7 @@ const {
   deleteMemberRepository,
   searchMembersByNameRepository,
   getEligibleUsersForMemberRepository,
+  getAllPlansWithMetrics,
 } = await import("./member.repository.js");
 
 const { default: Member } =

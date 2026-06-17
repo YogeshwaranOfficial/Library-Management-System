@@ -68,6 +68,7 @@ describe(
                     "Programming",
                   booksCount: 10,
                   lendingCount: 25,
+                  totalCopies: 0,
                 },
               ],
               totalCount: 5,
@@ -106,6 +107,58 @@ describe(
             ).toBe(1);
           }
         );
+
+        it("should sanitize aggregate string values", async () => {
+  mockCategoryRepository.getCategoriesWithMetrics.mockResolvedValue({
+    rows: [
+      {
+        category_id: "cat-1",
+        booksCount: "12",
+        totalCopies: "50",
+        lendingCount: "9",
+      },
+    ],
+    count: 1,
+  });
+
+  const result =
+    await categoriesService.getAllCategoriesWithMetrics(
+      1,
+      10
+    );
+
+  expect(result.rows[0]).toMatchObject({
+    booksCount: 12,
+    totalCopies: 50,
+    lendingCount: 9,
+  });
+});
+
+it("should default aggregate values to zero", async () => {
+  mockCategoryRepository.getCategoriesWithMetrics.mockResolvedValue({
+    rows: [
+      {
+        category_id: "cat-1",
+        booksCount: null,
+        totalCopies: null,
+        lendingCount: null,
+      },
+    ],
+    count: 1,
+  });
+
+  const result =
+    await categoriesService.getAllCategoriesWithMetrics(
+      1,
+      10
+    );
+
+  expect(result.rows[0]).toMatchObject({
+    booksCount: 0,
+    totalCopies: 0,
+    lendingCount: 0,
+  });
+});
 
         it(
           "should pass filters correctly",
@@ -260,7 +313,7 @@ describe(
                   "Backend",
               }
             );
-expect(result?.category_id).toBe("cat-1");
+      expect(result?.category_id).toBe("cat-1");
           }
         );
 

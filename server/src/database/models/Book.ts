@@ -24,6 +24,7 @@ class Book extends Model<
 
   declare available_copies:number;
 
+  declare language: CreationOptional<string>;
   declare lending_count: CreationOptional<number>; // Defaults to 0 in database
   declare readonly created_at: CreationOptional<Date>; // Handled by timestamps
   declare readonly updated_at: CreationOptional<Date>;
@@ -65,6 +66,12 @@ Book.init(
     lending_count: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
+    },
+
+    language: {
+      type: DataTypes.STRING(100),
+      allowNull: true, // Kept true for migration safety, managed by defaults
+      defaultValue: "English",
     },
 
     created_at: {

@@ -17,47 +17,75 @@ export const DeleteBookModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans text-text-main text-left">
-      <div className="bg-card-bg rounded-2xl shadow-2xl w-full max-w-md p-6 border border-border-main animate-zoom-in">
-        <div className="flex flex-col items-center text-center">
-          <div className="p-3 bg-rose-50 text-rose-600 rounded-full mb-3.5">
-            <Trash2 size={28} />
-          </div>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 font-sans">
+    <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-gray-200 overflow-hidden animate-zoom-in">
 
-          <h3 className="text-xl font-bold text-text-main tracking-tight">
-            Delete Book From Catalog
-          </h3>
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-gray-200 p-5 bg-white">
+        <h3 className="text-lg font-bold text-[#1A365D] tracking-tight">
+          Delete Book From Catalog
+        </h3>
 
-          <p className="text-base text-slate-500 mt-3 leading-relaxed font-medium">
-            Are you absolutely sure you want to delete{" "}
-            <strong className="text-text-main font-bold">"{bookTitle}"</strong>{" "}
-            permanently from the library repository index?
-          </p>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-[#718096] hover:text-[#1A365D] hover:bg-gray-100 transition-all cursor-pointer p-1.5 rounded-full"
+        >
+          ✕
+        </button>
+      </div>
 
-          <p className="text-sm text-rose-600 font-semibold mt-4 bg-rose-50 border border-rose-100 p-3.5 rounded-xl leading-relaxed">
-            Warning: This action cannot be reverted and will permanently delete
-            all tracking history and copy instances.
-          </p>
+      {/* Content */}
+      <div className="p-6 text-center text-[#2D3748]">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center mb-5">
+          <Trash2 size={30} className="text-rose-600" />
         </div>
 
-        {/* Action Panel Buttons */}
-        <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100 text-sm font-bold uppercase tracking-wider">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2.5 text-slate-500 hover:text-text-main transition-colors cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="px-5 py-2.5 text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md transition-all cursor-pointer"
-          >
-            Confirm Delete
-          </button>
+        <h4 className="text-xl font-bold text-[#1A365D] tracking-tight">
+          Confirm Book Deletion
+        </h4>
+
+        <p className="text-sm text-[#718096] leading-relaxed mt-4">
+          Are you sure you want to permanently remove
+          <span className="font-semibold text-[#1A365D]">
+            {" "}
+            "{bookTitle}"
+          </span>
+          {" "}from the library catalog?
+        </p>
+
+        {/* Warning Card */}
+        <div className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-left">
+          <span className="block text-[11px] font-bold uppercase tracking-widest text-rose-700 mb-2">
+            Permanent Action
+          </span>
+
+          <p className="text-xs text-rose-800 leading-relaxed font-medium">
+            This operation cannot be undone. All associated book copies,
+            borrowing references, and catalog tracking history linked to this
+            title may become unavailable after deletion.
+          </p>
         </div>
       </div>
+
+      {/* Footer */}
+      <div className="flex justify-end gap-3 border-t border-gray-200 p-5 bg-white">
+        <button
+          type="button"
+          onClick={onClose}
+          className="px-4 py-2.5 border border-gray-200 rounded-xl bg-white text-[#2D3748] text-sm font-semibold hover:bg-gray-50 transition-all cursor-pointer"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={onConfirm}
+          className="px-5 py-2.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white text-sm font-bold rounded-xl transition-all cursor-pointer shadow-sm"
+        >
+          Confirm Delete
+        </button>
+      </div>
     </div>
-  );
-};
+  </div>
+);}

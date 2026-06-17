@@ -13,8 +13,8 @@
   --color-utility-crimson: #C0392B;   /* Critical validation / blocks / alerts */
   
   /* 📐 2. Font Pair Configurations */
-  --font-sans: "Inter", system-ui, sans-serif;    /* Inter for Primary UI & Headings */
-  --font-data: "Roboto", sans-serif;              /* Roboto for numbers, dates, lists */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-data: "Inter", system-ui, sans-serif;       
 
   /* 🌗 3. Dynamic Dark-Mode Semantic Mapping Tokens */
   --color-page-bg: var(--page-bg);

@@ -3,6 +3,7 @@ import AppError from "../../utils/AppError.js";
 import fineRepository from "./fine.repository.js";
 import { sequelize } from "../../database/index.js";
 import Issue from "../../database/models/Issue.js";
+import Book from "../../database/models/Book.js";
 import Member from "../../database/models/Member.js";
 import MembershipPlan from "../../database/models/MembershipPlan.js";
 import Fine from "../../database/models/Fine.js";
@@ -107,28 +108,83 @@ class FineService {
     }
   }
 
+
   async payFine(fine_id: string, paidDate: string | Date | null, paymentMethod: "CASH" | "CARD" | "UPI") {
-    const fine = await fineRepository.getFineById(fine_id);
+  const fine = await fineRepository.getFineById(fine_id);
 
-    if (!fine) {
-      throw new AppError("Fine registry record not found", httpStatus.NOT_FOUND);
-    }
-
-    if (fine.paid_status) {
-      throw new AppError("This fine has already been settled", httpStatus.BAD_REQUEST);
-    }
-
-    const validatedExecutionDate = paidDate ? new Date(paidDate) : new Date();
-
-    const paymentUpdates = {
-      paid_status: true,
-      paid_date: validatedExecutionDate,
-      payment_method: paymentMethod
-    };
-
-    const updatedRecord = await fineRepository.payFine(fine_id, paymentUpdates);
-    return this.transformFineRecord(updatedRecord);
+  if (!fine) {
+    throw new AppError("Fine registry record not found", httpStatus.NOT_FOUND);
   }
+
+  if (fine.paid_status) {
+    throw new AppError("This fine has already been settled", httpStatus.BAD_REQUEST);
+  }
+
+  const validatedExecutionDate = paidDate ? new Date(paidDate) : new Date();
+
+  const paymentUpdates = {
+    paid_status: true,
+    paid_date: validatedExecutionDate,
+    payment_method: paymentMethod
+  };
+
+  // 🌟 START ACID TRANSACTION ATOMIC SHIELD
+  const transaction = await sequelize.transaction();
+
+  try {
+    // 1. ✅ FIXED: Run the fine update directly via Fine model to keep TypeScript happy with the transaction context
+    await Fine.update(paymentUpdates, {
+      where: { fine_id }, // Check if your fine primary key is named fine_id or id
+      transaction
+    });
+
+    // 2. Fetch the fresh state of the fine record to ensure synchronization
+    const updatedRecord = await fineRepository.getFineById(fine_id);
+
+    // 3. Cascade update the Issue ledger records if an issue_id is attached
+    if (fine.issue_id) {
+      // Look up using your explicit primary key: issue_id
+      const associatedIssue = await Issue.findByPk(fine.issue_id, { transaction });
+
+      // ✅ FIXED: Using 'issue_status' instead of 'status' to match your model declaration
+      if (associatedIssue && associatedIssue.issue_status === "OVERDUE") {
+        
+        // A. Automatically update status from OVERDUE to RETURNED
+        await Issue.update(
+          { 
+            issue_status: "RETURNED", // ✅ FIXED
+            returned_date: validatedExecutionDate 
+          },
+          { 
+            where: { issue_id: fine.issue_id }, // ✅ FIXED: Explicitly referencing the model primary key
+            transaction 
+          }
+        );
+
+        // B. Increment the stock of copies available on library shelves
+        if (associatedIssue.book_id) {
+          await Book.increment(
+            { available_copies: 1 },
+            { 
+              where: { book_id: associatedIssue.book_id },
+              transaction 
+            }
+          );
+        }
+      }
+    }
+
+    // Commit changes safely to the database
+    await transaction.commit();
+    
+    return this.transformFineRecord(updatedRecord!);
+
+  } catch (error) {
+    // Roll back if any database error occurs
+    await transaction.rollback();
+    throw error;
+  }
+}
 
   async purgeFine(fine_id: string) {
     if (!fine_id) {
@@ -147,24 +203,78 @@ class FineService {
     }
   }
 
-  async restoreFine(fine_id: string) {
-    if (!fine_id) {
-      throw new AppError("Fine unique identifier parameter is missing", httpStatus.BAD_REQUEST);
-    }
-
-    const fine = await fineRepository.getFineById(fine_id);
-    if (!fine) {
-      throw new AppError("Fine registry record not found for restoration", httpStatus.NOT_FOUND);
-    }
-
-    try {
-      await fineRepository.restoreFine(fine_id);
-      const updatedRecord = await fineRepository.getFineById(fine_id);
-      return this.transformFineRecord(updatedRecord);
-    } catch (error: any) {
-      throw new AppError(`Ledger Restoration Error: ${error.message}`, httpStatus.INTERNAL_SERVER_ERROR);
-    }
+ async restoreFine(fine_id: string) {
+  if (!fine_id) {
+    throw new AppError("Fine unique identifier parameter is missing", httpStatus.BAD_REQUEST);
   }
+
+  const fine = await fineRepository.getFineById(fine_id);
+  if (!fine) {
+    throw new AppError("Fine registry record not found for restoration", httpStatus.NOT_FOUND);
+  }
+
+  // 🌟 ACID TRANSACTION SHIELD: If the book count decrement fails, the fine doesn't change
+  const transaction = await sequelize.transaction();
+
+  try {
+    // 1. Reset the Fine metrics natively using the Fine model inside the transaction
+    await Fine.update(
+      {
+        paid_status: false,
+        paid_date: null,
+        payment_method: null
+      },
+      {
+        where: { fine_id },
+        transaction
+      }
+    );
+
+    // 2. Locate the linked Issue tracking record
+    if (fine.issue_id) {
+      const associatedIssue = await Issue.findByPk(fine.issue_id, { transaction });
+
+      // We only reverse it if the current status is marked as RETURNED
+      if (associatedIssue && associatedIssue.issue_status === "RETURNED") {
+        
+        // A. REVERSE STATUS: Shift from RETURNED back to OVERDUE and wipe out the returned_date timestamp
+        await Issue.update(
+          { 
+            issue_status: "OVERDUE",
+            returned_date: null // Book is no longer officially returned
+          },
+          { 
+            where: { issue_id: fine.issue_id },
+            transaction 
+          }
+        );
+
+        // B. CORRECT SHELF STOCK: Decrement the copies back down by 1 since the book is still checked out
+        if (associatedIssue.book_id) {
+          await Book.decrement(
+            { available_copies: 1 },
+            { 
+              where: { book_id: associatedIssue.book_id },
+              transaction 
+            }
+          );
+        }
+      }
+    }
+
+    // Commit all changes simultaneously
+    await transaction.commit();
+
+    // Fetch and transform the fresh record state to send back to your frontend template
+    const updatedRecord = await fineRepository.getFineById(fine_id);
+    return this.transformFineRecord(updatedRecord!);
+
+  } catch (error: any) {
+    // Roll back changes cleanly if a database constraint locks up
+    await transaction.rollback();
+    throw new AppError(`Ledger Restoration Error: ${error.message}`, httpStatus.INTERNAL_SERVER_ERROR);
+  }
+}
 
   /**
    * ⏰ DUAL-TRIGGER FINE ACCRUAL SYNC ENGINE

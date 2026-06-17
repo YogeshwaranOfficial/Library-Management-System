@@ -1,5 +1,5 @@
 import type { BookIssueRecord } from "../../../types/transactions";
-import { Mail, Phone, BookOpen, RefreshCw, Trash2, X } from "lucide-react";
+import { Mail, Phone, BookOpen, RefreshCw, Trash2 } from "lucide-react";
 
 interface ReturnedDetailsModalProps {
   isOpen: boolean;
@@ -24,112 +24,113 @@ export const ReturnedDetailsModal = ({
       ? `ISSUE-${record.id.slice(-4).toUpperCase()}`
       : `ISSUE-${record.id}`;
 
-  return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans text-xs sm:text-sm text-text-main text-left animate-fade-in">
-      <div className="bg-card-bg rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-border-main animate-zoom-in">
-        {/* Header Block */}
-        <div className="bg-slate-900 px-6 py-5 text-white flex justify-between items-center">
-          <div>
-            <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200">
-              Returned Book Details
-            </h3>
-            <span className="text-[11px] text-slate-400 font-mono tracking-widest">
-              {formattedIssueId}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
-          >
-            <X size={16} />
-          </button>
+ return (
+  <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans select-none text-left">
+    <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden border border-gray-200 flex flex-col max-h-[90vh] transition-all">
+      {/* Header Framework - Matching Reference Module */}
+      <div className="flex items-center justify-between border-b border-gray-200 p-5 bg-white">
+        <div>
+          <h3 className="text-lg font-bold text-[#1A365D] tracking-tight">
+            Returned Book Details
+          </h3>
+          <p className="text-[11px] text-[#718096] font-bold mt-1 tracking-wider uppercase">
+            ID: {formattedIssueId}
+          </p>
         </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-[#718096] hover:text-[#1A365D] hover:bg-gray-100 transition-all text-xs font-bold cursor-pointer p-1.5 rounded-full"
+        >
+          ✕
+        </button>
+      </div>
 
-        <div className="p-6 space-y-5">
+      <div className="p-6 overflow-y-auto space-y-6 flex-1 text-[#2D3748]">
+        <div className="space-y-6">
           {/* Member Card */}
-          <div className="bg-slate-50 p-4 rounded-xl border border-border-main space-y-1.5">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide block">
+          <div className="bg-slate-50 p-4 rounded-xl border border-gray-200 space-y-1.5">
+            <span className="text-[11px] font-bold text-[#718096] uppercase tracking-widest block">
               Borrower Profile
             </span>
-            <div className="text-sm font-bold text-text-main">
+            <div className="text-sm font-semibold text-[#1A365D]">
               {record.memberName}
             </div>
-            <div className="text-xs text-slate-500 font-medium flex items-center gap-1.5">
-              <Mail size={12} className="shrink-0 text-slate-400" />{" "}
+            <div className="text-xs text-[#718096] font-medium flex items-center gap-1.5">
+              <Mail size={12} className="shrink-0 text-[#718096]" />{" "}
               {record.memberEmail || "No email provided"}
             </div>
-            <div className="text-xs text-slate-500 font-medium flex items-center gap-1.5">
-              <Phone size={12} className="shrink-0 text-slate-400" />{" "}
+            <div className="text-xs text-[#718096] font-medium flex items-center gap-1.5">
+              <Phone size={12} className="shrink-0 text-[#718096]" />{" "}
               {record.memberPhone || "No contact info"}
             </div>
           </div>
 
           {/* Book Card */}
           <div className="space-y-1.5 px-1">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide block">
+            <span className="text-[11px] font-bold text-[#718096] uppercase tracking-widest block">
               Book Details
             </span>
-            <div className="text-sm font-bold text-text-main flex items-start gap-2">
-              <BookOpen size={14} className="mt-0.5 text-slate-400 shrink-0" />
+            <div className="text-sm font-semibold text-[#1A365D] flex items-start gap-2">
+              <BookOpen size={14} className="mt-0.5 text-[#718096] shrink-0" />
               <div>{record.bookTitle}</div>
             </div>
-            <div className="text-xs text-slate-500 font-medium pl-5.5">
+            <div className="text-xs text-[#718096] font-medium pl-5.5">
               Author:{" "}
-              <span className="font-semibold text-text-main">
+              <span className="font-semibold text-[#2D3748]">
                 {record.bookAuthor || "Unknown author"}
               </span>
             </div>
           </div>
 
           {/* Core Timeline Grid */}
-          <div className="grid grid-cols-3 gap-2 border-t border-b border-slate-100 py-3.5 font-mono text-center text-[11px]">
+          <div className="grid grid-cols-3 gap-2 border-t border-b border-gray-100 py-3.5 font-mono text-center text-xs bg-slate-50/50 px-2 rounded-xl">
             <div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase block font-sans tracking-wide mb-0.5">
+              <span className="text-[11px] font-bold text-[#718096] uppercase block font-sans tracking-wide mb-0.5">
                 Issued
               </span>
-              <div className="text-text-main font-bold">
+              <div className="text-[#2D3748] font-bold">
                 {record.borrowedDate}
               </div>
             </div>
             <div>
-              <span className="text-[11px] font-bold text-slate-400 uppercase block font-sans tracking-wide mb-0.5">
+              <span className="text-[11px] font-bold text-[#718096] uppercase block font-sans tracking-wide mb-0.5">
                 Due Date
               </span>
-              <div className="text-text-main font-bold">{record.dueDate}</div>
+              <div className="text-[#2D3748] font-bold">{record.dueDate}</div>
             </div>
             <div>
               <span className="text-[11px] font-bold text-emerald-700 uppercase block font-sans tracking-wide mb-0.5">
                 Returned
               </span>
-              <div className="text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-md inline-block">
+              <div className="text-emerald-700 font-bold bg-emerald-50 px-2.5 py-1 rounded-md inline-block border border-emerald-100 text-xs">
                 {record.returnedDate || "N/A"}
               </div>
             </div>
           </div>
 
-          {/* Operational Control Footers */}
+          {/* Operations Layout Action Buttons - Matching layout rules and theme */}
           <div className="pt-2 flex flex-col gap-3">
             <button
               type="button"
               onClick={() => onUndoReturn(record.id)}
-              className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-50 hover:bg-amber-100/80 border border-amber-200 rounded-xl transition-all cursor-pointer shadow-xs flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-50 hover:bg-amber-100/80 border border-amber-200 rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
             >
               <RefreshCw size={12} /> Revert Return Status
             </button>
 
-            <div className="flex justify-between items-center gap-3 pt-3 border-t border-slate-100">
+            <div className="pt-5 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-text-main cursor-pointer transition-colors"
+                className="px-4 py-2 text-xs font-bold text-[#718096] uppercase tracking-wider hover:bg-gray-50 border border-transparent hover:border-gray-200 rounded-xl transition-all cursor-pointer text-left sm:text-center"
               >
                 Close View
               </button>
               <button
                 type="button"
                 onClick={() => onDeletePermanent(record.id)}
-                className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-white bg-rose-600 hover:bg-rose-700 shadow-xs rounded-xl transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+                className="px-4 py-2 text-xs font-bold text-rose-600 uppercase tracking-wider hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 justify-center sm:justify-start whitespace-nowrap"
               >
                 <Trash2 size={12} /> Delete Record
               </button>
@@ -138,5 +139,6 @@ export const ReturnedDetailsModal = ({
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };

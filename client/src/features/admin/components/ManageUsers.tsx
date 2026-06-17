@@ -5,8 +5,8 @@ import { useAuthStore } from "../../../store/authStore";
 import {
   Plus,
   Search,
-  ChevronLeft,
-  ChevronRight,
+  Users,
+  X,
   RotateCcw,
 } from "lucide-react";
 import { UserModal } from "./UserModal";
@@ -94,169 +94,218 @@ export const ManageUsers: React.FC = () => {
     setCurrentPage(1);
   };
 
-  return (
-    <div className="flex flex-col min-h-screen max-w-6xl mx-auto relative animate-fade-in pb-12 font-sans text-xs sm:text-sm text-text-main text-left">
-      {/* 1. Page Header Block */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card-bg p-5 mb-5 rounded-2xl border border-border-main shadow-xs shrink-0">
+ return (
+    /* Standardized corporate canvas padding with exact alignment configurations */
+    <div className="min-h-screen bg-white text-[#2D3748] antialiased pb-16 pt-10 px-8 lg:px-14 font-sans select-none text-left">
+      
+      {/* ==================== ZONES A & B: HEADER & TRACKER ==================== */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
         <div>
-          <h2 className="text-xl font-bold text-text-main tracking-tight">
+          <div className="flex items-center gap-2 text-[#718096] text-[11px] font-bold uppercase tracking-widest mb-1.5">
+            <Users size={13} className="stroke-[2.5]" /> Directory
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-[#1A365D]">
             Users Database Management
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5 font-medium leading-relaxed">
-            Click any system row ledger to view access settings, check full
-            operational logs, or customize user system parameters.
+          </h1>
+          <p className="text-xs text-[#718096] mt-1.5 font-semibold max-w-2xl leading-relaxed">
+            Click any system row ledger to view access settings, check full operational logs, or customize user system parameters.
           </p>
         </div>
-        <button
-          onClick={() => {
-            setSelectedUser(null);
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap self-stretch sm:self-auto justify-center"
-        >
-          <Plus size={14} /> Add New User
-        </button>
+
+        {/* Standardized tracker statistics blocks from reference */}
+        <div className="flex items-center gap-10 select-none pb-0.5 self-start md:self-auto">
+          <div>
+            <span className="block text-2xl font-bold text-[#1A365D] tracking-tight leading-none text-right">
+              {totalCount}
+            </span>
+            <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider mt-2 block">
+              Total Users
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* 2. Standardized Control Pipeline Filter Ribbon */}
-      <div className="flex flex-col md:flex-row gap-3 bg-card-bg p-4 mb-5 rounded-2xl border border-border-main shadow-2xs shrink-0">
-        {/* Search Anchored Input */}
-        <div className="relative flex-1 w-full">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-            <Search size={16} />
-          </span>
-          <input
-            type="text"
-            placeholder="Search users by name or email database..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full pl-10 pr-10 py-2 bg-slate-50 border border-border-main text-text-main rounded-xl text-xs sm:text-sm font-medium outline-hidden focus:bg-card-bg focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 transition-all placeholder-slate-400"
-          />
+      <div className="h-px bg-gray-200 w-full mb-6" />
+
+      {/* ==================== ZONE C: UTILITIES HEADER ==================== */}
+      <div className="flex items-center justify-between gap-4 mb-4 h-9">
+        <div className="text-[10px] font-bold tracking-widest text-[#1A365D] uppercase">
+          Users Ledger
         </div>
 
-        {/* Dropdowns Action Block */}
-        <div className="flex flex-wrap md:flex-nowrap gap-2.5 w-full md:w-auto items-center">
-          {/* Reset Filters Control */}
+        <div className="flex items-center gap-3">
+          {/* Exact standardized rounded search field element from reference menu */}
+          <div className="flex items-center bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-sm focus-within:border-gray-300 focus-within:bg-white transition-all w-64">
+            <Search size={13} className="text-gray-400 mr-2 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search users by name or email database..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="bg-transparent border-0 outline-none w-full text-xs font-medium text-[#1A365D] placeholder-[#A0AEC0] p-0 focus:ring-0 focus:outline-none"
+            />
+            {searchQuery && (
+              <button 
+                type="button" 
+                onClick={() => { setSearchQuery(""); setCurrentPage(1); }}
+                className="text-gray-400 hover:text-gray-600 ml-1 shrink-0"
+              >
+                <X size={11} />
+              </button>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={handleClearFilters}
-            className="px-4 py-2 h-8.5 text-xs font-bold text-slate-500 bg-slate-50 border border-border-main hover:bg-slate-100 hover:text-text-main rounded-xl cursor-pointer transition-all text-center whitespace-nowrap flex items-center justify-center gap-1.5 uppercase"
+            className="p-1.5 rounded-full text-gray-400 hover:bg-gray-100 transition-colors"
+            title="Reset Filters"
           >
-            <RotateCcw size={12} /> Reset
+            <RotateCcw size={15} />
+          </button>
+
+          <div className="w-px h-4 bg-gray-200 mx-0.5" />
+
+          {/* Clean institutional plus button framework matches exactly */}
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedUser(null);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center justify-center p-1.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white rounded-full transition-all cursor-pointer shadow-2xs shrink-0"
+            title="Add New User"
+          >
+            <Plus size={16} strokeWidth={2.5} />
           </button>
         </div>
       </div>
 
-      {/* 3. Central Interactive Data Matrix Table */}
-      <div className="flex flex-col flex-1 space-y-5">
-        {isLoading ? (
-          <div className="text-center py-24 text-xs text-slate-400 font-bold uppercase tracking-widest animate-pulse">
-            Syncing System Account Directory...
-          </div>
-        ) : (
-          <div className="bg-card-bg rounded-2xl border border-border-main shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-border-main text-[11px] font-bold text-slate-400 uppercase bg-slate-50 tracking-wider">
-                    <th className="py-3.5 px-5">System ID</th>
-                    <th className="py-3.5 px-5">User Name</th>
-                    <th className="py-3.5 px-5">Email Address</th>
-                    <th className="py-3.5 px-5">Phone Number</th>
-                    <th className="py-3.5 px-5">Entry Date</th>
-                  </tr>
-                </thead>
-                <tbody className="text-xs sm:text-sm divide-y divide-slate-100 text-text-main">
-                  {usersList.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={5}
-                        className="py-20 text-center text-xs text-slate-500 font-medium>"
-                      >
-                        No active matching subscriber accounts found on server
-                        indexing.
-                      </td>
+      {/* ==================== ZONE D: GRID DISPLAY VIEW ==================== */}
+      <div className="w-full transition-all duration-300">
+        <div className="w-full">
+          {isLoading ? (
+            <div className="py-24 text-xs font-semibold text-[#718096] tracking-widest uppercase animate-pulse">
+              Syncing System Account Directory...
+            </div>
+          ) : (
+            <div className="w-full">
+              <div className="overflow-x-auto w-full">
+                {/* FIX: Swapped arbitrary 'min-w-[800px]' with canonical Tailwind v4 'min-w-200' */}
+                <table className="w-full text-left border-collapse table-fixed min-w-200">
+                  <thead>
+                    <tr className="border-b border-gray-200 text-[11px] font-bold text-[#718096] uppercase tracking-widest bg-transparent select-none">
+                      <th className="pb-3 pr-4 font-bold tracking-widest w-[18%] pl-3">System ID</th>
+                      <th className="pb-3 px-4 font-bold tracking-widest w-[25%]">User Name</th>
+                      <th className="pb-3 px-4 font-bold tracking-widest w-[27%]">Email Address</th>
+                      <th className="pb-3 px-4 font-bold tracking-widest w-[18%]">Phone Number</th>
+                      <th className="pb-3 px-4 font-bold tracking-widest w-[12%]">Entry Date</th>
                     </tr>
-                  ) : (
-                    usersList.map((user: UserRecord) => (
-                      <tr
-                        key={user.user_id}
-                        onClick={() => setSelectedUser(user)}
-                        className="hover:bg-slate-50/80 transition-colors cursor-pointer group select-none"
-                      >
-                        <td className="py-3.5 px-5 font-mono text-[11px] font-bold text-slate-400 uppercase">
-                          USR-{user.user_id.slice(-4)}
-                        </td>
-                        <td className="py-3.5 px-5 font-bold text-text-main">
-                          {user.name}
-                        </td>
-                        <td className="py-3.5 px-5">
-                          <div className="font-semibold text-slate-800">
-                            {user.gmail}
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-5">
-                          <div className="text-[11px] sm:text-xs text-slate-800 mt-0.5 font-medium">
-                            {user.phone_number || "No Phone Contact"}
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-5 font-semibold text-slate-500 text-xs">
-                          {new Date(user.created_at).toLocaleDateString(
-                            undefined,
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            },
-                          )}
+                  </thead>
+                  <tbody className="text-sm divide-y divide-gray-100 font-medium text-[#2D3748]">
+                    {usersList.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-20 text-left text-sm text-[#718096] font-medium pl-3">
+                          No active matching subscriber accounts found on server indexing.
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ) : (
+                      /* FIX: Changed structural iteration hook type mapping from 'any' to explicit 'UserRecord' contract */
+                      usersList.map((user: UserRecord) => {
+                        const isCurrentSelection = selectedUser?.user_id === user.user_id;
+                        return (
+                          <tr
+                            key={user.user_id}
+                            onClick={() => setSelectedUser(user)}
+                            className={`transition-all duration-150 cursor-pointer border-l-4 ${
+                              isCurrentSelection 
+                                ? 'bg-slate-50/80 border-l-4 border-l-blue-500' 
+                                : 'hover:bg-blue-50/40 border-l-4 border-l-transparent'
+                            }`}
+                          >
+                            <td className="py-3.5 pr-4 pl-3 font-mono text-[11px] font-bold text-[#718096] uppercase truncate">
+                              USR-{user.user_id.slice(-4)}
+                            </td>
+                            
+                            <td className="py-3.5 px-4 font-bold text-[#1A365D] truncate">
+                              <div className="flex items-center gap-3 truncate">
+                                <div className="w-7 h-7 bg-slate-100 text-[#1A365D] font-semibold text-xs rounded-md flex items-center justify-center shrink-0">
+                                  {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+                                </div>
+                                <span className={`font-semibold tracking-tight text-sm truncate ${isCurrentSelection ? "text-[#2B6CB0]" : "text-[#1A365D]"}`}>
+                                  {user.name}
+                                </span>
+                              </div>
+                            </td>
+                            
+                            <td className="py-3.5 px-4 font-semibold text-slate-800 truncate">
+                              {user.gmail}
+                            </td>
 
-            {/* 4. Pagination Navigation Footer Deck */}
-            <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
-              <span>
-                Page {currentPage} / {totalPages}{" "}
-                <span className="text-slate-300 mx-2">|</span> Total{" "}
-                {totalCount} Users
-              </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={currentPage === 1 || totalPages <= 1}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentPage((prev) => Math.max(prev - 1, 1));
-                  }}
-                  className="p-2 border border-border-main bg-card-bg hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                <button
-                  type="button"
-                  disabled={currentPage === totalPages || totalPages <= 1}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-                  }}
-                  className="p-2 border border-border-main bg-card-bg hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
-                >
-                  <ChevronRight size={14} />
-                </button>
+                            <td className="py-3.5 px-4 text-[11px] sm:text-xs text-slate-800 font-medium truncate">
+                              {user.phone_number || "No Phone Contact"}
+                            </td>
+
+                            <td className="py-3.5 px-4 font-semibold text-[#718096] text-xs truncate">
+                              {new Date(user.created_at).toLocaleDateString(
+                                undefined,
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                },
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
+
+              {/* RESTORED: Pagination navigation metrics block elements under the layout frame */}
+              {totalPages > 0 && (
+                <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-2 select-none pl-3">
+                  <span>
+                    Page <span className="font-semibold text-gray-800">{currentPage}</span> of <span className="font-semibold text-gray-800">{totalPages}</span>
+                    <span className="text-slate-300 mx-2">|</span> Total <span className="font-semibold text-gray-800">{totalCount}</span> Users
+                  </span>
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      disabled={currentPage === 1 || totalPages <= 1}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentPage((prev) => Math.max(prev - 1, 1));
+                      }}
+                      className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+                    >
+                      ← Previous
+                    </button>
+                    <button
+                      type="button"
+                      disabled={currentPage === totalPages || totalPages <= 1}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+                      }}
+                      className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Popup Form Modals Layers */}
+      {/* ==================== GLOBAL OVERLAY MODALS ==================== */}
       <UserModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
 
       <UserDetailsModal

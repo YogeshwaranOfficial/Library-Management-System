@@ -8,6 +8,7 @@ import {
   updateMemberRepository,
   searchMembersByNameRepository,
   getEligibleUsersForMemberRepository,
+  getAllPlansWithMetrics, // 💡 ADDED: Importing the new metric repository function
 } from "./member.repository.js";
 import {
   CreateMemberPayload,
@@ -57,6 +58,8 @@ export const getAllMembersService = async (query: MemberQuery) => {
   return {
     meta: {
       total: members.count,
+      globalActive: members.totalActive,
+      globalExpired: members.totalExpired,
       page: Number(query.page) || 1,
       limit: Number(query.limit) || 10,
     },
@@ -113,6 +116,7 @@ export const updateMemberService = async (memberId: string, payload: UpdateMembe
 
   return updatedMember;
 };
+
 export const deleteMemberService = async (memberId: string) => {
   const deletedMember = await deleteMemberRepository(memberId);
   if (!deletedMember) {
@@ -126,4 +130,20 @@ export const searchMembersByNameService = async (searchToken: string) => {
     return [];
   }
   return await searchMembersByNameRepository(searchToken.trim());
+};
+
+// =========================================================
+// NEW: PLANS WITH MEMBERS MEMBERSHIP METRICS SERVICE
+// =========================================================
+export const getAllPlansWithMetricsService = async (searchTerm?: string) => {
+  const { plans, globalActiveMembers, globalInactiveMembers } = await getAllPlansWithMetrics(searchTerm);
+  
+  return {
+    meta: {
+      total: plans.length,
+      globalActiveMembers,
+      globalInactiveMembers
+    },
+    data: plans
+  };
 };

@@ -10,6 +10,7 @@ export interface MembershipPlan {
   plan_name: string;
   duration_days: number;
   price: number;
+  max_books_allowed: number;
 }
 
 export interface LibraryMember {

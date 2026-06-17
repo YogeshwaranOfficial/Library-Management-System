@@ -1,6 +1,4 @@
-import { Op, CreationAttributes } from "sequelize";
-
-import Book from "../../database/models/Book.js";
+import { fn, col, Op, CreationAttributes } from "sequelize";import Book from "../../database/models/Book.js";
 import Category from "../../database/models/Category.js";
 
 import {
@@ -15,34 +13,49 @@ class BookRepository {
       book_author: payload.book_author,
       category_id: payload.category_id,
       total_copies: payload.total_copies,
-      // 💡 Now perfectly legal since we expanded the interface contract type!
       available_copies: payload.available_copies ?? payload.total_copies,
+      language: payload.language
     } as CreationAttributes<Book>);
   }
 
-  /**
-   * 💡 Handles clean pagination limits, offsets, mixed title/author searches, 
-   * and isolated category ID relational filtering.
-   */
   async getBooks(
-    page: number,
-    limit: number,
-    search?: string,
-    category_id?: string
-  ) {
-    const offset = (page - 1) * limit;
+  page: number,
+  limit: number,
+  search?: string,
+  category_id?: string,
+  language?: string
+) {
+  const offset = (page - 1) * limit;
 
-    return Book.findAndCountAll({
-      where: {
-        ...(search && {
-          [Op.or]: [
-            { book_name: { [Op.iLike]: `%${search}%` } },
-            { book_author: { [Op.iLike]: `%${search}%` } },
-          ],
-        }),
-        ...(category_id && { category_id }),
-      },
+  // 1. Build an isolated, strong where clause object literal
+  const whereClause: any = {};
 
+  // Handle fuzzy title/author searches
+  if (search) {
+    whereClause[Op.or] = [
+      { book_name: { [Op.iLike]: `%${search}%` } },
+      { book_author: { [Op.iLike]: `%${search}%` } },
+    ];
+  }
+
+  // Handle direct relational category identifiers
+  if (category_id) {
+    whereClause.category_id = category_id;
+  }
+
+  // Explicit strict matching safeguarding string casing discrepancies
+  if (language) {
+    whereClause.language = {
+      [Op.iLike]: language.trim()
+    };
+  }
+
+  // 2. Concurrently fire the paginated rows query and the global meta aggregations
+  // Using Promise.all keeps database round-trip costs optimally minimized.
+  const [paginatedResult, metadataAggregation] = await Promise.all([
+    // Main Paginated Data Engine Fetch
+    Book.findAndCountAll({
+      where: whereClause,
       include: [
         {
           model: Category,
@@ -51,13 +64,42 @@ class BookRepository {
             ["category_id", "id"],
             ["category_name", "name"]
           ],
+          required: false
         },
       ],
-
       limit,
       offset,
       order: [["created_at", "DESC"]],
-    });
+      distinct: true, 
+    }),
+
+    // Global Aggregate Metrics Engine
+    // Note: We deliberately pass the exact same whereClause parameters here so that 
+    // the header indicators accurately reflect the currently filtered subset.
+    Book.findAll({
+      where: whereClause,
+      attributes: [
+        [fn("SUM", col("total_copies")), "globalTotalCopies"],
+        [fn("SUM", col("available_copies")), "globalAvailableCopies"]
+      ],
+      raw: true
+    })
+  ]);
+
+  // 3. Extract the computed sums safely out of the array response raw rows
+  const metricsRow = metadataAggregation[0] as unknown as Record<string, string | null>;
+  const globalTotalCopies = Number(metricsRow?.globalTotalCopies || 0);
+  const globalAvailableCopies = Number(metricsRow?.globalAvailableCopies || 0);
+
+  // 4. Return custom formatted metadata response payload structural block
+  return {
+    rows: paginatedResult.rows,
+    count: paginatedResult.count,
+    meta: {
+      globalTotalCopies,
+      globalAvailableCopies
+    }
+  };
   }
 
   async getBookById(book_id: string) {
@@ -75,13 +117,13 @@ class BookRepository {
     book_id: string,
     payload: UpdateBookPayload
   ) {
-    // 💡 FIX: Safe, explicit assignments prevent accidental column drops on PATCH updates
     await Book.update({
       ...(payload.book_name && { book_name: payload.book_name }),
       ...(payload.book_author && { book_author: payload.book_author }),
       ...(payload.category_id && { category_id: payload.category_id }),
       ...(payload.total_copies !== undefined && { total_copies: payload.total_copies }),
       ...(payload.available_copies !== undefined && { available_copies: payload.available_copies }),
+      ...(payload.language && { language: payload.language })
     }, {
       where: { book_id },
     });
@@ -103,7 +145,7 @@ class BookRepository {
           { book_author: { [Op.iLike]: `%${searchToken}%` } }
         ]
       },
-      attributes: ["book_id", "book_name", "book_author", "available_copies"],
+      attributes: ["book_id", "book_name", "book_author", "available_copies", "language"],
       order: [["book_name", "ASC"]],
       limit: 15
     });
@@ -116,6 +158,7 @@ class BookRepository {
         book_id: book.book_id,
         title: book.book_name,
         author: book.book_author || "Unknown Author",
+        language: book.language || "Not Mentioned",
         available_copies: stockCount,
         compliance: {
           status: outOfStock ? "OUT_OF_STOCK" : "AVAILABLE",
@@ -140,6 +183,23 @@ class BookRepository {
       order: [["category_name", "ASC"]],
     });
   }
+
+  async getLanguages() {
+  const records = await Book.findAll({
+    attributes: [
+      [fn("DISTINCT", col("language")), "language"]
+    ],
+    where: {
+      language: {
+        [Op.not]: null as any
+      }
+    },
+    raw: true,
+    order: [["language", "ASC"]],
+  });
+
+  return records.map((r: any) => r.language);
+}
 }
 
 export default new BookRepository();

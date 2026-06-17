@@ -49,6 +49,7 @@ describe("Book Service Unit Tests", () => {
       book_author: "Robert Martin",
       category_id: "cat-1",
       total_copies: 10,
+      language: "English",
     };
 
     it("should create book successfully", async () => {

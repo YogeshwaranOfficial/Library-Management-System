@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, User, Mail, Lock, Phone, ShieldCheck } from "lucide-react";
+import { User, Mail, Lock, Phone, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { axiosClient } from "../../../api/axiosClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,18 +24,18 @@ interface LibrarianModalProps {
   isOpen: boolean;
   onClose: () => void;
   librarianToEdit?: UserRecord | null;
+  onSaveSuccess?: () => void; // ✨ Added callback hook
 }
 
 export const LibrarianModal: React.FC<LibrarianModalProps> = ({
   isOpen,
   onClose,
   librarianToEdit,
+  onSaveSuccess,
 }) => {
   const queryClient = useQueryClient();
   const isEditMode = !!librarianToEdit;
 
-  // 💡 FIXED: Initialize state directly from props.
-  // Combined with the unique layout `key`, this renders cleanly without a useEffect loop.
   const [name, setName] = useState(librarianToEdit?.name || "");
   const [gmail, setGmail] = useState(librarianToEdit?.gmail || "");
   const [password, setPassword] = useState("");
@@ -77,6 +77,7 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
       );
       queryClient.invalidateQueries({ queryKey: ["adminUsersMasterFeed"] });
       handleResetAndClose();
+      if (onSaveSuccess) onSaveSuccess(); // ✨ Return immediately to dashboard page
     },
     onError: (error: AxiosError<BackendErrorResponse>) => {
       toast.error(
@@ -143,15 +144,14 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-sans">
-      <div className="bg-card-bg rounded-2xl shadow-xl w-full max-w-md border border-amber-100/80 animate-zoom-in overflow-hidden">
-        {/* Header Layout Block */}
-        <div className="p-6 border-b border-slate-100 flex bg-slate-900 items-center justify-between">
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 font-sans select-none">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-200">
+        <div className="bg-white border-b border-gray-200 p-5 flex justify-between items-center">
           <div>
-            <h3 className="text-base font-bold text-white tracking-tight">
+            <h3 className="text-lg text-[#1A365D] font-bold tracking-tight">
               {isEditMode ? "Modify Librarian Details" : "Add New Librarian"}
             </h3>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">
+            <p className="text-[11px] text-[#718096] mt-1 font-bold tracking-wider uppercase">
               {isEditMode
                 ? "Adjust system operational parameters"
                 : "All fields below are strictly required"}
@@ -160,156 +160,127 @@ export const LibrarianModal: React.FC<LibrarianModalProps> = ({
           <button
             type="button"
             onClick={handleResetAndClose}
-            className="p-1.5 hover:bg-slate-50 text-slate-400 hover:text-text-main rounded-lg transition-colors cursor-pointer"
+            className="text-[#718096] hover:text-[#1A365D] transition-colors cursor-pointer text-xs font-bold p-1.5 hover:bg-gray-100 rounded-full"
           >
-            <X size={16} />
+            ✕
           </button>
         </div>
 
-        {/* Input Form Fields Wrapper */}
-        <form onSubmit={handleSubmission} className="p-6 space-y-4">
-          {/* Name Field */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+        <form onSubmit={handleSubmission} className="p-6 space-y-5 text-[#2D3748]">
+          <div>
+            <label className="text-[11px] font-bold text-[#718096] uppercase tracking-widest block mb-1.5">
               Official Handle Name
             </label>
             <div className="relative">
-              <User
-                className="absolute left-3.5 top-3 text-slate-400"
-                size={14}
-              />
+              <User className="absolute left-3.5 top-3 text-gray-400" size={15} />
               <input
                 type="text"
                 placeholder="Marcus Vance"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className={`w-full pl-9 pr-4 py-2.5 bg-slate-50 border text-text-main rounded-xl text-xs font-semibold transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
+                className={`w-full pl-10 pr-4 py-2.5 bg-gray-50 border rounded-xl text-xs font-semibold outline-hidden transition-all focus:bg-white focus:border-gray-300 focus:ring-0 ${
                   errors.name
-                    ? "border-rose-500 focus:ring-rose-500/5"
-                    : "border-border-main focus:ring-slate-900/5 focus:border-slate-900"
+                    ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
+                    : "border-gray-200 text-[#2D3748]"
                 }`}
               />
             </div>
             {errors.name && (
-              <p className="text-[11px] text-rose-600 font-medium mt-1">
-                {errors.name}
-              </p>
+              <p className="text-xs text-rose-600 mt-1.5 font-semibold">{errors.name}</p>
             )}
           </div>
 
-          {/* Email Field */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+          <div>
+            <label className="text-[11px] font-bold text-[#718096] uppercase tracking-widest block mb-1.5">
               System Routing Address
             </label>
             <div className="relative">
-              <Mail
-                className="absolute left-3.5 top-3 text-slate-400"
-                size={14}
-              />
+              <Mail className="absolute left-3.5 top-3 text-gray-400" size={15} />
               <input
                 type="text"
                 placeholder="marcus.vance@gmail.com"
                 value={gmail}
                 onChange={(e) => setGmail(e.target.value)}
-                className={`w-full pl-9 pr-4 py-2.5 bg-slate-50 border text-text-main rounded-xl text-xs font-semibold transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
+                className={`w-full pl-10 pr-4 py-2.5 bg-gray-50 border rounded-xl text-xs font-semibold outline-hidden transition-all focus:bg-white focus:border-gray-300 focus:ring-0 ${
                   errors.gmail
-                    ? "border-rose-500 focus:ring-rose-500/5"
-                    : "border-border-main focus:ring-slate-900/5 focus:border-slate-900"
+                    ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
+                    : "border-gray-200 text-[#2D3748]"
                 }`}
               />
             </div>
             {errors.gmail && (
-              <p className="text-[11px] text-rose-600 font-medium mt-1">
-                {errors.gmail}
-              </p>
+              <p className="text-xs text-rose-600 mt-1.5 font-semibold">{errors.gmail}</p>
             )}
           </div>
 
-          {/* Password Field */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block leading-snug">
+          <div>
+            <label className="text-[11px] font-bold text-[#718096] uppercase tracking-widest block mb-1.5 leading-snug">
               {isEditMode
                 ? "Change Security Password (Leave blank to preserve)"
                 : "Terminal Assignment Password"}
             </label>
             <div className="relative">
-              <Lock
-                className="absolute left-3.5 top-3 text-slate-400"
-                size={14}
-              />
+              <Lock className="absolute left-3.5 top-3 text-gray-400" size={15} />
               <input
                 type="text"
                 placeholder={isEditMode ? "••••••••" : "e.g., ClearanceKey99"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full pl-9 pr-4 py-2.5 bg-slate-50 border text-text-main rounded-xl text-xs font-semibold tracking-wide transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
+                className={`w-full pl-10 pr-4 py-2.5 bg-gray-50 border rounded-xl text-xs font-semibold tracking-wide transition-all outline-hidden focus:bg-white focus:border-gray-300 focus:ring-0 ${
                   errors.password
-                    ? "border-rose-500 focus:ring-rose-500/5"
-                    : "border-border-main focus:ring-slate-900/5 focus:border-slate-900"
+                    ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
+                    : "border-gray-200 text-[#2D3748]"
                 }`}
               />
             </div>
             {errors.password && (
-              <p className="text-[11px] text-rose-600 font-medium mt-1">
-                {errors.password}
-              </p>
+              <p className="text-xs text-rose-600 mt-1.5 font-semibold">{errors.password}</p>
             )}
           </div>
 
-          {/* Phone Number Field */}
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+          <div>
+            <label className="text-[11px] font-bold text-[#718096] uppercase tracking-widest block mb-1.5">
               Secure Mobile String
             </label>
             <div className="relative">
-              <Phone
-                className="absolute left-3.5 top-3 text-slate-400"
-                size={14}
-              />
+              <Phone className="absolute left-3.5 top-3 text-gray-400" size={15} />
               <input
                 type="text"
                 maxLength={10}
                 placeholder="9876543210"
                 value={phoneNumber}
-                onChange={(e) =>
-                  setPhoneNumber(e.target.value.replace(/\D/g, ""))
-                }
-                className={`w-full pl-9 pr-4 py-2.5 bg-slate-50 border text-text-main rounded-xl text-xs font-semibold transition-all outline-hidden focus:bg-card-bg focus:ring-4 ${
+                onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
+                className={`w-full pl-10 pr-4 py-2.5 bg-gray-50 border rounded-xl text-xs font-semibold transition-all outline-hidden focus:bg-white focus:border-gray-300 focus:ring-0 ${
                   errors.phoneNumber
-                    ? "border-rose-500 focus:ring-rose-500/5"
-                    : "border-border-main focus:ring-slate-900/5 focus:border-slate-900"
+                    ? "border-rose-300 focus:ring-rose-900/5 focus:border-rose-400 text-rose-900 bg-rose-50/20"
+                    : "border-gray-200 text-[#2D3748]"
                 }`}
               />
             </div>
             {errors.phoneNumber && (
-              <p className="text-[11px] text-rose-600 font-medium mt-1">
-                {errors.phoneNumber}
-              </p>
+              <p className="text-xs text-rose-600 mt-1.5 font-semibold">{errors.phoneNumber}</p>
             )}
           </div>
 
-          {/* Configuration Alert Badge */}
-          <div className="bg-slate-50 p-3 rounded-xl border border-border-main/60 flex items-center gap-2 text-xs font-bold text-text-main select-none">
-            <ShieldCheck size={15} className="text-text-main" />
+          <div className="flex items-center gap-2.5 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-[#718096] select-none">
+            <ShieldCheck size={16} className="text-gray-400 stroke-[2.2]" />
             <span className="text-[11px] uppercase tracking-wide">
               Enforced Authority Level: LIBRARIAN
             </span>
           </div>
 
-          {/* Action Footer Buttons */}
-          <div className="flex gap-3 pt-3 border-t border-slate-100 text-xs font-bold tracking-wide">
+          <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 text-xs font-bold tracking-wide">
             <button
               type="button"
               onClick={handleResetAndClose}
-              className="flex-1 py-3 bg-slate-50 border border-border-main text-text-main rounded-xl transition-all hover:bg-slate-100 cursor-pointer text-center"
+              className="px-4 py-2.5 bg-gray-50 border border-gray-200 text-[#718096] hover:text-[#1A365D] rounded-full transition-all hover:bg-gray-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={librarianMutation.isPending}
-              className="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-amber-50 rounded-xl transition-all shadow-sm cursor-pointer disabled:bg-slate-700 disabled:cursor-not-allowed text-center"
+              className="px-5 py-2.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white rounded-full transition-all disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed cursor-pointer shadow-sm tracking-wide"
             >
               {librarianMutation.isPending
                 ? "Syncing..."

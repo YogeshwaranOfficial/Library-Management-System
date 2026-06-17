@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
 import { TransactionModal } from "../components/TransactionModal";
@@ -15,16 +15,13 @@ import { useAuthStore } from "../../../store/authStore";
 import {
   Search,
   RotateCcw,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
+  Layers,
+  X,
   Plus,
-  RefreshCw,
   User,
   BookOpen,
   Calendar,
-  AlertCircle,
-  Activity,
 } from "lucide-react";
 
 export const TransactionsPage = () => {
@@ -37,11 +34,32 @@ export const TransactionsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
 
+  // Clean UI state parameters matching Members layout
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<BookIssueRecord | null>(
     null,
   );
+
+  // Refs for tracking outside dropdown clicks
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close interactive headers if clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        isStatusDropdownOpen &&
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => document.removeEventListener("mousedown", handleOutsideClick);
+  }, [isStatusDropdownOpen]);
 
   // Fetch Master Feed Data Ledger
   const { data: rawIssues = [], isLoading } = useQuery<BookIssueRecord[]>({
@@ -153,117 +171,196 @@ export const TransactionsPage = () => {
   }, [allFilteredRecords, safeCurrentPage, rowsPerPage]);
 
   return (
-    <div className="flex flex-col min-h-screen max-w-6xl relative animate-fade-in pb-12 font-sans text-xs sm:text-sm text-text-main text-left">
-      {/* Upper Control Bar Layout */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-card-bg p-5 mb-5 rounded-2xl border border-border-main shadow-xs shrink-0">
-        <div>
-          <h2 className="text-xl font-bold text-text-main tracking-tight">
-            Borrow & Return Desk
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5 font-medium">
-            Manage real-time out-of-building media assets, process drop-offs,
-            and track compliance.
-          </p>
+  <div className="min-h-screen bg-white text-[#2D3748] antialiased pb-16 pt-10 px-8 lg:px-14 font-sans select-none">
+    
+    {/* ==================== ZONES A & B: ALIGNED HEADER WITH METRIC STRIP ==================== */}
+    <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6">
+      <div>
+        <div className="flex items-center gap-2 text-[#718096] text-[11px] font-bold uppercase tracking-widest mb-1.5">
+          <Layers size={13} className="stroke-[2.5]" /> Lending Management Desk
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            setSelectedRecord(null);
-            setIsFormOpen(true);
-          }}
-          className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition-all cursor-pointer whitespace-nowrap"
-        >
-          <Plus size={14} /> Issue New Book
-        </button>
+        <h1 className="text-2xl font-bold tracking-tight text-[#1A365D]">
+          Borrow & Return Desk
+        </h1>
       </div>
 
-      {/* Filter & Search Bar Controls Section */}
-      <div className="flex flex-col md:flex-row gap-3 bg-card-bg p-4 mb-5 rounded-2xl border border-border-main shadow-2xs shrink-0">
-        <div className="relative flex-1">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-            <Search size={16} />
+      {/* Metric Tracker Stack */}
+      <div className="flex items-center gap-10 select-none pb-0.5">
+        <div>
+          <span className="block text-2xl font-bold text-[#1A365D] tracking-tight leading-none text-right">
+            {totalRecordsCount}
           </span>
+          <span className="text-[10px] font-semibold text-[#718096] uppercase tracking-wider mt-2 block">
+            Total Issued Books
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div className="h-px bg-gray-200 w-full mb-6" />
+
+    {/* ==================== ZONE C: MINIMALIST UTILITIES SUB HEADER ==================== */}
+    <div className="flex items-center justify-between gap-4 mb-4 h-9">
+      <div className="text-[10px] font-bold tracking-widest text-[#1A365D] uppercase">
+        Classification Ledger
+      </div>
+
+      {/* Compact Right-Aligned Control Blocks */}
+      <div className="flex items-center gap-3">
+        
+        {/* Always-On Static Rounded Search Input Field Frame */}
+        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-sm focus-within:border-gray-300 focus-within:bg-white transition-all w-48">
+          <Search size={13} className="text-gray-400 mr-2 shrink-0" />
           <input
             type="text"
-            placeholder="Query active loans by member name or book title..."
+            placeholder="Search book or member..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-border-main rounded-xl text-xs sm:text-sm font-medium text-text-main focus:bg-card-bg focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 outline-hidden transition-all placeholder-slate-400"
+            className="bg-transparent border-0 outline-hidden w-full text-xs font-medium text-[#1A365D] placeholder-[#A0AEC0] p-0 focus:ring-0 focus:outline-hidden"
           />
-        </div>
-        <div className="flex gap-2.5 min-w-xs">
-          <div className="w-full md:w-64 relative">
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
                 setCurrentPage(1);
               }}
-              className="w-full px-3.5 pr-10 py-2 bg-slate-50 border border-border-main rounded-xl text-xs font-bold uppercase tracking-wider text-slate-800 appearance-none focus:bg-card-bg focus:ring-4 focus:ring-slate-900/5 focus:border-slate-900 outline-hidden transition-all cursor-pointer"
+              className="text-gray-400 hover:text-gray-600 ml-1 shrink-0"
             >
-              <option value="">Issue Status</option>
-              <option value="BORROWED">Borrowed</option>
-              <option value="OVERDUE">Overdue</option>
-            </select>
-            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-              <ChevronDown size={14} />
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleClearFilters}
-            className="px-4 py-2 text-xs font-bold text-slate-500 bg-slate-50 border border-border-main hover:bg-slate-100 hover:text-text-main rounded-xl cursor-pointer transition-all animate-fade-in text-center whitespace-nowrap flex items-center justify-center gap-1.5 uppercase"
-          >
-            <RotateCcw size={12} /> Reset
-          </button>
+              <X size={11} />
+            </button>
+          )}
         </div>
+
+        {/* Always-On Persistent Filters Clear Action Icon Trigger */}
+        <button
+          type="button"
+          onClick={handleClearFilters}
+          className="p-1.5 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+          title="Reset Filters"
+        >
+          <RotateCcw size={15} />
+        </button>
+
+        <div className="w-px h-4 bg-gray-200 mx-0.5" />
+
+        {/* Streamlined Action Core Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedRecord(null);
+            setIsFormOpen(true);
+          }}
+          className="flex items-center justify-center p-1.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white rounded-full transition-all cursor-pointer shadow-2xs shrink-0"
+          title="Add New Issue"
+        >
+          <Plus size={16} strokeWidth={2.5} />
+        </button>
       </div>
+    </div>
 
-      {isLoading ? (
-        <div className="text-center py-20 text-xs sm:text-sm text-slate-400 font-semibold animate-pulse flex-1 flex flex-col items-center justify-center gap-2">
-          <RefreshCw size={20} className="animate-spin text-slate-300" />
-          Syncing active book circulation ledgers...
-        </div>
-      ) : (
-        <div className="flex flex-col flex-1 space-y-5">
-          {/* Main List Workspace Table */}
-          <div className="bg-card-bg rounded-2xl border border-border-main shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+    {/* ==================== ZONE D: STATIC FULL-WIDTH TABLE DISPLAY ==================== */}
+    <div className="flex items-start gap-10 w-full transition-all duration-300">
+      <div className="w-full">
+        {isLoading ? (
+          <div className="py-24 text-xs font-semibold text-[#718096] tracking-widest uppercase animate-pulse">
+            Syncing active book circulation ledgers...
+          </div>
+        ) : (
+          <div className="w-full">
+            <div className="overflow-visible w-full">
+              <table className="w-full text-left border-collapse table-fixed">
                 <thead>
-                  <tr className="border-b border-border-main text-[11px] font-bold text-slate-400 uppercase bg-slate-50 tracking-wider">
-                    <th className="py-3.5 px-5">
-                      <User size={12} className="inline mr-1" />
-                      Member Name
+                  <tr className="border-b border-gray-200 text-[11px] font-bold text-[#718096] uppercase tracking-widest bg-transparent select-none">
+                    <th className="pb-3 pr-4 font-bold tracking-widest pl-3 w-[20%]">
+                      <User size={12} className="inline mr-1" /> Member Name
                     </th>
-                    <th className="py-3.5 px-5">
-                      <BookOpen size={12} className="inline mr-1" />
-                      Issued Book Title
+                    <th className="pb-3 px-4 font-bold tracking-widest w-[25%]">
+                      <BookOpen size={12} className="inline mr-1" /> Issued Book Title
                     </th>
-                    <th className="py-3.5 px-5">
-                      <Calendar size={12} className="inline mr-1" />
-                      Checkout Date
+                    <th className="pb-3 px-4 font-bold tracking-widest w-[20%]">
+                      <Calendar size={12} className="inline mr-1" /> Checkout Date
                     </th>
-                    <th className="py-3.5 px-5">Target Due Deadline</th>
-                    <th className="py-3.5 px-5 text-center">
-                      <Activity size={12} className="inline mr-1" />
-                      Status Flag
+                    <th className="pb-3 px-4 font-bold tracking-widest w-[20%]">
+                      Target Due Deadline
+                    </th>
+                    <th className="pb-3 px-4 font-bold tracking-widest relative w-[15%]">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsStatusDropdownOpen(!isStatusDropdownOpen);
+                        }}
+                        className={`inline-flex items-center gap-1 hover:text-[#1A365D] transition-colors uppercase tracking-widest text-[11px] font-bold ${
+                          statusFilter ? "text-[#2B6CB0]" : ""
+                        }`}
+                      >
+                        Status {statusFilter ? `(${statusFilter})` : ""}
+                        <ChevronDown
+                          size={11}
+                          className={`transition-transform duration-200 ${
+                            isStatusDropdownOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                      </button>
+
+                      {isStatusDropdownOpen && (
+                        <div
+                          ref={statusDropdownRef}
+                          className="absolute left-4 top-7 z-50 w-36 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 text-xs text-[#2D3748] font-medium normal-case tracking-normal text-left"
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStatusFilter("");
+                              setIsStatusDropdownOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
+                              !statusFilter ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""
+                            }`}
+                          >
+                            All Statuses
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStatusFilter("BORROWED");
+                              setIsStatusDropdownOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
+                              statusFilter === "BORROWED" ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""
+                            }`}
+                          >
+                            Borrowed
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStatusFilter("OVERDUE");
+                              setIsStatusDropdownOpen(false);
+                              setCurrentPage(1);
+                            }}
+                            className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
+                              statusFilter === "OVERDUE" ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""
+                            }`}
+                          >
+                            Overdue
+                          </button>
+                        </div>
+                      )}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="text-xs sm:text-sm divide-y divide-slate-100 text-text-main">
+                <tbody className="text-sm divide-y divide-gray-100 font-medium text-[#2D3748]">
                   {paginatedRecords.length === 0 ? (
                     <tr>
-                      <td
-                        colSpan={5}
-                        className="py-16 text-center text-slate-400 font-medium"
-                      >
-                        No active out-of-building book logs registered on
-                        current indexing criteria.
+                      <td colSpan={5} className="py-20 text-left text-sm text-[#718096] font-medium pl-3">
+                        No active out-of-building book logs registered on current indexing criteria.
                       </td>
                     </tr>
                   ) : (
@@ -274,31 +371,27 @@ export const TransactionsPage = () => {
                           setSelectedRecord(record);
                           setIsDetailsOpen(true);
                         }}
-                        className="hover:bg-slate-50/80 transition-colors cursor-pointer select-none group"
+                        className="transition-all duration-150 cursor-pointer border-l-4 hover:bg-blue-50/40 border-l-transparent"
                       >
-                        <td className="py-3.5 px-5 font-bold text-text-main group-hover:text-slate-800 transition-colors">
+                        <td className="py-3.5 pl-3 font-semibold text-[#1A365D] truncate">
                           {record.memberName}
                         </td>
-                        <td className="py-3.5 px-5 text-slate-800 font-medium">
+                        <td className="py-3.5 px-4 font-medium text-gray-700 text-sm truncate">
                           {record.bookTitle}
                         </td>
-                        <td className="py-3.5 px-5 text-slate-500 font-mono text-xs">
+                        <td className="py-3.5 px-4 text-[11px] text-[#718096] font-normal truncate">
                           {record.borrowedDate}
                         </td>
-                        <td className="py-3.5 px-5 font-bold font-mono text-text-main text-xs">
+                        <td className="py-3.5 px-4 font-medium text-gray-700 text-sm truncate">
                           {record.dueDate}
                         </td>
-                        <td className="py-3.5 px-5 text-center">
+                        <td className="py-3.5 px-4 text-left truncate">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase border ${
-                              record.computedStatus === "OVERDUE"
-                                ? "bg-rose-50 text-rose-700 border-rose-100 animate-pulse"
-                                : "bg-emerald-50 text-emerald-700 border-emerald-100"
+                            className={`inline-flex items-center gap-1.5 font-semibold text-xs select-none ${
+                              record.computedStatus === "OVERDUE" ? "text-rose-700" : "text-emerald-700"
                             }`}
                           >
-                            {record.computedStatus === "OVERDUE" && (
-                              <AlertCircle size={10} className="mr-1 inline" />
-                            )}
+                            <span className={`w-1.5 h-1.5 rounded-full ${record.computedStatus === "OVERDUE" ? "bg-rose-500" : "bg-emerald-500"}`} />
                             {record.computedStatus}
                           </span>
                         </td>
@@ -309,68 +402,71 @@ export const TransactionsPage = () => {
               </table>
             </div>
 
+            {/* Minimal Pagination Elements */}
             {totalPages > 0 && (
-              <div className="p-4 bg-slate-50/50 border-t border-slate-100 flex justify-between items-center text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">
+              <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-2 select-none pl-3">
                 <span>
-                  Page {currentPage} / {totalPages}{" "}
-                  <span className="text-slate-300 mx-2">|</span> Total{" "}
-                  {totalRecordsCount} Books
+                  Page <span className="font-semibold text-gray-800">{currentPage}</span> of{" "}
+                  <span className="font-semibold text-gray-800">{totalPages}</span>
+                  <span className="mx-2">|</span>
+                  Total <span className="font-semibold text-gray-800">{totalRecordsCount}</span> Books
                 </span>
-                <div className="flex gap-2">
+                <div className="flex gap-4">
                   <button
                     type="button"
                     disabled={currentPage === 1}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setCurrentPage((p) => Math.max(1, p - 1));
+                      setCurrentPage((p) => Math.max(p - 1, 1));
                     }}
-                    className="p-2 border border-border-main bg-card-bg hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                    className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
                   >
-                    <ChevronLeft size={14} />
+                    &larr; Previous
                   </button>
                   <button
                     type="button"
                     disabled={currentPage === totalPages}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setCurrentPage((p) => Math.min(totalPages, p + 1));
+                      setCurrentPage((p) => Math.min(p + 1, totalPages));
                     }}
-                    className="p-2 border border-border-main bg-card-bg hover:bg-slate-50 text-slate-600 rounded-lg disabled:opacity-30 cursor-pointer transition-colors shadow-xs"
+                    className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
                   >
-                    <ChevronRight size={14} />
+                    Next &rarr;
                   </button>
                 </div>
               </div>
             )}
           </div>
-        </div>
-      )}
-
-      {/* Modals Layers */}
-      <TransactionModal
-        key={
-          isFormOpen
-            ? selectedRecord
-              ? `edit-${selectedRecord.id}`
-              : "new-issue-form"
-            : "closed"
-        }
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSubmit={(vals) => saveMutation.mutate(vals)}
-        editingRecord={selectedRecord}
-      />
-
-      <IssueDetailsModal
-        isOpen={isDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
-        record={selectedRecord}
-        onMarkAsReturned={(id) => returnBookMutation.mutate(id)}
-        onTriggerEdit={() => {
-          setIsDetailsOpen(false);
-          setIsFormOpen(true);
-        }}
-      />
+        )}
+      </div>
     </div>
+
+    {/* Modals Layers */}
+    <TransactionModal
+      key={
+        isFormOpen
+          ? selectedRecord
+            ? `edit-${selectedRecord.id}`
+            : "new-issue-form"
+          : "closed"
+      }
+      isOpen={isFormOpen}
+      onClose={() => setIsFormOpen(false)}
+      onSubmit={(vals) => saveMutation.mutate(vals)}
+      editingRecord={selectedRecord}
+    />
+
+    <IssueDetailsModal
+      isOpen={isDetailsOpen}
+      onClose={() => setIsDetailsOpen(false)}
+      record={selectedRecord}
+      onMarkAsReturned={(id) => returnBookMutation.mutate(id)}
+      onTriggerEdit={() => {
+        setIsDetailsOpen(false);
+        setIsFormOpen(true);
+      }}
+    />
+  </div>
   );
 };

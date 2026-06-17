@@ -8,16 +8,22 @@ export const ReturnForecaster = ({
 }) => {
   const maxForecast = Math.max(...forecast.map((f) => f.count), 1);
   return (
-    <div className="bg-card-bg p-6 rounded-2xl border border-border-main/60 shadow-xs space-y-4 text-left font-sans">
-      <div>
-        <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-          <CalendarDays size={14} className="text-slate-500" /> 7-Day Return
-          Flow Forecaster
-        </h3>
-        <p className="text-xs text-slate-500 mt-1 leading-relaxed font-medium">
-          Expected book return volumes to optimize intake shelf arrangements.
-        </p>
-      </div>
+    <div className="bg-white p-2 rounded-2xl space-y-4 text-left font-sans select-none">
+      
+
+      <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+        <div>
+          <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5">
+             <CalendarDays size={14} className="text-[#0066ff]" /> 7-Day
+          </h3>
+          <h4 className="text-base font-bold text-slate-900 tracking-tight mt-0.5">
+          Return Flow Forecaster
+          </h4>
+          <p className="text-xs font-normal text-slate-500 mt-0.5">
+            Expected book return volumes to optimize intake shelf arrangements.
+          </p>
+        </div>
+        </div>
 
       {/* Horizontal Data Progress Bars Distribution layout */}
       <div className="space-y-3 pt-1">
@@ -26,20 +32,20 @@ export const ReturnForecaster = ({
             key={day.date}
             className="flex items-center gap-4 text-xs font-semibold"
           >
-            <span className="w-16 text-slate-500 font-bold tracking-wide">
+            <span className="w-16 text-slate-400 font-bold tracking-wide">
               {day.date}
             </span>
 
             {/* Horizontal progress channel tracks */}
-            <div className="flex-1 bg-slate-100 h-2 rounded-lg overflow-hidden">
+            <div className="flex-1 bg-slate-50 h-2 rounded-lg overflow-hidden border border-gray-200/40">
               <div
-                className="bg-slate-900 h-full rounded-lg transition-all duration-500 ease-out"
+                className="bg-[#2B6CB0] h-full rounded-lg transition-all duration-500 ease-out"
                 style={{ width: `${(day.count / maxForecast) * 100}%` }}
               />
             </div>
 
-            <span className="w-16 text-right font-mono font-bold text-text-main shrink-0">
-              {day.count} items
+            <span className="w-16 text-right font-mono font-bold text-slate-400 shrink-0">
+              {day.count} books
             </span>
           </div>
         ))}
