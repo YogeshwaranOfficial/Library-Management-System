@@ -159,6 +159,9 @@ class DashboardRepository {
       ? parseFloat(((overdueCount / totalBooksCount) * 100).toFixed(1))
       : 0;
 
+    const uniqueMembers = new Set(overdueBooks.map(record => record.memberId));
+    const uniqueOverdueMembersCount = uniqueMembers.size;
+
     // =========================================================================
     // 3. WIDGET INTELLIGENCE ENGINE QUERIES
     // =========================================================================

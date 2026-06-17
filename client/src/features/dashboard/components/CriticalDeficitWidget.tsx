@@ -1,5 +1,5 @@
 // Editorial Visual Assets
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ShoppingCart } from "lucide-react";
 
 interface DeficitItem {
   id: string;
@@ -7,41 +7,69 @@ interface DeficitItem {
   requests: number;
 }
 
-export const CriticalDeficitWidget = ({ items }: { items: DeficitItem[] }) => (
-  <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs flex flex-col justify-between min-h-65 text-left font-sans select-none">
-    <div>
-      <h3 className="text-[11px] font-bold text-rose-600 uppercase tracking-wider flex items-center gap-1.5">
-        <AlertCircle size={14} className="text-rose-600" /> Procurement Alerts
-      </h3>
-      <p className="text-xs text-[#718096] mt-1 leading-relaxed font-medium">
-        Critical titles with 0 copies remaining on the shelves.
-      </p>
-    </div>
+export const CriticalDeficitWidget = ({ items }: { items: DeficitItem[] }) => {
+  // Business Logic: Sum total pending demand across the institution to justify budget spending
 
-    <div className="space-y-2.5 my-4 overflow-y-auto max-h-35 pr-1 flex-1">
-      {items.length === 0 ? (
-        <p className="text-xs text-[#718096]/60 italic py-6 text-center font-medium">
-          Zero inventory bottlenecks reported.
+  return (
+    <div className="bg-white p-2 rounded-2xl flex flex-col justify-between h-full text-left font-sans select-none">
+      
+      {/* HEADER BLOCK: Premium Swiss Editorial Hierarchy */}
+      <div className="border-b border-slate-100 pb-3.5 mb-4">
+        <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 font-mono">
+          <AlertCircle size={12} className="text-rose-600 animate-pulse" /> 
+          Stock Management
+        </h3>
+        <h4 className="text-lg font-black text-slate-900 tracking-tight mt-1">
+          Out of Stock Alerts
+        </h4>
+        <p className="text-xs font-normal text-slate-500 mt-0.5 leading-relaxed">
+          Critical titles with 0 copies remaining on shelves alongside mounting reserve waitlists.
         </p>
-      ) : (
-        items.map((item) => (
-          <div
-            key={item.id}
-            className="flex justify-between items-center bg-rose-50/40 border border-rose-100 p-2.5 rounded-xl transition-colors"
-          >
-            <span
-              className="text-xs font-bold text-[#2D3748] truncate max-w-35 sm:max-w-45"
-              title={item.name}
+      </div>
+
+      {/* COMPACT SCROLLABLE ALERT MATRIX */}
+      <div className="space-y-2 max-h-60 overflow-y-auto pr-1 flex-1 custom-scrollbar">
+        {items.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-xs text-slate-400 italic font-medium">
+              Zero inventory bottlenecks reported. All demands met.
+            </p>
+          </div>
+        ) : (
+          items.map((item) => (
+            <div
+              key={item.id}
+              className="flex justify-between items-center bg-rose-50/30 border border-rose-100/60 p-2.5 rounded-xl hover:bg-rose-50/60 transition-colors gap-3"
             >
-              {item.name}
-            </span>
-            {/* ⚡ CLEANED: Always shows Out of Stock explicitly for books at 0 available copies */}
-            <span className="text-[10px] font-mono font-bold bg-rose-600 text-white px-2.5 py-0.5 rounded-md whitespace-nowrap uppercase tracking-wider">
-              Out of Stock
+              {/* Title label showing high weight contrast */}
+              <span
+                className="text-xs font-bold text-slate-900 truncate flex-1"
+                title={item.name}
+              >
+                {item.name}
+              </span>
+              
+              {/* High-Contrast Dynamic Utility Badge — Shows absolute real-world item demand */}
+              <span className="text-[10px] font-black bg-rose-600 text-white px-2.5 py-1 rounded-md whitespace-nowrap uppercase tracking-wider shadow-2xs">
+                0 Availble Copies
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* HIGH-PRIORITY LOGISTICAL PROCUREMENT FOOTER */}
+      {items.length > 0 && (
+        <div className="mt-4 bg-[#79a4d2] text-white rounded-xl p-3 flex items-center justify-between ">
+          <div className="flex items-center gap-2">
+            <ShoppingCart size={13} className="text-white" />
+            <span className="text-[11px] font-bold text-white">
+              Need to Restock Copies 
             </span>
           </div>
-        ))
+        </div>
       )}
+
     </div>
-  </div>
-);
+  );
+};
