@@ -44,16 +44,16 @@ export const RetentionAnalytics = ({
             {avg}
           </span>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest  block mt-1">
-            Mean Turnaround
+            Average Due Days
           </span>
         </div>
 
-        <div className="text-right mt-10">
+        <div className="text-left mt-10">
           <span className="text-xl font-bold text-slate-800 tracking-tight block">
             {maxLimit} Days
           </span>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest  block mt-1">
-            Max Policy Cap
+            Maximum Due days
           </span>
         </div>
       </div>
