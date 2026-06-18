@@ -337,23 +337,23 @@ export const FinePage = () => {
       )}
 
       {activeTab === "history" && (
-        <div className="bg-emerald-600 p-5 rounded-2xl text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xs">
-          <div>
-            <div className="text-[11px] uppercase font-bold tracking-widest text-emerald-100">
-              Total Audited Balance Collected
-            </div>
-            <div className="text-2xl font-bold mt-0.5">
-              ₹{aggregateAccruedSumVal}.00
-            </div>
-          </div>
-          <div>
-            <span className="text-xs font-bold uppercase tracking-wider bg-emerald-500/40 px-3.5 py-1.5 rounded-xl border border-emerald-400/20 inline-flex items-center gap-1.5">
-              <CheckCircle2 size={12} /> {totalItemsCount} Settled Invoices In
-              Archive Ledger
-            </span>
-          </div>
-        </div>
-      )}
+  <div className="bg-linear-to-r from-[#4b6993] to-[#3c5578] p-5 rounded-2xl text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md border border-white/10 animate-slide-in">
+    <div>
+      <div className="text-[11px] uppercase font-bold tracking-widest text-slate-300">
+        Total Audited Balance Collected
+      </div>
+      <div className="text-2xl font-bold mt-0.5">
+        ₹{aggregateAccruedSumVal}.00
+      </div>
+    </div>
+    <div>
+      <span className="text-xs font-bold uppercase tracking-wider bg-white/10 px-3.5 py-1.5 rounded-xl border border-white/10 inline-flex items-center gap-1.5 text-slate-100">
+        <CheckCircle2 size={12} className="text-slate-200" /> {totalItemsCount} Settled Invoices In
+        Archive Ledger
+      </span>
+    </div>
+  </div>
+)}
 
       {/* Search Filter Control Grid */}
       <div className="flex items-center justify-between gap-4 mb-4 mt-4 h-9">

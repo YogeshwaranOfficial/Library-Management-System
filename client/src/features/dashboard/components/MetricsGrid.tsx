@@ -84,7 +84,7 @@ export const MetricsGrid = ({ data }: MetricsBannerProps) => {
   useEffect(() => {
     const autoSlideTimer = setInterval(() => {
       handleNext();
-    }, 6000); // Extended slide duration for editorial legibility
+    }, 4000);
     return () => clearInterval(autoSlideTimer);
   }, [handleNext]);
 

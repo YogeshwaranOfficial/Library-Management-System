@@ -59,6 +59,7 @@ export const DashboardLayout = () => {
     if (container) {
       container.scrollTop = 0;
       setIsAtAbsoluteTop(true);
+      setSidebarExpanded(false); // Reset sidebar state on page changes
       container.addEventListener("scroll", handleContainerScroll);
     }
     return () => {
@@ -84,13 +85,19 @@ export const DashboardLayout = () => {
     setSidebarExpanded(true);
   };
 
-  // Handler triggered when mouse leaves the sidebar area — sets the 5-second slide-away countdown
+  // Handler triggered when mouse leaves the sidebar area
   const handleMouseLeaveSidebar = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     
-    timeoutRef.current = setTimeout(() => {
+    if (isDashboardPage) {
+      // Dashboard maintains the special 5-second slide-away delay
+      timeoutRef.current = window.setTimeout(() => {
+        setSidebarExpanded(false);
+      }, 100);
+    } else {
+      // Other pages collapse immediately back to icon view when the mouse leaves
       setSidebarExpanded(false);
-    }, 10); 
+    }
   };
 
   const handleSignOut = () => {
@@ -110,24 +117,37 @@ export const DashboardLayout = () => {
     { name: "Fines & Payments", path: "/fines", icon: Receipt },
   ];
 
+  // Dynamic width calculations based on context rules
+  const getSidebarWidth = () => {
+    if (sidebarExpanded) return 288;
+    return isDashboardPage ? 0 : 80;
+  };
+
+  const getSidebarPadding = () => {
+    if (sidebarExpanded) return 16;
+    return isDashboardPage ? 0 : 16;
+  };
+
   return (
     <div className="w-screen h-screen overflow-hidden flex flex-col bg-[#F8FAFC] font-sans text-[#2D3748] antialiased selection:bg-[#2B6CB0]/10 select-none">
       
-      {/* Invisible Left Edge Trigger Strip: Hovering here slides out the menu instantly */}
-      <div 
-        className="fixed left-0 top-0 h-full w-3 z-50 bg-transparent"
-        onMouseEnter={handleMouseEnterSidebar}
-      />
+      {/* Invisible Left Edge Trigger Strip - Only active on the dashboard view */}
+      {isDashboardPage && (
+        <div 
+          className="fixed left-0 top-0 h-full w-3 z-50 bg-transparent"
+          onMouseEnter={handleMouseEnterSidebar}
+        />
+      )}
 
       {/* Main Structural Layout Split Shell Container */}
       <div className="flex flex-1 w-full h-full overflow-hidden relative">
         
-        {/* Dynamic Slide-out Left Sidebar Menu — Moves from 0px to 288px and pushes content dynamically */}
+        {/* Dynamic Contextual Left Sidebar Menu */}
         <motion.aside
           animate={{ 
-            width: sidebarExpanded ? 288 : 0,
-            padding: sidebarExpanded ? 16 : 0,
-            opacity: sidebarExpanded ? 1 : 0
+            width: getSidebarWidth(),
+            padding: getSidebarPadding(),
+            opacity: !isDashboardPage || sidebarExpanded ? 1 : 0
           }}
           transition={{ type: "spring", damping: 30, stiffness: 250 }}
           onMouseEnter={handleMouseEnterSidebar}
@@ -136,17 +156,20 @@ export const DashboardLayout = () => {
         >
           <div className="flex flex-col h-full overflow-hidden">
             
-            {/* Dedicated Sidebar Upper Decorative Header Block */}
+            {/* Dedicated Sidebar Upper Branding Frame */}
             <div className="h-16 flex items-center justify-start mb-4 border-b border-white/10 shrink-0">
-              <div className="w-11 h-11 rounded-lg flex items-center justify-center bg-white/10 border border-white/10">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center bg-white/10 border border-white/10 shrink-0">
                 <Library size={20} className="stroke-[2.2] text-white" />
               </div>
-              <motion.span 
-                animate={{ opacity: sidebarExpanded ? 1 : 0 }}
-                className="text-xs font-black tracking-[0.2em] uppercase text-white/90 pl-3 font-mono truncate"
-              >
-                Menu
-              </motion.span>
+              {sidebarExpanded && (
+                <motion.span 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-xs font-black tracking-[0.2em] uppercase text-white/90 pl-3 truncate"
+                >
+                  MENU
+                </motion.span>
+              )}
             </div>
 
             {/* Sidebar Main Nav Options */}
@@ -168,9 +191,15 @@ export const DashboardLayout = () => {
                     <div className="w-11 h-full flex items-center justify-center shrink-0">
                       <IconComponent size={18} className="stroke-[2.2]" />
                     </div>
-                    <span className="truncate pl-1 pr-4">
-                      {item.name}
-                    </span>
+                    {sidebarExpanded && (
+                      <motion.span 
+                        initial={{ opacity: 0, x: -4 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="truncate pl-1 pr-4"
+                      >
+                        {item.name}
+                      </motion.span>
+                    )}
                   </NavLink>
                 );
               })}
@@ -186,9 +215,15 @@ export const DashboardLayout = () => {
               <div className="w-11 h-full flex items-center justify-center shrink-0">
                 <LogOut size={14} className="stroke-[2.5]" />
               </div>
-              <span className="truncate pr-4">
-                Logout
-              </span>
+              {sidebarExpanded && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="truncate pr-4"
+                >
+                  Logout
+                </motion.span>
+              )}
             </button>
           </div>
         </motion.aside>
@@ -198,12 +233,12 @@ export const DashboardLayout = () => {
           ref={mainScrollContainerRef}
           className="flex-1 overflow-y-auto bg-transparent relative"
         >
-          {/* Top Navbar — Automatically shifts its padding-left value to match the incoming sidebar width perfectly */}
+          {/* Top Navbar — Shifts dynamically alongside our dual-state layout models */}
           <motion.header 
             animate={{ 
               opacity: isAtAbsoluteTop ? 1 : 0,
               pointerEvents: isAtAbsoluteTop ? "auto" : "none",
-              paddingLeft: sidebarExpanded ? 288 + 24 : 24
+              paddingLeft: sidebarExpanded ? 288 + 24 : (isDashboardPage ? 24 : 80 + 24)
             }}
             transition={{ 
               type: "spring", 
@@ -214,7 +249,7 @@ export const DashboardLayout = () => {
             className={`fixed top-0 left-0 right-0 h-20 flex items-center justify-between pr-6 z-30 select-none
               ${isDashboardPage 
                 ? "bg-transparent border-transparent text-white drop-shadow-xs" 
-                : "bg-[#4b6993] border-b border-slate-200/80 shadow-xs text-slate-900 backdrop-blur-md"
+                : "bg-white/95 border-b border-slate-200/80 shadow-xs text-slate-900 backdrop-blur-md"
               }`}
           >
             {/* Pure Informational Brand Block */}
@@ -222,16 +257,16 @@ export const DashboardLayout = () => {
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center border transition-all duration-200 ${
                 isDashboardPage 
                   ? "bg-white/10 border-white/10" 
-                  : "border-white/10 bg-white/10"
+                  : "bg-slate-100 border-slate-200"
               }`}>
-                <Library size={18} className={`stroke-[2.2] ${isDashboardPage ? "text-white" : "text-white"}`} />
+                <Library size={18} className={`stroke-[2.2] ${isDashboardPage ? "text-white" : "text-slate-700"}`} />
               </div>
 
               <div className="flex flex-col text-left">
-                <span className={`font-black text-base tracking-tight leading-tight transition-colors ${isDashboardPage ? "text-white" : "text-white"}`}>
+                <span className={`font-black text-base tracking-tight leading-tight transition-colors ${isDashboardPage ? "text-white" : "text-slate-900"}`}>
                   LMS
                 </span>
-                <span className={`text-[10px] font-extrabold uppercase tracking-widest transition-colors ${isDashboardPage ? "text-white/60" : "text-white/60"}`}>
+                <span className={`text-[10px] font-extrabold uppercase tracking-widest transition-colors ${isDashboardPage ? "text-white/60" : "text-slate-400"}`}>
                   Central Intelligence Matrix
                 </span>
               </div>
@@ -240,27 +275,27 @@ export const DashboardLayout = () => {
             {/* User Identity Matrix */}
             <div className="flex items-center gap-5">
               <div className="text-right hidden sm:block">
-                <p className={`text-[10px] font-extrabold tracking-widest uppercase transition-colors ${isDashboardPage ? "text-slate-300" : "text-slate-300"}`}>
-                  ROLE: <span className={`font-black ${isDashboardPage ? "text-white" : "text-white"}`}>{user?.role || "LIBRARIAN"}</span>
+                <p className={`text-[10px] font-extrabold tracking-widest uppercase transition-colors ${isDashboardPage ? "text-slate-300" : "text-slate-500"}`}>
+                  ROLE: <span className={`font-black ${isDashboardPage ? "text-white" : "text-slate-900"}`}>{user?.role || "LIBRARIAN"}</span>
                 </p>
               </div>
 
               <div className={`w-10 h-10 border rounded-lg flex items-center justify-center shadow-3xs transition-all ${
                 isDashboardPage 
                   ? "border-white/10 bg-white/10 text-white" 
-                  : "border-white/10 bg-white/10 text-white"
+                  : "border-slate-200 bg-slate-50 text-slate-700"
               }`}>
                 <User size={16} className="stroke-[2.5]" />
               </div>
             </div>
           </motion.header>
 
-          {/* Page content wrapper wrapper */}
+          {/* Page content wrapper */}
           <div className={`w-full ${isDashboardPage ? "pt-0" : "pt-20"}`}>
             <Outlet />
           </div>
 
-          {/* Interactive Dynamic Scroll to Top Action Button Module (Works across all views!) */}
+          {/* Interactive Dynamic Scroll to Top Action Button Module */}
           <AnimatePresence>
             {!isAtAbsoluteTop && (
               <motion.button
