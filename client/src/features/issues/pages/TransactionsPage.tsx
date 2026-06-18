@@ -408,8 +408,6 @@ export const TransactionsPage = () => {
                 <span>
                   Page <span className="font-semibold text-gray-800">{currentPage}</span> of{" "}
                   <span className="font-semibold text-gray-800">{totalPages}</span>
-                  <span className="mx-2">|</span>
-                  Total <span className="font-semibold text-gray-800">{totalRecordsCount}</span> Books
                 </span>
                 <div className="flex gap-4">
                   <button

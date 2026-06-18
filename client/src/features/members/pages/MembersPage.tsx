@@ -74,7 +74,7 @@ export const MembersPage = () => {
       const res = await axiosClient.get("/members", {
         params: {
           page: currentPage,
-          limit: 10,
+          limit: 10, // Adjusted page layout parameter matching front-end rendering constraints
           search: searchTerm || undefined,
           plan: tierFilter || undefined,
           status: statusFilter || undefined,
@@ -200,7 +200,8 @@ export const MembersPage = () => {
   if (statusFilter === "ACTIVE") displayExpired = "-";
   if (statusFilter === "EXPIRED") displayActive = "-";
 
-  const totalPages = Math.ceil(memberList.length / 10) || 1;
+  // Fixed total pages math layout mapping based on database response parameters
+  const totalPages = Math.ceil(displayTotal / 10) || 1;
 
   const handleClearFilters = () => {
     setSearchTerm(""); 
@@ -451,7 +452,7 @@ export const MembersPage = () => {
                 </table>
               </div>
 
-              {/* Minimal Pagination Elements */}
+              {/* Stabilized Pagination Navigation Footer */}
               {totalPages > 0 && (
                 <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-2 select-none pl-3">
                   <span>Page <span className="font-semibold text-gray-800">{currentPage}</span> of <span className="font-semibold text-gray-800">{totalPages}</span></span>
@@ -462,7 +463,7 @@ export const MembersPage = () => {
                       onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(p - 1, 1)); }}
                       className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
                     >
-                      ← Previous
+                      &larr; Previous
                     </button>
                     <button
                       type="button"
@@ -470,7 +471,7 @@ export const MembersPage = () => {
                       onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(p + 1, totalPages)); }}
                       className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
                     >
-                      Next →
+                      Next &rarr;
                     </button>
                   </div>
                 </div>
@@ -481,8 +482,6 @@ export const MembersPage = () => {
       </div>
 
       {/* ==================== GLOBAL OVERLAY MODALS ==================== */}
-      
-      {/* 1. Member Information Details Context Modal */}
       <MemberDetailsModal
         isOpen={isDetailsOpen}
         member={selectedMember}
@@ -493,7 +492,6 @@ export const MembersPage = () => {
         isRenewing={renewMutation.isPending}
       />
 
-      {/* 2. Member Form Modal (Handles Create and Updates) */}
       <MemberModal
         isOpen={isFormOpen}
         onClose={() => { setIsFormOpen(false); setSelectedMember(null); }}
