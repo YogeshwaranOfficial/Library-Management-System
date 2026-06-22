@@ -82,9 +82,7 @@ className="text-[#718096] hover:text-[#1A365D] transition-all p-1.5 hover:bg-gra
           <div className="mt-5 p-4 bg-rose-50 rounded-xl border border-rose-200 flex items-start gap-2.5 text-left">
             <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
             <p className="text-[11px] text-rose-800 font-bold leading-normal uppercase tracking-widest">
-              Relational Hazard: Members currently bound to this specific plan
-              model id may experience query faults during system verification
-              checkups.
+              Warning: Members currently underthis plan may be come with unclassified plans
             </p>
           </div>
         </div>

@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/authStore";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Lucide Icons with balanced stroke weight for clean, institutional clarity
 import { 
@@ -15,27 +15,81 @@ import {
   Receipt, 
   LogOut, 
   Library,
-  User,
+  ChevronUp,
 } from "lucide-react";
 
 export const DashboardLayout = () => {
-  const { user, logout } = useAuthStore();
+  const { logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   
-  // State engine managing navigation side bar width expansion configuration
+  // State engine managing navigation side bar hover-expansion configurations
   const [sidebarExpanded, setSidebarExpanded] = useState<boolean>(false);
   
+  // Track if the scroll container is at the absolute top (scrollTop === 0)
+  const [isAtAbsoluteTop, setIsAtAbsoluteTop] = useState<boolean>(true);
+  
   const mainScrollContainerRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<number | null>(null);
 
-  // Handle immediate viewport layout reset on route change
-  useEffect(() => {
+  // Pure scroll engine tracking baseline depth coordinates
+  const handleContainerScroll = useCallback(() => {
+    if (!mainScrollContainerRef.current) return;
+    const currentScrollTop = mainScrollContainerRef.current.scrollTop;
+    setIsAtAbsoluteTop(currentScrollTop === 0);
+  }, []);
+
+  // Action dispatcher that smoothly resets viewport back to coordinate 0
+  const scrollToTop = () => {
     if (mainScrollContainerRef.current) {
-      mainScrollContainerRef.current.scrollTop = 0;
+      mainScrollContainerRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
     }
-  }, [location.pathname]);
+  };
+
+  // Handle intersection triggers and layout resets on route redirects
+  useEffect(() => {
+    const container = mainScrollContainerRef.current;
+    if (container) {
+      container.scrollTop = 0;
+      setIsAtAbsoluteTop(true);
+      setSidebarExpanded(false); // Reset sidebar state on page changes
+      container.addEventListener("scroll", handleContainerScroll);
+    }
+    return () => {
+      if (container) {
+        container.removeEventListener("scroll", handleContainerScroll);
+      }
+    };
+  }, [location.pathname, handleContainerScroll]);
+
+  // Clean up timers when the component unmounts to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  // Handler triggered when mouse enters the left sidebar interactive zone
+  const handleMouseEnterSidebar = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    setSidebarExpanded(true);
+  };
+
+  // Handler triggered when mouse leaves the sidebar area
+  const handleMouseLeaveSidebar = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    // All pages now collapse instantly back to base icon view uniformly
+    setSidebarExpanded(false);
+  };
 
   const handleSignOut = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     logout();
     navigate("/login");
   };
@@ -49,60 +103,62 @@ export const DashboardLayout = () => {
     { name: "Borrow & Return Desk", path: "/transactions", icon: RefreshCw },
     { name: "Returned Books", path: "/returnedbooks", icon: BookCheck },
     { name: "Fines & Payments", path: "/fines", icon: Receipt },
+    { name: "Reports", path: "/reports", icon: Receipt },
   ];
 
+  // Global uniform sidebar layout measurements across all functional views
+  const getSidebarWidth = () => {
+    return sidebarExpanded ? 288 : 80;
+  };
+
   return (
-    <div className="w-screen h-screen overflow-hidden flex flex-col bg-[#F7FAFC] font-sans text-[#2D3748] antialiased selection:bg-[#2B6CB0]/10 select-none">
+    <div className="w-screen h-screen overflow-hidden flex flex-col bg-white font-sans text-[#2D3748] antialiased selection:bg-[#2B6CB0]/10 select-none">
       
-      {/* Institutional Top Application Header Bar - Always visible, persistent foundation layout */}
-      <header className="h-20 w-full flex items-center justify-between px-5 bg-[#4b6993] border-b border-white/10 shadow-sm text-white shrink-0 z-40">
+      {/* Main Structural Layout Split Shell Container */}
+      <div className="flex flex-1 w-full h-full overflow-hidden relative">
         
-        {/* Core Navigation Brand Click Area */}
-        <div 
-          onClick={() => setSidebarExpanded(!sidebarExpanded)}
-          className="flex items-center gap-4 cursor-pointer group select-none"
-          title={sidebarExpanded ? "Collapse Navigation Menu" : "Expand Navigation Menu"}
-        >
-          <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center border border-white/10 group-hover:bg-white/15 transition-all duration-150">
-            <Library size={20} className="stroke-[2.2] text-[#ffffff]" />
-          </div>
-
-          <div className="flex flex-col">
-            <span className="font-bold text-base tracking-tight leading-tight text-white flex items-center gap-2">
-              LMS
-            </span>
-            <span className="text-xs font-semibold uppercase tracking-wider font-sans text-white/70">
-              Library Management System
-            </span>
-          </div>
-        </div>
-
-        {/* User Identity Matrix */}
-        <div className="flex items-center gap-5">
-          <div className="text-right hidden sm:block">
-            <p className="text-xs font-semibold tracking-wide uppercase text-white/80">
-              ROLE: <span className="text-white font-bold">{user?.role || "LIBRARIAN"}</span>
-            </p>
-          </div>
-
-          <div className="w-11 h-11 border border-white/10 bg-white/10 text-white rounded-lg flex items-center justify-center shadow-2xs">
-            <User size={18} className="stroke-[2.2]" />
-          </div>
-        </div>
-      </header>
-
-      {/* Main Structural Application Framework Split */}
-      <div className="flex flex-1 w-full h-[calc(100vh-80px)] overflow-hidden">
-        
-        {/* Persistent Left Icon/Expanded Navigation Sidebar Tracking Shell */}
+        {/* Dynamic Contextual Left Sidebar Menu - Consistent across all routes */}
         <motion.aside
-          animate={{ width: sidebarExpanded ? 288 : 80 }}
-          transition={{ type: "spring", damping: 28, stiffness: 240 }}
-          className="h-full bg-[#1A365D] border-r border-white/10 shadow-md flex flex-col justify-between p-4 text-white shrink-0 z-30"
+          animate={{ 
+            width: getSidebarWidth(),
+          }}
+          transition={{ type: "spring", damping: 30, stiffness: 250 }}
+          onMouseEnter={handleMouseEnterSidebar}
+          onMouseLeave={handleMouseLeaveSidebar}
+          className="h-full bg-[#4b6993] border-r border-white/10 shadow-2xl flex flex-col justify-between text-white shrink-0 z-40 overflow-hidden p-4"
         >
-          <div className="flex flex-col h-full overflow-y-auto overflow-x-hidden no-scrollbar">
-            {/* Navigation Routing Links */}
-            <nav className="space-y-1.5 flex-1">
+          <div className="flex flex-col h-full overflow-hidden">
+            
+            {/* Dedicated Sidebar Upper Branding Frame */}
+            <div className="h-16 flex items-center justify-start mb-4 border-b border-white/10 shrink-0">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center bg-white/10 border border-white/10 shrink-0">
+                <Library size={20} className="stroke-[2.2] text-white" />
+              </div>
+              {sidebarExpanded && (
+                <motion.span 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-xs font-black tracking-[0.2em] uppercase text-white/90 pl-3 truncate"
+                >
+                  MENU
+                </motion.span>
+              )}
+            </div>
+
+            {/* Sidebar Main Nav Options */}
+            <nav 
+              className="space-y-1.5 flex-1 overflow-y-auto overflow-x-hidden"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}
+            >
+              <style>{`
+                nav::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
+
               {navItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
@@ -112,12 +168,11 @@ export const DashboardLayout = () => {
                     className={({ isActive }) =>
                       `flex items-center rounded-lg text-sm font-medium tracking-wide transition-all duration-150 h-12 overflow-hidden ${
                         isActive
-                          ? "bg-white/10 text-white font-bold border-l-4 border-[#D69E2E] rounded-l-none shadow-2xs"
-                          : "text-white/70 hover:bg-white/5 hover:text-white"
+                          ? "bg-white text-[#4b6993] font-bold shadow-md"
+                          : "text-white/80 hover:bg-white/10 hover:text-white"
                       }`
                     }
                   >
-                    {/* Centered box icon wrapper to protect collapse alignments */}
                     <div className="w-11 h-full flex items-center justify-center shrink-0">
                       <IconComponent size={18} className="stroke-[2.2]" />
                     </div>
@@ -136,14 +191,13 @@ export const DashboardLayout = () => {
             </nav>
           </div>
 
-          {/* Action Area Sidebar Footer */}
-          <div className="pt-4 border-t border-white/10 bg-[#1A365D] shrink-0 overflow-hidden">
+          <div className="pt-4 border-t border-white/10 shrink-0 overflow-hidden">
             <button
               onClick={handleSignOut}
-              className="flex items-center justify-center rounded-lg text-xs font-bold text-white bg-[#4b6993] hover:bg-[#2B6CB0]/90 border border-transparent transition-all cursor-pointer shadow-sm uppercase tracking-wider h-11 w-full"
+              className="flex items-center justify-center rounded-lg text-xs font-bold text-white bg-white/10 hover:bg-white/20 border border-transparent transition-all cursor-pointer shadow-sm uppercase tracking-wider h-11 w-full"
               title="Logout Account"
             >
-              <div className="w-11 flex items-center justify-center shrink-0">
+              <div className="w-11 h-full flex items-center justify-center shrink-0">
                 <LogOut size={14} className="stroke-[2.5]" />
               </div>
               {sidebarExpanded && (
@@ -159,19 +213,77 @@ export const DashboardLayout = () => {
           </div>
         </motion.aside>
 
-        {/* Workspace Canvas Container Block */}
+        {/* Workspace Canvas Layer Container */}
         <main 
           ref={mainScrollContainerRef}
           className="flex-1 overflow-y-auto bg-transparent relative"
         >
-          <motion.div
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="h-full w-full"
-          >
+          {/* Top Navbar — Standard uniform clean alignment across all layouts */}
+          {/* <motion.header 
+            animate={{ 
+              opacity: isAtAbsoluteTop ? 1 : 0,
+              pointerEvents: isAtAbsoluteTop ? "auto" : "none",
+              paddingLeft: sidebarExpanded ? 288 + 24 : 80 + 24
+            }}
+            transition={{ 
+              type: "spring", 
+              damping: 30, 
+              stiffness: 250,
+              opacity: { duration: 0.2, ease: "linear" }
+            }}
+            className="fixed top-0 left-0 right-0 h-20 flex items-center justify-between pr-6 z-30 select-none bg-white/95 border-b border-slate-200/80 shadow-xs text-slate-900 backdrop-blur-md"
+          > */}
+            {/* Pure Informational Brand Block */}
+            {/* <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center border border-slate-200 bg-slate-100">
+                <Library size={18} className="stroke-[2.2] text-slate-700" />
+              </div>
+
+              <div className="flex flex-col text-left">
+                <span className="font-black text-base tracking-tight leading-tight text-slate-900">
+                  LMS
+                </span>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
+                  Central Intelligence Matrix
+                </span>
+              </div>
+            </div> */}
+
+            {/* User Identity Matrix */}
+            {/* <div className="flex items-center gap-5">
+              <div className="text-right hidden sm:block">
+                <p className="text-[10px] font-extrabold tracking-widest uppercase text-slate-500">
+                  ROLE: <span className="font-black text-slate-900">{user?.role || "LIBRARIAN"}</span>
+                </p>
+              </div>
+
+              <div className="w-10 h-10 border border-slate-200 bg-slate-50 text-slate-700 rounded-lg flex items-center justify-center shadow-3xs">
+                <User size={16} className="stroke-[2.5]" />
+              </div>
+            </div> */}
+          {/* </motion.header> */}
+
+          {/* Regular page offset spacer container applied consistently */}
+          <div className="w-full">
             <Outlet />
-          </motion.div>
+          </div>
+
+          {/* Interactive Dynamic Scroll to Top Action Button Module */}
+          <AnimatePresence>
+            {!isAtAbsoluteTop && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                transition={{ duration: 0.2 }}
+                onClick={scrollToTop}
+                className="fixed bottom-6 right-6 w-12 h-12 rounded-xl bg-[#4b6993] hover:bg-[#3c5578] text-white flex items-center justify-center shadow-lg cursor-pointer border border-white/10 z-40 transition-colors"
+                title="Scroll back to top"
+              >
+                <ChevronUp size={22} className="stroke-[2.5]" />
+              </motion.button>
+            )}
+          </AnimatePresence>
         </main>
 
       </div>

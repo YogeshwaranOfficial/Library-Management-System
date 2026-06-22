@@ -25,7 +25,7 @@ const translationClient = createTextTranslationClient("https://api.cognitive.mic
 const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
 export const processBookCoverAI = async (imageBuffer: Buffer) => {
-  // 🟢 STEP 1: Global Azure Vision OCR Scan
+  // STEP 1: Global Azure Vision OCR Scan
   const visionResponse = await visionClient.path("/imageanalysis:analyze").post({
     body: imageBuffer,
     contentType: "application/octet-stream",
@@ -46,7 +46,7 @@ export const processBookCoverAI = async (imageBuffer: Buffer) => {
     });
   }
 
-  // 🟢 STEP 2: Azure Translation Bulk Normalization
+  // STEP 2: Azure Translation Bulk Normalization
   const translationInputs = extractedLines.map(line => ({ text: line, targets: [{ language: "en" }] }));
   let englishLines: string[] = [...extractedLines];
   let azureDetectedLangCode = "en"; 
@@ -74,7 +74,7 @@ export const processBookCoverAI = async (imageBuffer: Buffer) => {
     (raw, idx) => `- OCR Extracted: "${raw}" | Translated Target: "${englishLines[idx] || raw}"`
   ).join("\n");
 
-  // 🟢 STEP 3: Gemini Multimodal Vision & Contextual Verification
+  // STEP 3: Gemini Multimodal Vision & Contextual Verification
   let bestTitle = "";
   let bestAuthor = "";
   let bestLanguage = "";
@@ -148,7 +148,7 @@ export const processBookCoverAI = async (imageBuffer: Buffer) => {
     title: bestTitle || "Unknown Title", 
     author: bestAuthor || "Unknown Author",
     language: bestLanguage || "English",
-    category: detectedCategory || "Non-Fiction",
+    category: detectedCategory || "Unknown Category",
     overview: overviewText || "No overview available for this item."
   };
 };

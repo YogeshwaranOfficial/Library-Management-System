@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react"; 
-import { useLocation, useNavigate } from "react-router-dom"; 
+import { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "../../../api/axiosClient";
 import type { FineRecord } from "../../../types/fines";
@@ -33,13 +33,25 @@ interface AxiosErrorResponse {
   };
 }
 
+interface LocationStatePayload {
+  autoOpenIssueId?: string;
+  autoOpenSettlement?: boolean;
+  pendingCondition?: "GOOD" | "DAMAGED" | null;
+  pendingDescription?: string | null;
+}
+
 export const FinePage = () => {
   const queryClient = useQueryClient();
-  const location = useLocation(); 
-  const navigate = useNavigate(); 
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  const [selectedFine, setSelectedFine] = useState<FineRecord | null>(null);
-  const [showRestoreModal, setShowRestoreModal] = useState(false); 
+  const routeState = location.state as LocationStatePayload | null;
+
+  // Local interaction overrides tracking modifications manually executed by clerks
+  const [manualSelectedFine, setManualSelectedFine] = useState<FineRecord | null>(null);
+  const [manualSelectedFineForSettlement, setManualSelectedFineForSettlement] = useState<FineRecord | null>(null);
+
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
   const [activeHeaderDropdown, setActiveHeaderDropdown] = useState<"delay" | null>(null);
 
   // Active View Tab Panel Layout Selector ("active" | "history")
@@ -52,9 +64,6 @@ export const FinePage = () => {
   // Pagination Controls State
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10;
-
-  // Modals Core Management States
-  const [selectedFineForSettlement, setSelectedFineForSettlement] = useState<FineRecord | null>(null);
 
   // Ref tracking node for catching outside clicks on table header elements
   const delayDropdownRef = useRef<HTMLDivElement>(null);
@@ -74,91 +83,78 @@ export const FinePage = () => {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, [activeHeaderDropdown]);
 
-  // 🟢 NEW MUTATION NODE: Forces dynamic backend recalculation on mount
+  // Forces dynamic backend recalculation on mount
   const syncLedgerMutation = useMutation({
     mutationFn: async () => {
       const response = await axiosClient.patch("/fines/recalculate-ledger");
       return response.data;
     },
     onSuccess: (res) => {
-      console.log(`[Sync Engine] ${res.message || "Metrics synchronized successfully."}`, res.data);
+      console.log(
+        `[Sync Engine] ${res.message || "Metrics synchronized successfully."}`,
+        res.data,
+      );
       queryClient.invalidateQueries({ queryKey: ["finesMasterLedgerFeed"] });
     },
     onError: () => {
       toast.error("Fine sync ledger recalculation engine structural warning.");
-    }
+    },
   });
 
-  // 🟢 MOUNT LIFECYCLE ENGINE: Triggers every single time a clerk opens or views this page
+  // MOUNT LIFECYCLE ENGINE: Triggers every single time a clerk opens or views this page
   useEffect(() => {
-    console.log("⚡ Fines Management Desk Mounted. Dispatching master calculation tool...");
+    console.log(
+      "⚡ Fines Management Desk Mounted. Dispatching master calculation tool...",
+    );
     syncLedgerMutation.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, []);
 
   // 1. Fetch Data Stream conditionally depending on active tab view layouts
-  const { data: finesFeedPayload = [], isLoading: isQueryLoading } = useQuery<FineRecord[]>({
+  const { data: finesFeedPayload = [], isLoading: isQueryLoading } = useQuery<
+    FineRecord[]
+  >({
     queryKey: ["finesMasterLedgerFeed", activeTab],
     queryFn: async () => {
-      const endpoint = activeTab === "active" ? "/fines/pending" : "/fines/collected";
+      const endpoint =
+        activeTab === "active" ? "/fines/pending" : "/fines/collected";
       const response = await axiosClient.get(endpoint);
       return response.data?.data || response.data || [];
     },
   });
 
-  // 🟢 COMBINED LOADING EVALUATION: Keeps the pulse screen running until the sync finishes
+  // COMBINED LOADING EVALUATION: Keeps the pulse screen running until the sync finishes
   const isLoading = isQueryLoading || syncLedgerMutation.isPending;
 
-  // Intercept incoming routing state redirect signatures safely
-  useEffect(() => {
-    const routeState = location.state as { autoOpenIssueId?: string; autoOpenSettlement?: boolean } | null;
-
-    if (routeState) {
-      console.log("======== [DEBUG RECEIVER] ROUTE STATE DETECTED ========");
-      console.log("Received routeState:", routeState);
-    }
-
-    if (routeState?.autoOpenIssueId && finesFeedPayload.length > 0) {
-      const incomingId = routeState.autoOpenIssueId;
-
-      const matchingFine = finesFeedPayload.find((fine) => {
+  // 🧠 DERIVE DIRECTLY DURING RENDER PHASE: Zero useEffect state synchronizations or rule violations
+  const matchedRouteFine = routeState?.autoOpenIssueId && finesFeedPayload.length > 0
+    ? finesFeedPayload.find((fine) => {
         if (!fine) return false;
-        return (
-          fine.issue_id === incomingId ||
-          fine.fine_id === incomingId 
-        );
-      });
+        return fine.issue_id === routeState.autoOpenIssueId || fine.fine_id === routeState.autoOpenIssueId;
+      }) || null
+    : null;
 
-      if (matchingFine) {
-        console.log("✅ SUCCESS: Found a matching fine record object!", matchingFine);
-        
-        const timeoutId = setTimeout(() => {
-          if (routeState.autoOpenSettlement) {
-            setSelectedFineForSettlement(matchingFine);
-            setActiveTab("active");
-          } else {
-            setSelectedFine(matchingFine);
-            setActiveTab("active");
-          }
+  // Compute absolute active data targets safely combining local state overrides and render-derived route payloads
+  const selectedFine = manualSelectedFine || (!routeState?.autoOpenSettlement ? matchedRouteFine : null);
+  const selectedFineForSettlement = manualSelectedFineForSettlement || (routeState?.autoOpenSettlement ? matchedRouteFine : null);
 
-          navigate(location.pathname, { replace: true, state: null });
-        }, 0);
-
-        return () => clearTimeout(timeoutId);
-      } else {
-        console.error(
-          `❌ MATCH FAIL: Checked all ${finesFeedPayload.length} ledger entries but found no matching ID for "${incomingId}".`
-        );
-      }
+  // Clear modal selections and dismiss router navigation history context state safely on dismissal
+  const clearActiveModalsState = () => {
+    setManualSelectedFine(null);
+    setManualSelectedFineForSettlement(null);
+    
+    if (routeState) {
+      navigate(location.pathname, { replace: true, state: null });
     }
-  }, [location.state, finesFeedPayload, navigate, location.pathname]); 
+  };
 
   const restoreFineMutation = useMutation({
-    mutationFn: async (id: string) => await axiosClient.patch(`/fines/restore/${id}`),
+    mutationFn: async (id: string) =>
+      await axiosClient.patch(`/fines/restore/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finesMasterLedgerFeed"] });
       setShowRestoreModal(false);
-      setSelectedFine(null);
+      clearActiveModalsState();
 
       toast.success("Entry restored to active ledger!", {
         description:
@@ -174,28 +170,36 @@ export const FinePage = () => {
       id,
       paidDate,
       paymentMethod,
+      condition,
+      damage_description,
     }: {
       id: string;
       paidDate: string;
       paymentMethod: "CASH" | "CARD" | "UPI";
+      condition?: "GOOD" | "DAMAGED" | null;
+      damage_description?: string | null;
     }) => {
       return await axiosClient.patch("/fines/pay", {
         fine_id: id,
         paidDate: paidDate,
         paymentMethod: paymentMethod,
+        condition: condition || undefined,
+        damage_description: damage_description || undefined,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finesMasterLedgerFeed"] });
-      setSelectedFineForSettlement(null);
+      clearActiveModalsState();
       toast.success("💸 Invoice Ledger Balanced Successfully!", {
-        description: "Transaction finalized. This record has moved safely to Collected History.",
+        description:
+          "Transaction finalized. This record has moved safely to Collected History.",
         duration: 4000,
       });
     },
     onError: (err: AxiosErrorResponse) => {
       toast.error(
-        err?.response?.data?.message || "Execution engine rejected settlement input parameters."
+        err?.response?.data?.message ||
+          "Execution engine rejected settlement input parameters.",
       );
     },
   });
@@ -207,7 +211,7 @@ export const FinePage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["finesMasterLedgerFeed"] });
-      setSelectedFine(null);
+      clearActiveModalsState();
       toast.info("Invoice purged from ledger.");
     },
   });
@@ -216,13 +220,21 @@ export const FinePage = () => {
     if (!fine) return false;
 
     const term = searchQuery.toLowerCase().trim();
-    
-    const nameMatch = String(fine.memberName || "").toLowerCase().includes(term);
-    const titleMatch = String(fine.bookTitle || "").toLowerCase().includes(term);
+
+    const nameMatch = String(fine.memberName || "")
+      .toLowerCase()
+      .includes(term);
+    const titleMatch = String(fine.bookTitle || "")
+      .toLowerCase()
+      .includes(term);
     const passesSearch = term === "" || nameMatch || titleMatch;
 
     let passesDelayRange = true;
-    if (activeTab === "active" && delayIntervalFilter && typeof fine.delayed_days === 'number') {
+    if (
+      activeTab === "active" &&
+      delayIntervalFilter &&
+      typeof fine.delayed_days === "number"
+    ) {
       const days = fine.delayed_days;
       if (delayIntervalFilter === "7") passesDelayRange = days > 7;
       if (delayIntervalFilter === "14") passesDelayRange = days > 14;
@@ -233,10 +245,11 @@ export const FinePage = () => {
   });
 
   // 5. Aggregate metrics computation logic blocks
-  const totalUnpaidInvoicesCount = activeTab === "active" ? finesFeedPayload.length : 0;
+  const totalUnpaidInvoicesCount =
+    activeTab === "active" ? finesFeedPayload.length : 0;
   const aggregateAccruedSumVal = filteredFines.reduce(
     (sum, current) => sum + (current.fine_amount || 0),
-    0
+    0,
   );
 
   // 6. Inline dynamic pagination offsets
@@ -244,7 +257,7 @@ export const FinePage = () => {
   const totalPagesCount = Math.ceil(totalItemsCount / rowsPerPage) || 1;
   const paginatedRowsData = filteredFines.slice(
     (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
+    currentPage * rowsPerPage,
   );
 
   const handleTabChange = (tab: "active" | "history") => {
@@ -268,7 +281,9 @@ export const FinePage = () => {
           <div className="flex items-center gap-2 text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1.5">
             Fines Management Desk
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-[#1A365D]">Fines Management Desk</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-[#1A365D]">
+            Fines Management Desk
+          </h2>
           <p className="text-sm text-[#718096] mt-1">
             Active Plans (₹10/day) | Expired Plans (₹20/day).
           </p>
@@ -280,7 +295,9 @@ export const FinePage = () => {
             type="button"
             onClick={() => handleTabChange("active")}
             className={`flex items-center gap-1.5 px-3.5 py-4 text-xs font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
-              activeTab === "active" ? "bg-white shadow-xs text-[#1A365D]" : "text-slate-500 hover:text-slate-800"
+              activeTab === "active"
+                ? "bg-white shadow-xs text-[#1A365D]"
+                : "text-slate-500 hover:text-slate-800"
             }`}
           >
             <ShieldAlert size={14} /> Active Fines
@@ -307,16 +324,18 @@ export const FinePage = () => {
       )}
 
       {activeTab === "history" && (
-        <div className="bg-emerald-600 p-5 rounded-2xl text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xs">
+        <div className="bg-linear-to-r from-[#4b6993] to-[#3c5578] p-5 rounded-2xl text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-md border border-white/10 animate-slide-in">
           <div>
-            <div className="text-[11px] uppercase font-bold tracking-widest text-emerald-100">
+            <div className="text-[11px] uppercase font-bold tracking-widest text-slate-300">
               Total Audited Balance Collected
             </div>
-            <div className="text-2xl font-bold mt-0.5">₹{aggregateAccruedSumVal}.00</div>
+            <div className="text-2xl font-bold mt-0.5">
+              ₹{aggregateAccruedSumVal}.00
+            </div>
           </div>
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider bg-emerald-500/40 px-3.5 py-1.5 rounded-xl border border-emerald-400/20 inline-flex items-center gap-1.5">
-              <CheckCircle2 size={12} /> {totalItemsCount} Settled Invoices In Archive Ledger
+            <span className="text-xs font-bold uppercase tracking-wider bg-white/10 px-3.5 py-1.5 rounded-xl border border-white/10 inline-flex items-center gap-1.5 text-slate-100">
+              <CheckCircle2 size={12} className="text-slate-200" /> {totalItemsCount} Settled Invoices In Archive Ledger
             </span>
           </div>
         </div>
@@ -384,15 +403,16 @@ export const FinePage = () => {
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveHeaderDropdown(
-                          activeHeaderDropdown === "delay" ? null : "delay"
+                          activeHeaderDropdown === "delay" ? null : "delay",
                         );
                       }}
                       className={`inline-flex items-center justify-center gap-1 transition-colors uppercase tracking-widest text-[11px] font-bold hover:text-[#1A365D] ${
-                        delayIntervalFilter ? "text-[#2B6CB0]" : "text-[#718096]"
+                        delayIntervalFilter
+                          ? "text-[#2B6CB0]"
+                          : "text-[#718096]"
                       }`}
                     >
-                      Delayed Days
-                      {delayIntervalFilter ? ` (${delayIntervalFilter}+)` : ""}
+                      Delayed Days {delayIntervalFilter ? ` (${delayIntervalFilter}+)` : ""}
                       <ChevronDown
                         size={11}
                         className={`transition-transform duration-200 ${
@@ -414,7 +434,9 @@ export const FinePage = () => {
                             setCurrentPage(1);
                           }}
                           className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
-                            !delayIntervalFilter ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""
+                            !delayIntervalFilter
+                              ? "bg-slate-50/80 text-[#2B6CB0] font-semibold"
+                              : ""
                           }`}
                         >
                           All Delays
@@ -428,7 +450,9 @@ export const FinePage = () => {
                             setCurrentPage(1);
                           }}
                           className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
-                            delayIntervalFilter === "7" ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""
+                            delayIntervalFilter === "7"
+                              ? "bg-slate-50/80 text-[#2B6CB0] font-semibold"
+                              : ""
                           }`}
                         >
                           Critical (&gt; 7 Days)
@@ -442,7 +466,9 @@ export const FinePage = () => {
                             setCurrentPage(1);
                           }}
                           className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
-                            delayIntervalFilter === "14" ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""
+                            delayIntervalFilter === "14"
+                              ? "bg-slate-50/80 text-[#2B6CB0] font-semibold"
+                              : ""
                           }`}
                         >
                           Severe (&gt; 14 Days)
@@ -456,7 +482,9 @@ export const FinePage = () => {
                             setCurrentPage(1);
                           }}
                           className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${
-                            delayIntervalFilter === "30" ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""
+                            delayIntervalFilter === "30"
+                              ? "bg-slate-50/80 text-[#2B6CB0] font-semibold"
+                              : ""
                           }`}
                         >
                           High Delinquency (&gt; 30 Days)
@@ -471,7 +499,10 @@ export const FinePage = () => {
               <tbody className="text-sm divide-y divide-gray-100 font-medium text-[#2D3748]">
                 {paginatedRowsData.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-16 text-slate-400 font-medium">
+                    <td
+                      colSpan={5}
+                      className="text-center py-16 text-slate-400 font-medium"
+                    >
                       Operational Clear View. Zero matching layout targets found.
                     </td>
                   </tr>
@@ -480,22 +511,29 @@ export const FinePage = () => {
                     <tr
                       key={fine.fine_id}
                       onClick={() => {
-                        setSelectedFine(fine);
                         if (activeTab === "history") {
-                          setShowRestoreModal(true); 
+                          setManualSelectedFine(fine);
+                          setShowRestoreModal(true);
+                        } else {
+                          setManualSelectedFine(fine);
                         }
                       }}
                       className="transition-all duration-150 cursor-pointer border-l-4 border-l-transparent hover:bg-blue-50/40"
                     >
                       <td className="py-3 px-4">
-                        <div className="font-semibold text-[#1A365D]">{fine.memberName}</div>
-                        <div className="text-xs font-mono text-slate-400 mt-0.5">
+                        <div className="font-semibold text-[#1A365D]">
+                          {fine.memberName}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-0.5">
                           {fine.memberEmail}
                         </div>
                       </td>
                       <td className="py-3 px-4 font-medium">
                         <div className="flex items-center gap-1.5 text-slate-800">
-                          <BookOpen size={12} className="text-slate-400 shrink-0" />
+                          <BookOpen
+                            size={12}
+                            className="text-slate-400 shrink-0"
+                          />
                           <span>{fine.bookTitle}</span>
                         </div>
                         <span className="block text-[11px] text-[#718096]">
@@ -525,15 +563,21 @@ export const FinePage = () => {
                         <span className="inline-flex items-center gap-1.5 font-semibold text-xs select-none">
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${
-                              fine.membershipActive ? "bg-emerald-500" : "bg-rose-500"
+                              fine.membershipActive
+                                ? "bg-emerald-500"
+                                : "bg-rose-500"
                             }`}
                           />
                           <span
                             className={`px-2 py-0.5 text-[11px] font-bold tracking-wide uppercase ${
-                              fine.membershipActive ? "text-emerald-700" : "text-rose-700"
+                              fine.membershipActive
+                                ? "text-emerald-700"
+                                : "text-rose-700"
                             }`}
                           >
-                            {fine.membershipActive ? "Active Plan" : "Plan Expired"}
+                            {fine.membershipActive
+                              ? "Active Plan"
+                              : "Plan Expired"}
                           </span>
                         </span>
                       </td>
@@ -547,8 +591,7 @@ export const FinePage = () => {
           {/* Pagination Command Module */}
           <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-2">
             <span>
-              Page {currentPage} / {totalPagesCount} <span className="text-slate-300 mx-2">|</span>{" "}
-              Total {totalItemsCount} Fines
+              Page {currentPage} / {totalPagesCount} <span className="text-slate-300 mx-2">|</span> Total {totalItemsCount} Fines
             </span>
             <div className="flex gap-1">
               <button
@@ -587,10 +630,10 @@ export const FinePage = () => {
         <FineDetailsModal
           isOpen={!!selectedFine}
           fine={selectedFine}
-          onClose={() => setSelectedFine(null)}
+          onClose={clearActiveModalsState}
           onSettle={(fine) => {
-            setSelectedFine(null);
-            setSelectedFineForSettlement(fine);
+            setManualSelectedFine(null);
+            setManualSelectedFineForSettlement(fine);
           }}
           onDelete={(id) => {
             purgeFineMutation.mutate(id);
@@ -600,11 +643,11 @@ export const FinePage = () => {
 
       {/* 2. Collected History Tab Restoration Modal */}
       <RestoreFineModal
-        isOpen={activeTab === "history" && showRestoreModal && !!selectedFine} 
+        isOpen={activeTab === "history" && showRestoreModal && !!selectedFine}
         fine={selectedFine}
         onClose={() => {
-          setSelectedFine(null);
           setShowRestoreModal(false);
+          clearActiveModalsState();
         }}
         onConfirm={(id) => restoreFineMutation.mutate(id)}
       />
@@ -613,7 +656,7 @@ export const FinePage = () => {
       <SettleFinePaymentModal
         isOpen={!!selectedFineForSettlement}
         fine={selectedFineForSettlement}
-        onClose={() => setSelectedFineForSettlement(null)}
+        onClose={clearActiveModalsState}
         onConfirmSettlement={(payload) => {
           const resolvedMethod =
             payload.paymentMethod === "CARD" || payload.paymentMethod === "UPI"
@@ -624,6 +667,8 @@ export const FinePage = () => {
             id: payload.id,
             paidDate: payload.paidDate,
             paymentMethod: resolvedMethod,
+            condition: routeState?.pendingCondition,
+            damage_description: routeState?.pendingDescription,
           });
         }}
       />

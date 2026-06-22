@@ -12,18 +12,18 @@ export const CriticalDeficitWidget = ({ items }: { items: DeficitItem[] }) => {
 
   return (
     <div className="bg-white p-2 rounded-2xl flex flex-col justify-between h-full text-left font-sans select-none">
-      
       {/* HEADER BLOCK: Premium Swiss Editorial Hierarchy */}
       <div className="border-b border-slate-100 pb-3.5 mb-4">
-        <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 font-mono">
-          <AlertCircle size={12} className="text-rose-600 animate-pulse" /> 
+        <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 ">
+          <AlertCircle size={12} className="text-rose-600 animate-pulse" />
           Stock Management
         </h3>
         <h4 className="text-lg font-black text-slate-900 tracking-tight mt-1">
           Out of Stock Alerts
         </h4>
         <p className="text-xs font-normal text-slate-500 mt-0.5 leading-relaxed">
-          Critical titles with 0 copies remaining on shelves alongside mounting reserve waitlists.
+          Critical titles with 0 copies remaining on shelves alongside mounting
+          reserve waitlists.
         </p>
       </div>
 
@@ -48,7 +48,7 @@ export const CriticalDeficitWidget = ({ items }: { items: DeficitItem[] }) => {
               >
                 {item.name}
               </span>
-              
+
               {/* High-Contrast Dynamic Utility Badge — Shows absolute real-world item demand */}
               <span className="text-[10px] font-black bg-rose-600 text-white px-2.5 py-1 rounded-md whitespace-nowrap uppercase tracking-wider shadow-2xs">
                 0 Availble Copies
@@ -64,12 +64,11 @@ export const CriticalDeficitWidget = ({ items }: { items: DeficitItem[] }) => {
           <div className="flex items-center gap-2">
             <ShoppingCart size={13} className="text-white" />
             <span className="text-[11px] font-bold text-white">
-              Need to Restock Copies 
+              Need to Restock Copies
             </span>
           </div>
         </div>
       )}
-
     </div>
   );
 };

@@ -36,7 +36,7 @@ export const Dashboard = () => {
   // High-Visibility Light State Loading Screen
   if (isLoading || !token) {
     return (
-      <div className="flex h-screen w-full items-center justify-center flex-col gap-6 bg-[#F8FAFC] font-mono text-[#0F172A]">
+      <div className="flex h-screen w-full items-center justify-center flex-col gap-6 bg-[#F8FAFC]  text-[#0F172A]">
         <div className="relative">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#E2E8F0] border-t-[#5E6AD2] shadow-2xs" />
         </div>
@@ -51,7 +51,7 @@ export const Dashboard = () => {
   if (isError) {
     return (
       <div className="bg-orange-50 border border-orange-200 rounded-2xl text-center max-w-2xl mx-auto my-16 shadow-xs font-sans p-8">
-        <h3 className="text-base font-bold text-orange-800 uppercase tracking-widest font-mono">
+        <h3 className="text-base font-bold text-orange-800 uppercase tracking-widest ">
           Operational Sync Failure
         </h3>
         <p className="text-sm text-orange-700 font-medium mt-3 bg-[#FFFFFF] p-4 rounded-xl border border-[#E2E8F0] max-w-lg mx-auto">
@@ -77,8 +77,7 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in bg-[#F8FAFC] min-h-screen pb-16 font-sans text-[#0F172A] selection:bg-[#5E6AD2]/10">
-      
+    <div className="space-y-8 animate-fade-in bg-[#ffffff] min-h-screen pb-16 font-sans text-[#0F172A] selection:bg-[#5E6AD2]/10">
       {/* Level 1: Core System KPI Indicators */}
       <div className="relative transition-all duration-300">
         <MetricsGrid data={gridMetrics} />
@@ -86,7 +85,6 @@ export const Dashboard = () => {
 
       {/* UPGRADED CORE WORKSPACE */}
       <div className="space-y-10">
-
         {/* SECTION 1: CIRCULATION TRENDS & GRAPH ANALYSIS */}
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-4">
@@ -94,9 +92,11 @@ export const Dashboard = () => {
               01. Circulation & Traffic Trends
             </h2>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6
-            *:bg-[#FFFFFF] *:border *:border-[#E2E8F0] *:rounded-xl *:p-6 *:shadow-sm *:h-95">
+
+          <div
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6
+            *:bg-[#FFFFFF] *:border *:border-[#E2E8F0] *:rounded-xl *:p-6 *:shadow-sm *:h-95"
+          >
             <div>
               <PeakHoursChart data={widgets.peakHours || []} />
             </div>
@@ -114,9 +114,10 @@ export const Dashboard = () => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6
-            *:bg-[#FFFFFF] *:border *:border-[#E2E8F0] *:rounded-xl *:p-6 *:shadow-sm *:h-95">
-            
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6
+            *:bg-[#FFFFFF] *:border *:border-[#E2E8F0] *:rounded-xl *:p-6 *:shadow-sm *:h-95"
+          >
             {/* Procurement Alerts (Urgent Priority - Spans 5 Columns) */}
             <div className="lg:col-span-5">
               <CriticalDeficitWidget items={widgets.criticalDeficit || []} />
@@ -142,9 +143,10 @@ export const Dashboard = () => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6
-            *:bg-[#FFFFFF] *:border *:border-[#E2E8F0] *:rounded-xl *:p-6 *:shadow-sm *:h-95">
-            
+          <div
+            className="grid grid-cols-1 lg:grid-cols-12 gap-6
+            *:bg-[#FFFFFF] *:border *:border-[#E2E8F0] *:rounded-xl *:p-6 *:shadow-sm *:h-95"
+          >
             {/* Fine Recovery Output Gauge (Spans 4 Columns) */}
             <div className="lg:col-span-4">
               <FineVelocityGauge
@@ -168,9 +170,10 @@ export const Dashboard = () => {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6
-            *:bg-[#FFFFFF] *:border *:border-[#E2E8F0] *:rounded-xl *:shadow-sm *:h-95">
-            
+          <div
+            className="grid grid-cols-1 lg:grid-cols-12 gap-6
+            *:bg-[#FFFFFF] *:border *:border-[#E2E8F0] *:rounded-xl *:shadow-sm *:h-95"
+          >
             {/* Category Tree Map (Spans 8 Columns) */}
             <div className="lg:col-span-8 overflow-hidden">
               <CategoryTreeMap categories={widgets.categoryPopularity || []} />
@@ -178,11 +181,12 @@ export const Dashboard = () => {
 
             {/* Reader Engagement Activity Logs (Spans 4 Columns) */}
             <div className="lg:col-span-4 p-6">
-              <EngagementLeaderboard members={widgets.engagementLeaderboard || []} />
+              <EngagementLeaderboard
+                members={widgets.engagementLeaderboard || []}
+              />
             </div>
           </div>
         </div>
-
       </div>
     </div>
   );

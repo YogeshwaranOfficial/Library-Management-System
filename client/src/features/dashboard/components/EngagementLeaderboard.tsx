@@ -11,18 +11,18 @@ interface TopUser {
 export const EngagementLeaderboard = ({ members }: { members: TopUser[] }) => {
   return (
     <div className="bg-white p-2 rounded-2xl flex flex-col justify-between h-full text-left font-sans select-none">
-      
       {/* HEADER BLOCK: Premium Swiss Editorial Hierarchy */}
       <div className="border-b border-slate-100 pb-3.5 mb-4">
-        <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 font-mono">
-          <Trophy size={12} className="text-amber-500 animate-bounce" /> 
-           Top Readers
+        <h3 className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 flex items-center gap-1.5 ">
+          <Trophy size={12} className="text-amber-500 animate-bounce" />
+          Top Readers
         </h3>
         <h4 className="text-lg font-black text-slate-900 tracking-tight mt-1">
           Elite Reader Engagement
         </h4>
         <p className="text-xs font-normal text-slate-500 mt-0.5 leading-relaxed">
-          Top-performing member accounts maintaining high circulation volume and exemplary return compliance metrics.
+          Top-performing member accounts maintaining high circulation volume and
+          exemplary return compliance metrics.
         </p>
       </div>
 
@@ -45,7 +45,7 @@ export const EngagementLeaderboard = ({ members }: { members: TopUser[] }) => {
                 {/* Left Side: Avatar Rank and Label Identification */}
                 <div className="flex items-center gap-3 min-w-0">
                   <span
-                    className={`text-[10px] font-mono font-black h-5 w-6 rounded-md flex items-center justify-center border transition-colors shrink-0 ${
+                    className={`text-[10px]  font-black h-5 w-6 rounded-md flex items-center justify-center border transition-colors shrink-0 ${
                       isFirst
                         ? "bg-amber-50 border-amber-200 text-amber-700 shadow-3xs"
                         : "bg-slate-50 border-slate-200 text-slate-600"
@@ -63,10 +63,10 @@ export const EngagementLeaderboard = ({ members }: { members: TopUser[] }) => {
 
                 {/* Right Side: Account Activity Performance Stats */}
                 <div className="text-right shrink-0">
-                  <p className="text-xs font-black text-slate-900 font-mono">
+                  <p className="text-xs font-black text-slate-900 ">
                     {member.loans} Loans
                   </p>
-                  <p className="text-[10px] font-extrabold text-emerald-600 mt-0.5 uppercase tracking-wider font-mono flex items-center justify-end gap-0.5">
+                  <p className="text-[10px] font-extrabold text-emerald-600 mt-0.5 uppercase tracking-wider  flex items-center justify-end gap-0.5">
                     <CheckCircle2 size={10} strokeWidth={3} />
                     {member.onTimeRate}% On-Time
                   </p>

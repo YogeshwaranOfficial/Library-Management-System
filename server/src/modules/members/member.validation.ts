@@ -40,15 +40,35 @@ export const updateMemberValidation = z.object({
   }).strict(), // Strict is safe now because user_id and is_active are accounted for!
 });
 
-// 4. Get All Members Query Parameters Validation Schema
+// 4. Get All Members Query Parameters Validation Schema (UPDATED FOR GLOBAL SORTING)
 export const getMembersQueryValidation = z.object({
   query: z.object({
-    page: z.preprocess((val) => String(val), z.string()).optional(),
-    limit: z.preprocess((val) => String(val), z.string()).optional(),
-    search: z.string().optional(),
-    plan: z.string().optional(),
-    status: z.string().optional(),
-    membership_status: z.enum(["ACTIVE", "EXPIRED", "CLOSED"]).optional(),
+    // Preprocesses strings, parses to integers, and defaults to 1 if missing or invalid
+    page: z
+      .preprocess((val) => (val ? parseInt(String(val), 10) : 1), z.number().int().min(1))
+      .default(1),
+    
+    // Preprocesses strings, parses to integers, and defaults to 10 if missing or invalid
+    limit: z
+      .preprocess((val) => (val ? parseInt(String(val), 10) : 10), z.number().int().min(1))
+      .default(10),
+
+    search: z.string().optional().or(z.literal("")),
+    plan: z.string().optional().or(z.literal("")),
+    status: z.string().optional().or(z.literal("")),
+    membership_status: z.enum(["ACTIVE", "EXPIRED"]).optional().or(z.literal("")),
+
+    // 🚀 NEW: Whitelist valid sorting field options to match repository logic
+    sort_by: z
+      .enum(["name", "contact", "created_at"])
+      .optional()
+      .default("created_at"),
+      
+    // 🚀 NEW: Restrict ordering keywords safely 
+    order: z
+      .enum(["ASC", "DESC", "asc", "desc"])
+      .optional()
+      .default("DESC"),
   }),
 });
 
@@ -62,12 +82,25 @@ export const searchMembersQueryValidation = z.object({
 });
 
 // =========================================================
-// NEW: GET ALL PLANS METRICS QUERY PARAMETERS VALIDATION
+// NEW: GET ALL PLANS METRICS QUERY PARAMETERS VALIDATION (PATCHED FOR DYNAMIC LIMITS)
 // =========================================================
 export const getPlansQueryValidation = z.object({
   query: z.object({
-    page: z.preprocess((val) => String(val), z.string()).optional(),
-    limit: z.preprocess((val) => String(val), z.string()).optional(),
+    page: z
+      .preprocess((val) => (val ? parseInt(String(val), 10) : 1), z.number().int().min(1))
+      .default(1),
+    limit: z
+      .preprocess((val) => (val ? parseInt(String(val), 10) : 10), z.number().int().min(1))
+      .default(10),
     search: z.string().optional(),
+  }),
+});
+
+// 6. Param Request Validation Schema
+export const getMemberByIdParamsValidation = z.object({
+  params: z.object({
+    id: z
+      .string({ error: "Member parameter 'id' is required" })
+      .uuid({ message: "Invalid parameter format. Must be a valid UUID string" }),
   }),
 });

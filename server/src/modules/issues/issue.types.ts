@@ -34,3 +34,15 @@ export interface UpdateIssueServiceDTO {
   status?: string;
   returnedDate?: string | null;
 }
+
+export interface IssueAttributes {
+  issue_id: string;
+  member_id: string;
+  book_id: string;
+  due_date: Date;
+  returned_date?: Date | null;
+  issue_status: string;
+  // 🚀 ADD THESE TWO FIELDS HERE:
+  book_condition: "GOOD" | "DAMAGED";
+  damage_description?: string | null;
+}

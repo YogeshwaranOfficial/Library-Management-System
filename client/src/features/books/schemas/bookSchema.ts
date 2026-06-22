@@ -8,6 +8,13 @@ export const BookFormSchema = z.object({
     .min(1, { message: "Minimum catalog collection entry requires 1 copy" }),
   categoryId: z.string().min(1, { message: "Please map this asset to an organizational category" }),
   language: z.string().min(1, { message: "language is required" }),
+  isbn: z
+    .string()
+    .min(1, "ISBN number is required")
+    .regex(
+      /^(?:ISBN(?:-1[03])?:?\s*)?(?:(?=^[0-9X]{10}$)|(?=^[0-9-]{13}$)|(?=^[0-9X]{13}$))?(?:97[89]-?)?[0-9]{1,5}-?[0-9]+-?[0-9]+-?[0-9X]$/i,
+      "Please enter a valid ISBN-10 or ISBN-13 format"
+    ),
 });
 
 export type BookFormValues = z.infer<typeof BookFormSchema>;

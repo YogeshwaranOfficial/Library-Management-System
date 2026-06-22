@@ -138,7 +138,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm font-sans select-none">
         <div className="w-full max-w-xl rounded-2xl bg-white shadow-xl transition-all overflow-hidden border border-gray-200 flex flex-col max-h-[90vh]">
-          
           {/* Header Framework */}
           <div className="flex items-center justify-between border-b border-gray-200 p-5 bg-white">
             <div>
@@ -164,7 +163,6 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
           {/* Content Box Switcher Container */}
           <div className="p-6 overflow-y-auto space-y-6 flex-1 text-[#2D3748]">
             <div className="space-y-6">
-              
               {/* Full Name Section */}
               <div>
                 <span className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest mb-1">
@@ -282,7 +280,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                     <span className="block text-[11px] font-bold text-[#718096] uppercase tracking-widest mb-1">
                       Password
                     </span>
-                    <span className="font-mono font-semibold text-[#2D3748] mt-1 block select-all text-sm tracking-wide">
+                    <span className=" font-semibold text-[#2D3748] mt-1 block select-all text-sm tracking-wide">
                       ••••••••
                     </span>
                   </div>

@@ -29,6 +29,8 @@ export const updateIssueSchema = z.object({
     
     // ✨ NEW: Explicitly allow the client to send a valid date string OR a null literal
     returnedDate: dateStringSchema.nullable().optional(),
+    condition: z.string().nullable().optional(),
+    damage_description: z.string().nullable().optional()
   }),
 });
 
@@ -36,7 +38,16 @@ export const updateIssueSchema = z.object({
 export const returnBookSchema = z.object({
   body: z.object({
     issueId: z.string().uuid({ message: "Invalid Issue UUID format" }),
-    returnedDate: dateStringSchema.optional(),
+    returnedDate: z.string().optional(), 
+  condition: z.enum(["GOOD", "DAMAGED"], "Condition state must be either GOOD or DAMAGED"),
+    description: z
+      .string()
+      .max(255, { message: "Damage descriptions must be inside 255 characters limit" })
+      .optional()
+      .nullable(),
+  }).refine(data => data.condition !== "DAMAGED" || (data.description && data.description.trim().length > 0), {
+    message: "A detailed reason description is mandatory when marking books as DAMAGED",
+    path: ["description"]
   }),
 });
 

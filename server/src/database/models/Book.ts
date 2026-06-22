@@ -20,9 +20,12 @@ class Book extends Model<
 
   declare book_author: string;
 
+  // 🚀 NEW: Declared string property for tracking inventory barcodes
+  declare isbn: string;
+
   declare total_copies: number;
 
-  declare available_copies:number;
+  declare available_copies: number;
 
   declare language: CreationOptional<string>;
   declare lending_count: CreationOptional<number>; // Defaults to 0 in database
@@ -51,6 +54,12 @@ Book.init(
     book_author: {
       type: DataTypes.STRING(150),
       allowNull: false,
+    },
+
+    // 🚀 NEW: ISBN column definitions matching database properties
+    isbn: {
+      type: DataTypes.STRING(255),
+      allowNull: false, // Enforces strict entry validation matching your migration
     },
 
     total_copies: {

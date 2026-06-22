@@ -109,14 +109,24 @@ class FineService {
   }
 
 
-  async payFine(fine_id: string, paidDate: string | Date | null, paymentMethod: "CASH" | "CARD" | "UPI") {
+async payFine(
+  fine_id: string, 
+  paidDate: string | Date | null, 
+  paymentMethod: "CASH" | "CARD" | "UPI",
+  condition?: "GOOD" | "DAMAGED",       
+  damage_description?: string               
+) {
+  // 1. Fetch the fine record
   const fine = await fineRepository.getFineById(fine_id);
 
   if (!fine) {
     throw new AppError("Fine registry record not found", httpStatus.NOT_FOUND);
   }
 
-  if (fine.paid_status) {
+  // Cast to any safely to avoid repository model type strictness on custom includes
+  const fineData = fine as any;
+
+  if (fineData.paid_status) {
     throw new AppError("This fine has already been settled", httpStatus.BAD_REQUEST);
   }
 
@@ -132,9 +142,9 @@ class FineService {
   const transaction = await sequelize.transaction();
 
   try {
-    // 1. ✅ FIXED: Run the fine update directly via Fine model to keep TypeScript happy with the transaction context
+    // 1. Run the fine update directly via Fine model
     await Fine.update(paymentUpdates, {
-      where: { fine_id }, // Check if your fine primary key is named fine_id or id
+      where: { fine_id }, 
       transaction
     });
 
@@ -142,21 +152,21 @@ class FineService {
     const updatedRecord = await fineRepository.getFineById(fine_id);
 
     // 3. Cascade update the Issue ledger records if an issue_id is attached
-    if (fine.issue_id) {
-      // Look up using your explicit primary key: issue_id
-      const associatedIssue = await Issue.findByPk(fine.issue_id, { transaction });
+    if (fineData.issue_id) {
+      const associatedIssue = await Issue.findByPk(fineData.issue_id, { transaction });
 
-      // ✅ FIXED: Using 'issue_status' instead of 'status' to match your model declaration
       if (associatedIssue && associatedIssue.issue_status === "OVERDUE") {
         
-        // A. Automatically update status from OVERDUE to RETURNED
+        // A. Automatically update status from OVERDUE to RETURNED with condition details
         await Issue.update(
           { 
-            issue_status: "RETURNED", // ✅ FIXED
-            returned_date: validatedExecutionDate 
+            issue_status: "RETURNED", 
+            returned_date: validatedExecutionDate,
+            condition: condition || "GOOD", 
+            damage_description: condition === "DAMAGED" ? (damage_description ?? null) : null
           },
           { 
-            where: { issue_id: fine.issue_id }, // ✅ FIXED: Explicitly referencing the model primary key
+            where: { issue_id: fineData.issue_id }, 
             transaction 
           }
         );
@@ -241,7 +251,9 @@ class FineService {
         await Issue.update(
           { 
             issue_status: "OVERDUE",
-            returned_date: null // Book is no longer officially returned
+            returned_date: null,
+            condition: null,
+            damage_description: null
           },
           { 
             where: { issue_id: fine.issue_id },

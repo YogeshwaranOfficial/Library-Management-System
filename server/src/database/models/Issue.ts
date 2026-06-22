@@ -23,6 +23,8 @@ class Issue extends Model<
   declare borrowed_date: CreationOptional<Date>; 
   declare issue_status: CreationOptional<string>; 
   declare returned_date: CreationOptional<Date | null>;
+  declare condition: CreationOptional<string | null>;
+  declare damage_description: CreationOptional<string | null>;
 
   declare readonly created_at: CreationOptional<Date>;
   declare readonly updated_at: CreationOptional<Date>;
@@ -74,6 +76,21 @@ Issue.init(
     updated_at: {
       type: DataTypes.DATE,
     },
+  
+
+    condition: {
+      type: DataTypes.ENUM("GOOD", "DAMAGEd"),
+      allowNull: true,
+      defaultValue: null,
+
+    },
+
+    damage_description:{
+      type: DataTypes.STRING,
+      allowNull: true,
+      defaultValue: null
+
+    }
   },
 
   {

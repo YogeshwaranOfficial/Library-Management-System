@@ -64,7 +64,7 @@ export const borrowBookController = asyncHandler(
 export const updateIssueParametersController = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params as { id: string };
-    const { memberId, bookId, borrowDate, dueDate, status, returnedDate } = req.body;
+    const { memberId, bookId, borrowDate, dueDate, status, returnedDate, condition, damageDescription } = req.body;
 
     const servicePayload = {
       ...(memberId ? { memberId } : {}),
@@ -72,7 +72,9 @@ export const updateIssueParametersController = asyncHandler(
       ...(borrowDate ? { borrowDate } : {}),
       ...(dueDate ? { dueDate } : {}),
       ...(status ? { status } : {}),
-      ...(returnedDate !== undefined ? { returnedDate } : {})
+      ...(returnedDate !== undefined ? { returnedDate } : {}),
+      ...(condition ? {condition} : {}),
+      ...(damageDescription ? {damageDescription} : {})
     };
 
     // This handles both regular adjustments AND the full return rollback engine seamlessly!
@@ -100,13 +102,20 @@ export const updateIssueParametersController = asyncHandler(
 // 5. Close/Process Active Asset Return (POST /issues/return)
 export const returnBookController = asyncHandler(
   async (req: Request, res: Response) => {
-    const { issueId, returnedDate } = req.body as { 
+    const { 
+      issueId, 
+      returnedDate, 
+      condition, 
+      description 
+    } = req.body as { 
       issueId: string; 
       returnedDate?: string; 
+      condition: "GOOD" | "DAMAGED";
+      description?: string;
     };
 
-    // 🚀 Execution blocks here at the Service layer if fine validations fail
-    const result = await issueService.returnBook(issueId, returnedDate);
+    // 🚀 Passing condition and description into service layer
+    const result = await issueService.returnBook(issueId, returnedDate, condition, description);
 
     sendResponse(res, {
       success: true,

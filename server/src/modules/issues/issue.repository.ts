@@ -37,6 +37,10 @@ class IssueRepository {
       due_date?: Date;             // ✨ Made optional for partial PATCH operations
       issue_status?: string;       // Can accept status updates (like BORROWED / OVERDUE on undo return)
       returned_date?: Date | null;  // Can accept date removals (wiping to null on undo return)
+      
+      // 🟢 NEW: Added type parameters matching your backend migrations
+      condition?: string | null;
+      damage_description?: string | null;
     },
     options?: { transaction?: Transaction }
   ) {
@@ -63,21 +67,29 @@ class IssueRepository {
     });
   }
   
-  async returnBook(issue_id: string, returned_date: Date | string, options?: { transaction?: Transaction }) {
-    const finalDate = typeof returned_date === "string" ? new Date(returned_date) : returned_date;
+  async returnBook(
+  issue_id: string, 
+  returned_date: Date | string, 
+  book_condition: "GOOD" | "DAMAGED",
+  damage_description?: string,
+  options?: { transaction?: Transaction }
+) {
+  const finalDate = typeof returned_date === "string" ? new Date(returned_date) : returned_date;
 
-    await Issue.update(
-      {
-        returned_date: finalDate,
-        issue_status: "RETURNED",
-      },
-      {
-        where: { issue_id },
-        ...options
-      }
-    );
-    return this.findIssueById(issue_id, options);
-  }
+  await Issue.update(
+    {
+      returned_date: finalDate,
+      issue_status: "RETURNED",
+      condition: book_condition,              // 🚀 Saved to column
+      damage_description: damage_description || null // 🚀 Saved to column
+    },
+    {
+      where: { issue_id },
+      ...options
+    }
+  );
+  return this.findIssueById(issue_id, options);
+}
 
   async getAllIssuesDetailed() {
     return Issue.findAll({
