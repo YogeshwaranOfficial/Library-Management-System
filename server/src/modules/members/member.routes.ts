@@ -257,7 +257,8 @@ import {
   updateMemberValidation,
   getMembersQueryValidation,
   searchMembersQueryValidation,
-  getPlansQueryValidation // 💡 ADDED: Imported the query parameter validator schema
+  getPlansQueryValidation,
+  getMemberByIdParamsValidation
 } from "./member.validation.js";
 
 const router = Router();
@@ -337,6 +338,7 @@ router.post(
 router.get(
   "/:id",
   auth,
+  validate(getMemberByIdParamsValidation),
   getMemberByIdController
 );
 

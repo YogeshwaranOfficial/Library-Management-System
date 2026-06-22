@@ -16,8 +16,8 @@ export interface MemberQuery {
   page?: number;
   limit?: number;
   search?: string;
-  plan?: any;   // 💡 Added to match the router string parameter parsing
-  status?: any; // 💡 Added to match the router string parameter parsing
+  plan?: any;   
+  status?: any; 
   membership_status?: "ACTIVE" | "EXPIRED";
 }
 

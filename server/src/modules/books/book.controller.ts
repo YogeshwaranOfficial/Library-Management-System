@@ -7,6 +7,7 @@ import bookService from "./book.service.js";
 
 export const createBookController = asyncHandler(
   async (req: Request, res: Response) => {
+    // 🚀 Automatically captures payload 'isbn' string out of validation layers
     const bookData = req.body.body || req.body;
     const result = await bookService.createBook(bookData);
 
@@ -25,16 +26,20 @@ export const getBooksController = asyncHandler(
     const limit = Number(req.query.limit) || 10;
     const search = req.query.search ? String(req.query.search).trim() : undefined;
     const category_id = req.query.category_id ? String(req.query.category_id).trim() : undefined;
-    // 🌟 FIX: Extract the language query parameter securely from the request URL string
     const language = req.query.language ? String(req.query.language).trim() : undefined;
+    
+    // 🌟 Sort options safely pass 'isbn' configurations down to the repository whitelist
+    const sort_by = req.query.sort_by ? String(req.query.sort_by).trim() : undefined;
+    const order = req.query.order ? String(req.query.order).trim() : undefined;
    
-    // 🌟 FIX: Pass language as the 5th parameter into your service layer
     const result = await bookService.getBooks(
       page,
       limit,
       search,
       category_id,
-      language 
+      language,
+      sort_by,
+      order
     );
 
     sendResponse(res, {
@@ -49,7 +54,6 @@ export const getBooksController = asyncHandler(
 export const getBookByIdController = asyncHandler(
   async (req: Request, res: Response) => {
     const { bookId } = req.params;
-    // 💡 FIX (Line 52): String coercion guarantees the service gets a strict string
     const result = await bookService.getBookById(String(bookId));
 
     sendResponse(res, {
@@ -64,9 +68,9 @@ export const getBookByIdController = asyncHandler(
 export const updateBookController = asyncHandler(
   async (req: Request, res: Response) => {
     const { bookId } = req.params;
+    // 🚀 Captures optional partial properties like modified isbn strings
     const updateData = req.body.body || req.body;
     
-    // 💡 FIX (Line 69): Coerce bookId parameter safely
     const result = await bookService.updateBook(String(bookId), updateData);
 
     sendResponse(res, {
@@ -118,7 +122,6 @@ export const getLanguagesController = asyncHandler(
 );
 
 export const searchBooksController = asyncHandler(async (req: Request, res: Response) => {
-  // 💡 FIX (Line 84): Cast req.query.q cleanly into a string primitive fallback 
   const searchString = String(req.query.q || "");
   const structuredMatches = await bookService.searchBooks(searchString);
 

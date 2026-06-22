@@ -69,6 +69,8 @@ class IssueService {
           borrowedDate: formatIso(record.borrowed_date),
           dueDate: formatIso(record.due_date),
           returnedDate: formatIso(record.returned_date),
+          condition: record.condition ?? "GOOD",
+          damageDescription: record.damage_description ?? null,
           status: sourceOfTruthStatus, // Sent directly as source-of-truth status to client UI
           
           // 🟢 ENRICHMENT FOR FRONTEND CHECKS:
@@ -149,55 +151,67 @@ class IssueService {
     });
   }
 
-  async returnBook(issue_id: string, returnedDateString?: string) {
-    return await sequelize.transaction(async (t) => {
-      const issue = await issueRepository.findIssueById(issue_id, { transaction: t });
+  async returnBook(
+  issue_id: string, 
+  returnedDateString?: string, 
+  condition?: "GOOD" | "DAMAGED", 
+  description?: string
+) {
+  return await sequelize.transaction(async (t) => {
+    const issue = await issueRepository.findIssueById(issue_id, { transaction: t });
 
-      if (!issue) throw new AppError("Issue record not found", httpStatus.NOT_FOUND);
-      if (issue.returned_date) throw new AppError("Book already returned", httpStatus.BAD_REQUEST);
+    if (!issue) throw new AppError("Issue record not found", httpStatus.NOT_FOUND);
+    if (issue.returned_date) throw new AppError("Book already returned", httpStatus.BAD_REQUEST);
 
-      const returned_date = returnedDateString ? new Date(returnedDateString) : new Date();
-      const dueDate = new Date(issue.due_date);
+    const returned_date = returnedDateString ? new Date(returnedDateString) : new Date();
+    const dueDate = new Date(issue.due_date);
 
-      if (returned_date > dueDate) {
-        const associatedFine = await Fine.findOne({ where: { issue_id }, transaction: t });
+    if (returned_date > dueDate) {
+      const associatedFine = await Fine.findOne({ where: { issue_id }, transaction: t });
 
-        if (!associatedFine) {
-          const difference = returned_date.getTime() - dueDate.getTime();
-          const delayed_days = Math.ceil(difference / (1000 * 60 * 60 * 24));
-          const fine_amount = delayed_days * 10;
+      if (!associatedFine) {
+        const difference = returned_date.getTime() - dueDate.getTime();
+        const delayed_days = Math.ceil(difference / (1000 * 60 * 60 * 24));
+        const fine_amount = delayed_days * 10;
 
-          await Fine.create({
-            issue_id: issue.issue_id,
-            delayed_days,
-            fine_amount,
-            paid_status: false,
-          } as CreationAttributes<Fine>, { transaction: t });
+        await Fine.create({
+          issue_id: issue.issue_id,
+          delayed_days,
+          fine_amount,
+          paid_status: false,
+        } as CreationAttributes<Fine>, { transaction: t });
 
-          throw new AppError(
-            "Return Blocked: This book tracking log is past due. An active fine has been computed. Settle payment in fines dashboard to close checkout.",
-            httpStatus.FORBIDDEN
-          );
-        }
-
-        if (associatedFine && !associatedFine.paid_status) {
-          throw new AppError(
-            "Return Blocked: Outstanding fine detected for this volume checkout sequence. Process cash registration balances first.",
-            httpStatus.FORBIDDEN
-          );
-        }
+        throw new AppError(
+          "Return Blocked: This book tracking log is past due. An active fine has been computed. Settle payment in fines dashboard to close checkout.",
+          httpStatus.FORBIDDEN
+        );
       }
 
-      const updatedIssue = await issueRepository.returnBook(issue_id, returned_date, { transaction: t });
-
-      const book = await Book.findByPk(issue.book_id, { transaction: t });
-      if (book) {
-        await book.increment("available_copies", { by: 1, transaction: t });
+      if (associatedFine && !associatedFine.paid_status) {
+        throw new AppError(
+          "Return Blocked: Outstanding fine detected for this volume checkout sequence. Process cash registration balances first.",
+          httpStatus.FORBIDDEN
+        );
       }
+    }
 
-      return updatedIssue;
-    });
-  }
+    // 🚀 Forwarding condition parameters into the repository update pipeline
+    const updatedIssue = await issueRepository.returnBook(
+      issue_id, 
+      returned_date, 
+      condition || "GOOD", 
+      condition === "DAMAGED" ? description : undefined, 
+      { transaction: t }
+    );
+
+    const book = await Book.findByPk(issue.book_id, { transaction: t });
+    if (book) {
+      await book.increment("available_copies", { by: 1, transaction: t });
+    }
+
+    return updatedIssue;
+  });
+}
 
   async getMemberIssues(member_id: string) {
     return issueRepository.getMemberIssues(member_id);
@@ -211,7 +225,9 @@ class IssueService {
       borrowDate?: string; 
       dueDate?: string; 
       status?: string; 
-      returnedDate?: string | null 
+      returnedDate?: string | null;
+      condition?: string | null;
+      damageDescription?: string | null;
     }
   ) {
     return await sequelize.transaction(async (t) => {
@@ -245,13 +261,16 @@ class IssueService {
           }, { transaction: t });
         }
 
+        // ✨ UPDATED HERE: Save incoming state strings or revert back safely to null
         return await issueRepository.updateIssue(issue_id, {
           member_id: payload.memberId || issue.member_id,
           book_id: bookIdToUse,
           borrowed_date: payload.borrowDate ? new Date(payload.borrowDate) : issue.borrowed_date,
           due_date: targetDueDate,
           issue_status: dynamicRestoredStatus,
-          returned_date: null
+          returned_date: null,
+          condition: payload.condition !== undefined ? payload.condition : null,
+          damage_description: payload.damageDescription !== undefined ? payload.damageDescription : null,
         }, { transaction: t });
       }
 
@@ -294,16 +313,20 @@ class IssueService {
         await Fine.destroy({ where: { issue_id, paid_status: false }, transaction: t });
       }
       
+      // ✨ UPDATED HERE: Fall back to existing issue field context properties if fields are omitted
       return await issueRepository.updateIssue(issue_id, {
         member_id: payload.memberId || issue.member_id,
         book_id: payload.bookId || issue.book_id,
         borrowed_date: payload.borrowDate ? new Date(payload.borrowDate) : issue.borrowed_date,
         due_date: finalTargetDueDate,
-        issue_status: recalculatedStatus 
+        issue_status: recalculatedStatus,
+        returned_date: payload.returnedDate !== undefined ? (payload.returnedDate ? new Date(payload.returnedDate) : null) : issue.returned_date,
+        condition: payload.condition !== undefined ? payload.condition : issue.condition,
+        damage_description: payload.damageDescription !== undefined ? payload.damageDescription : issue.damage_description
       }, { transaction: t });
     });
   }
-
+  
   async deleteSingleIssue(issue_id: string) {
     return await sequelize.transaction(async (t) => {
       const issue = await issueRepository.findIssueById(issue_id, { transaction: t });

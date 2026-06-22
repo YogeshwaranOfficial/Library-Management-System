@@ -71,24 +71,36 @@ export const TransactionsPage = () => {
     enabled: !!token,
   });
 
-  // Mutate: Return Closed Checkouts
-  const returnBookMutation = useMutation({
-    mutationFn: async (issueId: string) => {
-      return await axiosClient.post("/issues/return", { issueId });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["circulationMasterRecordsFeed"],
-      });
-      toast.success("Book returned safely!");
-      setIsDetailsOpen(false);
-    },
-    onError: (err: unknown) => {
-      const error = err as { response?: { data?: { message?: string } } };
-      const message = error.response?.data?.message || "Failed to return book.";
-      toast.error(message);
-    },
-  });
+ // Mutate: Return Closed Checkouts
+const returnBookMutation = useMutation({
+  mutationFn: async ({ 
+    issueId, 
+    condition, 
+    description 
+  }: { 
+    issueId: string; 
+    condition: "GOOD" | "DAMAGED"; 
+    description?: string; 
+  }) => {
+    return await axiosClient.post("/issues/return", { 
+      issueId, 
+      condition, 
+      description 
+    });
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({
+      queryKey: ["circulationMasterRecordsFeed"],
+    });
+    toast.success("Book returned safely!");
+    setIsDetailsOpen(false);
+  },
+  onError: (err: unknown) => {
+    const error = err as { response?: { data?: { message?: string } } };
+    const message = error.response?.data?.message || "Failed to return book.";
+    toast.error(message);
+  },
+});
 
   // Mutate: Save (Create/Update Parameter Mappings)
   const saveMutation = useMutation({
@@ -459,7 +471,9 @@ export const TransactionsPage = () => {
       isOpen={isDetailsOpen}
       onClose={() => setIsDetailsOpen(false)}
       record={selectedRecord}
-      onMarkAsReturned={(id) => returnBookMutation.mutate(id)}
+      onMarkAsReturned={(id, condition, description) => 
+        returnBookMutation.mutate({ issueId: id, condition, description })
+      }      
       onTriggerEdit={() => {
         setIsDetailsOpen(false);
         setIsFormOpen(true);

@@ -53,7 +53,6 @@ export const MemberModal = ({
     },
   });
 
-  console.log("plans",plans);
 
   const selectedUserId = useWatch({
     control,
@@ -112,7 +111,6 @@ export const MemberModal = ({
       ? plans.data
       : [];
 
-  console.log("safeplans configuration payload verified:", safePlans);
 
   const hasNoAvailableUsers = safeUsers.length === 0;
 

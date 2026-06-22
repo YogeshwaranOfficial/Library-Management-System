@@ -237,7 +237,6 @@
  *       404:
  *         description: Book not found
  */
-
 import { Router } from "express";
 
 import validate from "../../middlewares/validate.js";
@@ -257,7 +256,8 @@ import {
 import {
   createBookSchema,
   updateBookSchema,
-  searchBooksQueryValidation
+  searchBooksQueryValidation,
+  getBooksQueryValidation // 🚀 ADDED: Import this to secure your GET / endpoint
 } from "./book.validation.js";
 
 const router = Router();
@@ -265,38 +265,23 @@ const router = Router();
 // =========================================================================
 // 🚀 SYSTEM CATEGORY DROPDOWN CHANNELS
 // =========================================================================
-router.get(
-  "/categories",
-  auth,
-  getCategoriesController
-);
-
-router.get(
-  "/languages",
-  auth,
-  getLanguagesController
-);
-
-router.get(
-  "/search",
-  auth,
-  validate(searchBooksQueryValidation),
-  searchBooksController
-);
+router.get("/categories", auth, getCategoriesController);
+router.get("/languages", auth, getLanguagesController);
+router.get("/search", auth, validate(searchBooksQueryValidation), searchBooksController);
 
 // =========================================================================
 // 🎯 BASE CRUD ROOT ROUTE
 // =========================================================================
 router.route("/")
-  .get(auth, getBooksController)
+  .get(auth, validate(getBooksQueryValidation), getBooksController) // 🚀 IMPLEMENTED: Validation for sort/filter queries
   .post(auth, validate(createBookSchema), createBookController);
 
 // =========================================================================
-// 🆔 DYNAMIC PARAMETER CRUD ROUTE GROUP (PATCH Only for Updates)
+// 🆔 DYNAMIC PARAMETER CRUD ROUTE GROUP
 // =========================================================================
 router.route("/:bookId")
   .get(auth, getBookByIdController)
-  .patch(auth, validate(updateBookSchema), updateBookController) // ✨ Pure partial edits
+  .patch(auth, validate(updateBookSchema), updateBookController)
   .delete(auth, deleteBookController);
 
 export default router;

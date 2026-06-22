@@ -71,7 +71,7 @@ export const DeleteCategoryConfirmationModal: React.FC<DeleteCategoryConfirmatio
               </span>
 
               <p className="text-xs text-amber-800 leading-relaxed font-medium">
-                There are currently <span className="font-bold text-amber-950">{category.booksCount} unique titles</span> registered under this category. Dropping this registry will cause all associated books to be shown as <span className="font-bold text-amber-950 underline">unclassified</span> inside the catalogs.
+                There are currently <span className="font-bold text-amber-950">{category.booksCount} books</span> registered under this category. Dropping this registry will cause all associated books to be shown as <span className="font-bold text-amber-950 underline">unclassified</span> inside the catalogs.
               </p>
             </div>
           ) : (

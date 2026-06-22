@@ -3,8 +3,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AxiosError } from "axios";
 import { axiosClient } from "../../../api/axiosClient";
 import { MemberModal } from "../components/MemberModal";
-import { MemberDetailsModal } from "../components/MemberDetailsModal"; 
+import { MemberDetailsPage } from "../components/MemberDetailsModal"; 
 import type { LibraryMember, MembershipPlan, SystemUser } from "../../../types/members";
+import { DeleteConfirmationModal } from "../components/DeleteConfirmationModal";
 import type { MemberFormValues } from "../schemas/memberSchema";
 import { toast } from "sonner";
 import { useAuthStore } from "../../../store/authStore";
@@ -14,7 +15,12 @@ import {
   RotateCcw,
   X,
   Users,
-  ChevronDown
+  ChevronDown,
+  ListChecks,
+  Trash2,
+  Edit3,
+  CheckSquare,
+  Square
 } from "lucide-react";
 
 export const MembersPage = () => {
@@ -22,27 +28,55 @@ export const MembersPage = () => {
 
   // Search filter parameters
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10); 
   const [searchTerm, setSearchTerm] = useState("");
   const [tierFilter, setTierFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  // Clean UI state parameters
-  const [activeHeaderDropdown, setActiveHeaderDropdown] = useState<"plan" | "status" | null>(null);
+  // ✅ New Sorting parameters matching theme architecture
+  const [sortField, setSortField] = useState<"name" | "contact" | "">(""); 
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC" | "">("");
+
+  // ✅ Expanded interactive UI state parameters
+  const [activeHeaderDropdown, setActiveHeaderDropdown] = useState<"name" | "contact" | "plan" | "status" | null>(null);
+
+  // Row selection tracking maps
+  const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+  // Track specific single items slated for removal dynamically
+  const [singleDeleteId, setSingleDeleteId] = useState<string | null>(null);
 
   // Modal controllers
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<LibraryMember | null>(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false); 
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null); // For deep ledger viewing
+  const [editingMember, setEditingMember] = useState<LibraryMember | null>(null); // Keeps your Form Modal working cleanly   
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const token = useAuthStore((state) => state.token);
   
-  // Refs for tracking outside dropdown clicks
+  // ✅ Refs for tracking outside dropdown clicks
+  const nameDropdownRef = useRef<HTMLDivElement>(null);
+  const contactDropdownRef = useRef<HTMLDivElement>(null);
   const planDropdownRef = useRef<HTMLDivElement>(null);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close interactive headers if clicking outside
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
+      if (
+        activeHeaderDropdown === "name" && 
+        nameDropdownRef.current && 
+        !nameDropdownRef.current.contains(event.target as Node)
+      ) {
+        setActiveHeaderDropdown(null);
+      }
+      if (
+        activeHeaderDropdown === "contact" && 
+        contactDropdownRef.current && 
+        !contactDropdownRef.current.contains(event.target as Node)
+      ) {
+        setActiveHeaderDropdown(null);
+      }
       if (
         activeHeaderDropdown === "plan" && 
         planDropdownRef.current && 
@@ -69,15 +103,18 @@ export const MembersPage = () => {
     globalExpired: number;
     data: LibraryMember[];
   }>({
-    queryKey: ["membersListFeed", token, currentPage, searchTerm, tierFilter, statusFilter],
+    // ✅ Updated queryKey mapping sequence to watch sort values
+    queryKey: ["membersListFeed", token, currentPage, itemsPerPage, searchTerm, tierFilter, statusFilter, sortField, sortOrder],
     queryFn: async () => {
       const res = await axiosClient.get("/members", {
         params: {
           page: currentPage,
-          limit: 10, // Adjusted page layout parameter matching front-end rendering constraints
+          limit: itemsPerPage, 
           search: searchTerm || undefined,
           plan: tierFilter || undefined,
           status: statusFilter || undefined,
+          sort_by: sortField || undefined,
+          order: sortOrder || undefined,
         },
       });
 
@@ -102,9 +139,9 @@ export const MembersPage = () => {
               phoneNumber: String(userObj.phone_number || row.phoneNumber || ""),
               membershipPlanId: String(row.membership_plan_id || row.membershipPlanId || ""),
               membershipPlanName: String(planObj.plan_name || "No Plan Tier Assigned"),
-              activationDate: String(row.activation_date || row.activationDate || ""),
+              activationDate: String(row.activation_date || row.start_date || row.activationDate || ""),
               expiryDate: String(row.expiry_date || row.expiryDate || "N/A"),
-              isActive: row.membership_status === "ACTIVE",
+              isActive: row.membership_status === "ACTIVE" || row.is_active === true,
             };
           })
         : [];
@@ -119,10 +156,20 @@ export const MembersPage = () => {
     queryKey: ["membershipPlansFeed", token],
     queryFn: async () => {
       const res = await axiosClient.get("/members/dropdown");
-      console.log("dropdown",res);
       return res.data?.data || res.data || [];
     },
     enabled: !!token,
+  });
+
+  // Add this hook to pull heavy structural data from GET /api/members/:id
+  const { data: deepMemberDetails } = useQuery({
+    queryKey: ["memberDetailRecord", selectedMemberId, token],
+    queryFn: async () => {
+      if (!selectedMemberId) return null;
+      const res = await axiosClient.get(`/members/${selectedMemberId}`);
+      return res.data?.data || res.data;
+    },
+    enabled: !!selectedMemberId && !!token,
   });
 
   // Safe destructuring with fallback array
@@ -135,9 +182,38 @@ export const MembersPage = () => {
     enabled: !!token,
   });
 
-  // 🛡️ CRITICAL DEFENSIVE SANITIZATION LAYER TO ASSURE AN ARRAY TYPE IS ALWAYS APPLIED
   const plans = Array.isArray(rawPlans) ? rawPlans : [];
   const users = Array.isArray(rawUsers) ? rawUsers : [];
+
+  const memberList = membersPayload?.data || [];
+  // ✅ Included sorting state inside tracker flags 
+  const hasActiveFilters = Boolean(searchTerm || tierFilter || statusFilter || sortField || sortOrder);
+  const displayTotal = membersPayload?.total ?? 0;
+
+  let displayActive: number | string = membersPayload?.globalActive ?? 0;
+  let displayExpired: number | string = membersPayload?.globalExpired ?? 0;
+
+  if (statusFilter === "ACTIVE") displayExpired = "-";
+  if (statusFilter === "EXPIRED") displayActive = "-";
+
+  const totalPages = Math.ceil(displayTotal / itemsPerPage) || 1;
+
+  // SELECTION UTILITY ENGINE HANDLERS
+  const isAllSelected = memberList.length > 0 && selectedRowIds.length === memberList.length;
+  
+  const handleSelectAllToggle = () => {
+    if (isAllSelected) {
+      setSelectedRowIds([]);
+    } else {
+      setSelectedRowIds(memberList.map((m) => m.id));
+    }
+  };
+
+  const handleSelectRowToggle = (id: string) => {
+    setSelectedRowIds((prev) => 
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   const saveMemberMutation = useMutation({
     mutationFn: async (payload: MemberFormValues) => {
@@ -147,16 +223,16 @@ export const MembersPage = () => {
         is_active: payload.isActive ?? true,
       };
 
-      if (selectedMember) {
-        return await axiosClient.patch(`/members/${selectedMember.id}`, processedPayload);
+      if (editingMember) {
+        return await axiosClient.patch(`/members/${editingMember.id}`, processedPayload);
       }
       return await axiosClient.post("/members", processedPayload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
-      toast.success(selectedMember ? "Membership updated cleanly." : "New library member created!");
+      toast.success(editingMember ? "Membership updated cleanly." : "New library member created!");
       setIsFormOpen(false);
-      setSelectedMember(null);
+      setEditingMember(null);
     },
     onError: (error: unknown) => {
       let msg = "Database mutation failure.";
@@ -165,49 +241,33 @@ export const MembersPage = () => {
     },
   });
 
-  const renewMutation = useMutation({
-    mutationFn: async (planId: string) => {
-      if (!selectedMember) return;
-      return await axiosClient.patch(`/members/${selectedMember.id}`, { membership_plan_id: planId });
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (idsToDelete: string[]) => {
+      const deletePromises = idsToDelete.map((id) =>
+        axiosClient.delete(`/members/${id}`)
+      );
+      return await Promise.all(deletePromises);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
-      toast.success("Membership activated successfully!");
-      setIsDetailsOpen(false); 
-      setSelectedMember(null);
+      toast.success(`Successfully purged ${variables.length} member profile records.`);
+      setSelectedRowIds([]); 
     },
+    onError: () => {
+      toast.error("Error executing server batch record deletions.");
+    }
   });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (memberId: string) => {
-      return await axiosClient.delete(`/members/${memberId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["membersListFeed"] });
-      toast.success("Member profile log purged.");
-      setIsDetailsOpen(false);
-      setSelectedMember(null);
-    },
-  });
-
-  const memberList = membersPayload?.data || [];
-  const hasActiveFilters = Boolean(searchTerm || tierFilter || statusFilter);
-  const displayTotal = membersPayload?.total ?? 0;
-
-  let displayActive: number | string = membersPayload?.globalActive ?? 0;
-  let displayExpired: number | string = membersPayload?.globalExpired ?? 0;
-
-  if (statusFilter === "ACTIVE") displayExpired = "-";
-  if (statusFilter === "EXPIRED") displayActive = "-";
-
-  // Fixed total pages math layout mapping based on database response parameters
-  const totalPages = Math.ceil(displayTotal / 10) || 1;
 
   const handleClearFilters = () => {
-    setSearchTerm(""); 
     setTierFilter("");
     setStatusFilter("");
+    // ✅ Clear sorting states completely back to default configuration layout
+    setSortField("");
+    setSortOrder("");
+    setItemsPerPage(10);
     setCurrentPage(1);
+    setSelectedRowIds([]);
+    setIsSelectionMode(false);
   };
 
   const getInitials = (name: string) => (name ? name.charAt(0).toUpperCase() : "M");
@@ -261,7 +321,7 @@ export const MembersPage = () => {
       {/* ==================== ZONE C: UTILITIES HEADER ==================== */}
       <div className="flex items-center justify-between gap-4 mb-4 h-9">
         <div className="text-[10px] font-bold tracking-widest text-[#1A365D] uppercase">
-          Members Ledger
+          Members Ledger {selectedRowIds.length > 0 && `(${selectedRowIds.length} Selected)`}
         </div>
 
         <div className="flex items-center gap-3">
@@ -288,17 +348,70 @@ export const MembersPage = () => {
           <button
             type="button"
             onClick={handleClearFilters}
-            className={`p-1.5 rounded-full transition-colors ${hasActiveFilters ? "text-rose-600 hover:bg-rose-50" : "text-gray-400 hover:bg-gray-100"}`}
-            title="Reset Filters"
+            className={`p-1.5 rounded-full transition-colors ${hasActiveFilters || selectedRowIds.length > 0 ? "text-rose-600 hover:bg-rose-50" : "text-gray-400 hover:bg-gray-100"}`}
+            title="Reset Filters & Selections"
           >
             <RotateCcw size={15} />
           </button>
 
           <div className="w-px h-4 bg-gray-200 mx-0.5" />
 
+          {/* Action to Toggle/Execute Multi-Selection */}
           <button
             type="button"
-            onClick={() => { setSelectedMember(null); setIsFormOpen(true); }}
+            onClick={() => {
+              if (!isSelectionMode) {
+                setIsSelectionMode(true);
+              } else if (selectedRowIds.length > 0) {
+                setSingleDeleteId(null); 
+                setIsDeleteModalOpen(true);
+              } else {
+                setIsSelectionMode(false);
+              }
+            }}
+            className={`flex items-center justify-center p-1.5 rounded-full transition-all cursor-pointer shadow-2xs shrink-0 ${
+              isSelectionMode 
+                ? selectedRowIds.length > 0 
+                  ? "bg-rose-600 hover:bg-rose-700 text-white" 
+                  : "bg-amber-500 text-white hover:bg-amber-600"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+            title={
+              isSelectionMode 
+                ? selectedRowIds.length > 0 
+                  ? `Click to delete selected (${selectedRowIds.length})` 
+                  : "No rows selected (Click to turn off selection)"
+                : "Enable Selection Mode"
+            }
+          >
+            {isSelectionMode && selectedRowIds.length > 0 ? (
+              <Trash2 size={16} strokeWidth={2.2} />
+            ) : (
+              <ListChecks size={16} strokeWidth={2.2} />
+            )}
+          </button>
+
+          {isSelectionMode && (
+            <button
+              type="button"
+              onClick={handleSelectAllToggle}
+              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full border transition-all cursor-pointer ${
+                isAllSelected 
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-700" 
+                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+              }`}
+              title={isAllSelected ? "Deselect All Members" : "Select All Visible Members"}
+            >
+              {isAllSelected ? <CheckSquare size={13} className="text-emerald-600" /> : <Square size={13} />}
+              <span>{isAllSelected ? "All Selected" : "Select All"}</span>
+            </button>
+          )}
+
+          <div className="w-px h-4 bg-gray-200 mx-0.5" />
+
+          <button
+            type="button"
+            onClick={() => { setEditingMember(null); setIsFormOpen(true); }}
             className="flex items-center justify-center p-1.5 bg-[#2B6CB0] hover:bg-[#1A365D] text-white rounded-full transition-all cursor-pointer shadow-2xs shrink-0"
             title="Add New Member"
           >
@@ -320,9 +433,89 @@ export const MembersPage = () => {
                 <table className="w-full text-left border-collapse table-fixed">
                   <thead>
                     <tr className="border-b border-gray-200 text-[11px] font-bold text-[#718096] uppercase tracking-widest bg-transparent select-none">
-                      <th className="pb-3 pr-4 font-bold tracking-widest w-[34%] pl-3">Member</th>
-                      <th className="pb-3 px-4 font-bold tracking-widest w-[31%]">Contact</th>
-                      <th className="pb-3 px-4 font-bold tracking-widest w-[20%] relative">
+                      {isSelectionMode && (
+                        <th className="pb-3 pl-3 w-[6%] text-left animate-in fade-in duration-200">
+                          Index
+                        </th>
+                      )}
+                      
+                      {/* ✅ Member Header Dropdown Filtering Setup */}
+                      <th className="pb-3 pr-4 font-bold tracking-widest w-[31%] pl-2 relative">
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setActiveHeaderDropdown(activeHeaderDropdown === "name" ? null : "name"); }}
+                          className={`inline-flex items-center gap-1 hover:text-[#1A365D] transition-colors uppercase tracking-widest text-[11px] font-bold ${sortField === "name" ? "text-[#2B6CB0]" : ""}`}
+                        >
+                          Member {sortField === "name" ? `(${sortOrder === "ASC" ? "A-Z" : "Z-A"})` : ""}
+                          <ChevronDown size={11} className={`transition-transform duration-200 ${activeHeaderDropdown === "name" ? "rotate-180" : ""}`} />
+                        </button>
+                        
+                        {activeHeaderDropdown === "name" && (
+                          <div ref={nameDropdownRef} className="absolute left-2 top-7 z-50 w-44 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 text-xs text-[#2D3748] font-medium normal-case tracking-normal">
+                            <button
+                              type="button"
+                              onClick={() => { setSortField(""); setSortOrder(""); setActiveHeaderDropdown(null); setCurrentPage(1); }}
+                              className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${!sortField ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""}`}
+                            >
+                              Default (Newly Added)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setSortField("name"); setSortOrder("ASC"); setActiveHeaderDropdown(null); setCurrentPage(1); }}
+                              className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${sortField === "name" && sortOrder === "ASC" ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""}`}
+                            >
+                              Alphabetical (A → Z)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setSortField("name"); setSortOrder("DESC"); setActiveHeaderDropdown(null); setCurrentPage(1); }}
+                              className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${sortField === "name" && sortOrder === "DESC" ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""}`}
+                            >
+                              Alphabetical (Z → A)
+                            </button>
+                          </div>
+                        )}
+                      </th>
+
+                      {/* ✅ Contact Header Dropdown Filtering Setup */}
+                      <th className="pb-3 px-4 font-bold tracking-widest w-[27%] relative">
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setActiveHeaderDropdown(activeHeaderDropdown === "contact" ? null : "contact"); }}
+                          className={`inline-flex items-center gap-1 hover:text-[#1A365D] transition-colors uppercase tracking-widest text-[11px] font-bold ${sortField === "contact" ? "text-[#2B6CB0]" : ""}`}
+                        >
+                          Contact {sortField === "contact" ? `(${sortOrder === "ASC" ? "A-Z" : "Z-A"})` : ""}
+                          <ChevronDown size={11} className={`transition-transform duration-200 ${activeHeaderDropdown === "contact" ? "rotate-180" : ""}`} />
+                        </button>
+                        
+                        {activeHeaderDropdown === "contact" && (
+                          <div ref={contactDropdownRef} className="absolute left-4 top-7 z-50 w-44 bg-white border border-gray-200 rounded-lg shadow-xl py-1.5 text-xs text-[#2D3748] font-medium normal-case tracking-normal">
+                            <button
+                              type="button"
+                              onClick={() => { setSortField(""); setSortOrder(""); setActiveHeaderDropdown(null); setCurrentPage(1); }}
+                              className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${!sortField ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""}`}
+                            >
+                              Default (Newly Added)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setSortField("contact"); setSortOrder("ASC"); setActiveHeaderDropdown(null); setCurrentPage(1); }}
+                              className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${sortField === "contact" && sortOrder === "ASC" ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""}`}
+                            >
+                              Alphabetical (A → Z)
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { setSortField("contact"); setSortOrder("DESC"); setActiveHeaderDropdown(null); setCurrentPage(1); }}
+                              className={`w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors ${sortField === "contact" && sortOrder === "DESC" ? "bg-slate-50/80 text-[#2B6CB0] font-semibold" : ""}`}
+                            >
+                              Alphabetical (Z → A)
+                            </button>
+                          </div>
+                        )}
+                      </th>
+
+                      <th className="pb-3 px-4 font-bold tracking-widest w-[18%] relative">
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setActiveHeaderDropdown(activeHeaderDropdown === "plan" ? null : "plan"); }}
@@ -355,7 +548,7 @@ export const MembersPage = () => {
                         )}
                       </th>
 
-                      <th className="pb-3 px-4 font-bold tracking-widest w-[15%] relative">
+                      <th className="pb-3 px-4 font-bold tracking-widest w-[12%] relative">
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setActiveHeaderDropdown(activeHeaderDropdown === "status" ? null : "status"); }}
@@ -391,38 +584,49 @@ export const MembersPage = () => {
                           </div>
                         )}
                       </th>
+                      <th className="pb-3 pr-3 text-right w-[10%]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="text-sm divide-y divide-gray-100 font-medium text-[#2D3748]">
                     {memberList.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="py-20 text-left text-sm text-[#718096] font-medium pl-3">
+                        <td colSpan={isSelectionMode ? 6 : 5} className="py-20 text-left text-sm text-[#718096] font-medium pl-3">
                           No matching records currently indexed inside this filtered view.
                         </td>
                       </tr>
                     ) : (
                       memberList.map((member) => {
-                        const isCurrentSelection = selectedMember?.id === member.id;
+                        const isRowChecked = selectedRowIds.includes(member.id);
                         return (
                           <tr
                             key={member.id}
                             onClick={() => { 
-                              setSelectedMember(member); 
-                              setIsDetailsOpen(true); 
+                              setSelectedMemberId(member.id); 
                             }}
                             className={`transition-all duration-150 cursor-pointer border-l-4 ${
-                              isCurrentSelection 
-                                ? 'bg-slate-50/80 border-l-4 border-l-blue-500' 
+                              isRowChecked 
+                                ? 'bg-[#2B6CB0]/5 border-l-4 border-l-[#2B6CB0]' 
                                 : 'hover:bg-blue-50/40 border-l-4 border-l-transparent'
                             }`}
                           >
-                            <td className="py-3.5 pr-4 pl-3 font-semibold text-[#1A365D] truncate">
+                            {isSelectionMode && (
+                              <td className="py-3.5 pl-3 animate-in fade-in duration-200" onClick={(e) => e.stopPropagation()}>
+                                <input 
+                                  type="checkbox"
+                                  checked={isRowChecked}
+                                  onChange={() => handleSelectRowToggle(member.id)}
+                                  className="w-3.5 h-3.5 rounded-sm border-gray-300 text-[#2B6CB0] focus:ring-[#2B6CB0] cursor-pointer"
+                                />
+                              </td>
+                            )}
+
+                            <td className="py-3.5 pr-4 pl-2 font-semibold text-[#1A365D] truncate">
                               <div className="flex items-center gap-3 truncate">
                                 <div className="w-7 h-7 bg-slate-100 text-[#1A365D] font-semibold text-xs rounded-md flex items-center justify-center shrink-0">
                                   {getInitials(member.name)}
                                 </div>
                                 <div className="truncate">
-                                  <div className={`font-semibold tracking-tight text-sm truncate ${isCurrentSelection ? "text-[#2B6CB0]" : "text-[#1A365D]"}`}>{member.name}</div>
+                                  <div className={`font-semibold tracking-tight text-sm truncate ${isRowChecked ? "text-[#2B6CB0]" : "text-[#1A365D]"}`}>{member.name}</div>
                                   <div className="text-[11px] text-[#718096] font-normal mt-0.5 truncate">Active Since: {member.activationDate || "N/A"}</div>
                                 </div>
                               </div>
@@ -444,6 +648,34 @@ export const MembersPage = () => {
                                 <span className={member.isActive ? "text-emerald-700" : "text-rose-700"}>{member.isActive ? "Active" : "Expired"}</span>
                               </span>
                             </td>
+
+                            <td className="py-3.5 pr-3 text-right" onClick={(e) => e.stopPropagation()}>
+                              <div className="inline-flex gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingMember(member);
+                                    setIsFormOpen(true);
+                                  }}
+                                  className="p-1 text-blue-600 hover:bg-blue-50 transition-colors rounded-md hover:bg-slate-100 table-cell"
+                                  title="Edit Row"
+                                >
+                                  <Edit3 size={13} />
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSingleDeleteId(member.id);
+                                    setIsDeleteModalOpen(true);
+                                  }}
+                                  className="p-1 text-rose-600 hover:bg-rose-50 transition-colors rounded-md hover:bg-rose-50 table-cell"
+                                  title="Delete Member"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         );
                       })
@@ -455,25 +687,47 @@ export const MembersPage = () => {
               {/* Stabilized Pagination Navigation Footer */}
               {totalPages > 0 && (
                 <div className="py-4 border-t border-gray-100 flex justify-between items-center text-xs text-[#718096] tracking-wide mt-2 select-none pl-3">
-                  <span>Page <span className="font-semibold text-gray-800">{currentPage}</span> of <span className="font-semibold text-gray-800">{totalPages}</span></span>
-                  <div className="flex gap-4">
-                    <button
-                      type="button"
-                      disabled={currentPage === 1}
-                      onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(p - 1, 1)); }}
-                      className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+                  <div className="flex items-center gap-2">
+                    <span>Showing</span>
+                    <select
+                      value={itemsPerPage}
+                      onChange={(e) => {
+                        setItemsPerPage(Number(e.target.value));
+                        setCurrentPage(1); 
+                      }}
+                      className="bg-gray-50 border border-gray-200 text-gray-700 py-1 px-2 rounded-md text-xs font-semibold focus:outline-hidden focus:border-gray-300 cursor-pointer"
                     >
-                      &larr; Previous
-                    </button>
-                    <button
-                      type="button"
-                      disabled={currentPage === totalPages}
-                      onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(p + 1, totalPages)); }}
-                      className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
-                    >
-                      Next &rarr;
-                    </button>
+                      <option value={5}>5 rows</option>
+                      <option value={10}>10 rows</option>
+                      <option value={20}>20 rows</option>
+                      <option value={50}>50 rows</option>
+                      {displayTotal > 0 && (
+                        <option value={displayTotal}>All ({displayTotal})</option>
+                      )}
+                    </select>
+                    <span>of <span className="font-semibold text-gray-800">{displayTotal}</span> records</span>
                   </div>
+
+                  {itemsPerPage < displayTotal && (
+                    <div className="flex gap-4">
+                      <button
+                        type="button"
+                        disabled={currentPage === 1}
+                        onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.max(p - 1, 1)); }}
+                        className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+                      >
+                        &larr; Previous
+                      </button>
+                      <button
+                        type="button"
+                        disabled={currentPage === totalPages}
+                        onClick={(e) => { e.stopPropagation(); setCurrentPage((p) => Math.min(p + 1, totalPages)); }}
+                        className="text-gray-600 font-semibold tracking-wider disabled:opacity-20 cursor-pointer hover:text-[#2B6CB0] flex items-center gap-1 transition-colors"
+                      >
+                        Next &rarr;
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -482,24 +736,49 @@ export const MembersPage = () => {
       </div>
 
       {/* ==================== GLOBAL OVERLAY MODALS ==================== */}
-      <MemberDetailsModal
-        isOpen={isDetailsOpen}
-        member={selectedMember}
-        plans={plans}
-        onClose={() => { setIsDetailsOpen(false); setSelectedMember(null); }}
-        onRenew={(planId) => renewMutation.mutate(planId)}
-        onDelete={(id) => deleteMutation.mutate(id)}
-        isRenewing={renewMutation.isPending}
+      {selectedMemberId && (
+        <MemberDetailsPage
+          onClose={() => setSelectedMemberId(null)}
+          member={deepMemberDetails || null}
+        />
+      )}
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        selectedCount={singleDeleteId ? 1 : selectedRowIds.length}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setSingleDeleteId(null);
+        }}
+        onConfirm={() => {
+          const targets = singleDeleteId ? [singleDeleteId] : selectedRowIds;
+          
+          bulkDeleteMutation.mutate(targets, {
+            onSuccess: () => {
+              setIsDeleteModalOpen(false);
+              setSingleDeleteId(null);
+              if (!singleDeleteId) {
+                setIsSelectionMode(false); 
+              }
+            }
+          });
+        }}
       />
 
-      <MemberModal
-        isOpen={isFormOpen}
-        onClose={() => { setIsFormOpen(false); setSelectedMember(null); }}
-        onSubmit={(vals) => saveMemberMutation.mutate(vals)}
-        users={users}
-        plans={plans}
-        editingMember={selectedMember}
-      />
-    </div>
+    {isFormOpen && (
+  <MemberModal
+    isOpen={isFormOpen}
+    onClose={() => { 
+      setIsFormOpen(false); 
+      setEditingMember(null); 
+    }}
+    onSubmit={(vals) => saveMemberMutation.mutate(vals)}
+    // ✅ Passed your state directly using the exact interface key
+    editingMember={editingMember} 
+    users={users}
+    plans={plans}
+  />
+)}
+  </div>
   );
 };

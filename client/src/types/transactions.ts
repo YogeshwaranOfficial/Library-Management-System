@@ -28,6 +28,8 @@ export interface BookIssueRecord {
   dueDate: string;      // ISO string format YYYY-MM-DD
   returnedDate: string | null;
   status: BaseIssueStatus; // What the database recognizes
+  condition: "GOOD" | "DAMAGED";
+  damageDescription?: string;
   
   // Optional metadata populated during joined lookups
   memberEmail?: string;
@@ -35,6 +37,33 @@ export interface BookIssueRecord {
   bookAuthor?: string;
   fineAmount?: number;      // Optional number for outstanding balances
   finePaidStatus?: boolean; // Optional boolean flag tracking payment state
+}
+
+export interface DetailedIssueItem {
+  issue_id: string;
+  status: "ISSUED" | "RETURNED" | "OVERDUE";
+  issue_date: string;
+  return_date: string | null;
+  
+  // 🚀 Your new UI audit tracking properties
+  condition: "GOOD" | "DAMAGED"; 
+  damage_description: string | null; 
+  
+  member: {
+    member_id: string;
+    user: {
+      name: string;
+      gmail: string;
+      phone_number: string;
+    };
+  };
+  book: {
+    book_id: string;
+    book_name: string;
+    book_author: string;
+    isbn: string;
+  };
+  created_at: string;
 }
 
 // 🏷️ 4. Dynamic Auto-Suggest Lookup Models

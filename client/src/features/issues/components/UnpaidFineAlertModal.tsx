@@ -6,6 +6,8 @@ interface UnpaidFineAlertModalProps {
   memberName: string;
   bookTitle: string;
   fineAmount?: number;
+  pendingCondition?: string;
+  pendingDescription?: string | null;
   onNavigateToFines?: () => void;
 }
 
@@ -15,6 +17,8 @@ export const UnpaidFineAlertModal = ({
   memberName,
   bookTitle,
   fineAmount,
+  pendingCondition,
+  pendingDescription, // 🟢 Now being read below!
   onNavigateToFines,
 }: UnpaidFineAlertModalProps) => {
   if (!isOpen) return null;
@@ -61,6 +65,24 @@ export const UnpaidFineAlertModal = ({
                 {bookTitle}
               </span>
             </div>
+            
+            {pendingCondition && (
+              <div className="flex justify-between items-center text-[11px] mt-1 text-slate-500">
+                <span className="uppercase font-bold tracking-wide">Return Condition:</span>
+                <span className={`font-bold ${pendingCondition === 'DAMAGED' ? 'text-rose-600' : 'text-emerald-600'}`}>
+                  {pendingCondition}
+                </span>
+              </div>
+            )}
+
+            {/* 🟢 FIXED: Using the variable to render structural confirmation data */}
+            {pendingCondition === "DAMAGED" && pendingDescription && (
+              <div className="bg-white/80 border border-rose-100 rounded-lg p-2.5 mt-1.5 text-slate-600">
+                <span className="block font-bold text-[10px] text-rose-700 uppercase tracking-wide mb-0.5">Damage Reason:</span>
+                <p className="italic text-slate-500 leading-normal">{pendingDescription}</p>
+              </div>
+            )}
+
             <div className="h-px bg-slate-200 my-1.5" />
             <div className="flex justify-between items-center pt-0.5">
               <span className="text-rose-700 font-bold uppercase text-[11px] tracking-wide flex items-center gap-1">
@@ -68,7 +90,7 @@ export const UnpaidFineAlertModal = ({
               </span>
               <span className="text-base font-bold  text-text-main">
                 {fineAmount && fineAmount > 0
-                  ? `₹${fineAmount}.00`
+                  ? `₹${fineAmount}`
                   : "Calculated at Desk"}
               </span>
             </div>

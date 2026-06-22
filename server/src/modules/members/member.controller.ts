@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import asyncHandler from "../../utils/asyncHandler.js";
 import sendResponse from "../../utils/SendResponse.js";
+import { MemberQuery } from "./member.types.js";
 
 import {
   createMemberService,
@@ -9,8 +10,8 @@ import {
   getMemberByIdService,
   updateMemberService,
   searchMembersByNameService,
-  getEligibleUsersForMemberService, // 💡 Imported the missing service engine link
-  getAllPlansWithMetricsService,    // 💡 ADDED: Importing the plans metric service link
+  getEligibleUsersForMemberService,
+  getAllPlansWithMetricsService,
 } from "./member.service.js";
 
 // 💡 FEATURE UPDATED: Refactored to leverage clean service-to-repo patterns with explicit READER filter constraints
@@ -38,45 +39,31 @@ export const createMemberController =
     });
   });
 
-export const getAllMembersController =
-  asyncHandler(async (req: Request, res: Response) => {
-    const query = {
-      page: Number(req.query.page) || 1,
-      limit: Number(req.query.limit) || 10,
-      search: req.query.search as string,
-      plan: req.query.plan,      
-      status: req.query.status,   
-      membership_status:
-        req.query.membership_status as
-          | "ACTIVE"
-          | "EXPIRED",
-    };
+export const getAllMembersController = asyncHandler(async (req: Request, res: Response) => {
+ 
+  const query = req.query as unknown as MemberQuery;
 
-    const result =
-      await getAllMembersService(query);
+  const result = await getAllMembersService(query);
 
-    sendResponse(res, {
-      success: true,
-      statusCode: 200,
-      message: "Members fetched successfully",
-      data: result,
-    });
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Members fetched successfully",
+    data: result,
   });
+});
 
-export const getMemberByIdController =
-  asyncHandler(async (req: Request, res: Response) => {
-    const result =
-      await getMemberByIdService(
-        req.params.id as any
-      );
+export const getMemberByIdController = asyncHandler(async (req: Request, res: Response) => {
+  const memberId = req.params.id as string;
+  const result = await getMemberByIdService(memberId);
 
-    sendResponse(res, {
-      success: true,
-      statusCode: 200,
-      message: "Member fetched successfully",
-      data: result,
-    });
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Member fetched successfully",
+    data: result,
   });
+});
 
 export const updateMemberController =
   asyncHandler(async (req: Request, res: Response) => {
@@ -114,13 +101,10 @@ export const deleteMemberController =
  * Handles endpoint: GET /api/v1/members/search?q=...
  */
 export const searchMembersByNameController = asyncHandler(async (req: Request, res: Response) => {
-  // 1. Capture search input string from 'q' query parameters token safely
   const searchString = req.query.q as string;
 
-  // 2. Fetch the flat, business-logic processed matching results array
   const detailedMatches = await searchMembersByNameService(searchString);
 
-  // 3. Dispatch the response structure back to your React TanStack hooks
   sendResponse(res, {
     success: true,
     statusCode: 200,
@@ -129,18 +113,19 @@ export const searchMembersByNameController = asyncHandler(async (req: Request, r
   });
 });
 
-// =========================================================
-// NEW: GET ALL PLANS METRICS CONTROLLER
-// =========================================================
+// ===================================================================================
+// 🛠️ PATCHED: Keeping search string parameter mapping to resolve Error #2 compiler break
+// ===================================================================================
 export const getAllPlansWithMetricsController = asyncHandler(async (req: Request, res: Response) => {
   const searchTerm = req.query.search as string;
 
+  // Passing just the search string back to your service to fix your second TypeScript parameter type restriction
   const result = await getAllPlansWithMetricsService(searchTerm);
 
   sendResponse(res, {
     success: true,
     statusCode: 200,
     message: "Membership plans analytics dashboard matrices structural feed compiled.",
-    data: result, // Contains data: plans[], meta: { total, globalActiveMembers, globalInactiveMembers }
+    data: result,
   });
 });

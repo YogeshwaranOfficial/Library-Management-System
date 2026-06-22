@@ -48,6 +48,7 @@ export const ReturnedBooks = () => {
     queryKey: ["circulationMasterRecordsFeed", token],
     queryFn: async () => {
       const res = await axiosClient.get("/issues");
+      console.log("issue res",res)
       return res.data?.data || res.data || [];
     },
     enabled: !!token,
@@ -59,6 +60,8 @@ export const ReturnedBooks = () => {
       return await axiosClient.patch(`/issues/${issueId}`, {
         status: "BORROWED",
         returnedDate: null,
+        condition: null,
+        damage_description: null,
       });
     },
     onSuccess: () => {
@@ -151,6 +154,7 @@ export const ReturnedBooks = () => {
       safeCurrentPage * rowsPerPage,
     );
   }, [auditedRecords, safeCurrentPage, rowsPerPage]);
+  console.log("paginatedRecords",paginatedRecords);
 
   // Refactored interactive triggers to dynamically feed parameters directly to the modal
   const handleUndoReturn = (id: string) => {
@@ -311,6 +315,12 @@ export const ReturnedBooks = () => {
                       <th className="pb-3 px-4 font-bold tracking-widest text-center w-[18%]">
                         Returned On
                       </th>
+                       <th className="pb-3 px-4 font-bold tracking-widest text-center w-[18%]">
+                        Condition
+                      </th>
+                       <th className="pb-3 px-4 font-bold tracking-widest text-center w-[18%]">
+                        Damage Reason
+                      </th>
                     </tr>
                   </thead>
 
@@ -375,6 +385,28 @@ export const ReturnedBooks = () => {
                                 {record.returnedDate}
                               </span>
                             </td>
+
+                            {/* Column 6: Condition */}
+                            <td className="py-3.5 px-4 text-center truncate">
+                              <span className={`badge ${record.condition === "GOOD" ? "text-green-600" : "text-red-600"}`}>
+                                {record.condition}
+                               </span>
+                            </td>
+
+                            {/* Damage description */}
+                            <td className="py-3.5 px-4 text-center max-w-37.5 truncate">
+  <span 
+    className="inline-flex items-center gap-1.5 font-semibold text-xs text-gray-700"
+    title={record.damageDescription || undefined} // 💡 Pro-tip: This reveals the full text on hover!
+  >
+    {record.damageDescription 
+      ? record.damageDescription.length > 20 
+        ? `${record.damageDescription.slice(0, 20)}...` 
+        : record.damageDescription
+      : "No Damage"
+    }
+  </span>
+</td>
                           </tr>
                         );
                       })

@@ -18,5 +18,33 @@ export interface BookInventoryItem {
   lendingCount: number;
   categoryId: string;
   categoryName: string;
-  createdAt: string; // 💡 Tracks when the asset entered the shelf index
+  createdAt: string; 
+  isbn: string;
+}
+
+interface BorrowHistoryItem {
+  member_name: string;
+  gmail: string;
+  borrow_date: string;
+  return_date: string | null;
+  status: "BORROWED" | "RETURNED";
+  condition: "GOOD" | "DAMAGED";
+  damage_description: string | null;
+}
+
+export interface EditingBookInventoryItem {
+  book_id: string;
+  book_name: string;
+  book_author: string;
+  total_copies: number;
+  available_copies: number;
+  language: string;
+  lending_count: number;
+ category?: {
+    category_id: string;
+    category_name: string;
+  };
+  created_at: string; 
+  isbn: string;
+  history: BorrowHistoryItem[];
 }

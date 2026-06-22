@@ -119,7 +119,7 @@ export const ReturnedDetailsModal = ({
                 onClick={() => onUndoReturn(record.id)}
                 className="w-full py-2.5 text-xs font-bold uppercase tracking-wider text-amber-800 bg-amber-50 hover:bg-amber-100/80 border border-amber-200 rounded-xl transition-all cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
               >
-                <RefreshCw size={12} /> Revert Return Status
+                <RefreshCw size={12} /> Restore Book Issue
               </button>
 
               <div className="pt-5 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">

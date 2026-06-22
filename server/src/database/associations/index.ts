@@ -12,7 +12,35 @@ import Issue from "../models/Issue.js";
 
 import Fine from "../models/Fine.js";
 
+import PlanHistory from "../models/PlanHistory.js";
 
+/* -------------------------------------------------------------------------- */
+/* MEMBERSHIP PLANS ↔ PLAN HISTORIES                             */
+/* -------------------------------------------------------------------------- */
+
+PlanHistory.belongsTo(MembershipPlan, {
+  foreignKey: 'membership_plan_id',
+  as: 'membership_plan' // Make sure this matches the alias used in your include query if there is one
+});
+
+// A membership plan can be referenced across many history logs
+MembershipPlan.hasMany(PlanHistory, {
+  foreignKey: 'membership_plan_id'
+});
+
+/* -------------------------------------------------------------------------- */
+/* MEMBER ↔ PLAN HISTORIES                             */
+/* -------------------------------------------------------------------------- */
+
+Member.hasMany(PlanHistory, {
+  foreignKey: "member_id",
+  as: "plan_histories",
+});
+
+PlanHistory.belongsTo(Member, {
+  foreignKey: "member_id",
+  as: "member",
+});
 
 /* -------------------------------------------------------------------------- */
 /*                               USER ↔ MEMBER                                */

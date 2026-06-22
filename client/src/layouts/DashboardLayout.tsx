@@ -129,7 +129,7 @@ export const DashboardLayout = () => {
   };
 
   return (
-    <div className="w-screen h-screen overflow-hidden flex flex-col bg-[#F8FAFC] font-sans text-[#2D3748] antialiased selection:bg-[#2B6CB0]/10 select-none">
+    <div className="w-screen h-screen overflow-hidden flex flex-col bg-white font-sans text-[#2D3748] antialiased selection:bg-[#2B6CB0]/10 select-none">
       
       {/* Invisible Left Edge Trigger Strip - Only active on the dashboard view */}
       {isDashboardPage && (
@@ -304,7 +304,7 @@ export const DashboardLayout = () => {
                 exit={{ opacity: 0, scale: 0.8, y: 10 }}
                 transition={{ duration: 0.2 }}
                 onClick={scrollToTop}
-                className="fixed bottom-6 right-6 w-12 h-12 rounded-xl bg-[#4b6993] hover:bg-[#3c5578] text-white flex items-center justify-center shadow-lg cursor-pointer border border-white/10 z-50 transition-colors"
+                className="fixed bottom-6 right-6 w-12 h-12 rounded-xl bg-[#4b6993] hover:bg-[#3c5578] text-white flex items-center justify-center shadow-lg cursor-pointer border border-white/10 z-40 transition-colors"
                 title="Scroll back to top"
               >
                 <ChevronUp size={22} className="stroke-[2.5]" />

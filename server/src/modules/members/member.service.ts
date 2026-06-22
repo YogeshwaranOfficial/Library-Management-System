@@ -53,17 +53,19 @@ export const createMemberService = async (payload: CreateMemberPayload) => {
   return await createMemberRepository(enrichedPayload as any);
 };
 
+// 🛠️ PATCHED: Using direct numbers from our upgraded query object layer
 export const getAllMembersService = async (query: MemberQuery) => {
   const members = await getAllMembersRepository(query);
+  
   return {
     meta: {
       total: members.count,
       globalActive: members.totalActive,
       globalExpired: members.totalExpired,
-      page: Number(query.page) || 1,
-      limit: Number(query.limit) || 10,
+      page: query.page,   
+      limit: query.limit, 
     },
-    data: members.rows,
+    data: members.rows, // ✅ This will now cleanly carry the frontend-ready LibraryMember[] records
   };
 };
 

@@ -24,9 +24,16 @@ export const getCollectedFinesController = asyncHandler(
 
 // 2. Pay Fine Controller
 // 🟢 FIXED: Clean type parameters configuration to eliminate error 1117
+// Update payFineController inside fine.controller.ts
 export const payFineController = asyncHandler(
-  async (req: Request<any, any, PayFinePayload>, res: Response) => {
-    const { fine_id, paidDate, paymentMethod } = req.body;
+  async (req: Request<any, any, any>, res: Response) => {
+    const { 
+      fine_id, 
+      paidDate, 
+      paymentMethod, 
+      condition,      // 🚀 Destructure new field
+      damage_description   // 🚀 Destructure new field
+    } = req.body;
 
     if (!fine_id) {
       res.status(400).json({
@@ -36,7 +43,14 @@ export const payFineController = asyncHandler(
       return;
     }
 
-    const result = await fineService.payFine(fine_id, paidDate || null, paymentMethod);
+    // 🚀 Pass book_condition and damage_description along into the service call wrapper
+    const result = await fineService.payFine(
+      fine_id, 
+      paidDate || null, 
+      paymentMethod, 
+      condition, 
+      damage_description
+    );
 
     sendResponse(res, {
       success: true,
