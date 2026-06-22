@@ -1,211 +1,275 @@
-import { useState, useEffect, useCallback } from "react";
 import type { DashboardSummaryMetrics } from "../../../types/dashboard";
-
-// Editorial Visual Assets
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { 
+  BookOpen, 
+  Layers, 
+  Users, 
+  AlertCircle, 
+  DollarSign, 
+  TrendingUp, 
+  CheckCircle, 
+  Activity, 
+  ShieldAlert, 
+  Book
+} from "lucide-react";
 
 interface MetricsBannerProps {
   data: DashboardSummaryMetrics | undefined;
 }
 
 export const MetricsGrid = ({ data }: MetricsBannerProps) => {
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-
-  // Interactive mini-states for the editorial layout filters
-  const [activeToggleA, setActiveToggleA] = useState<boolean>(true);
-  const [activeToggleB, setActiveToggleB] = useState<boolean>(false);
-
-  // Configuration for 5 distinct operational contextual slides match image layout
-  const slides = [
-    {
-      title: "DATA INSIGHT / CATALOG INDEX",
-      metricName: "Total Books Registered",
-      value: data?.totalBooks || 0,
-      tagline:
-        "Our digital ecosystem accurately tracks regular platform interactions, digital checkouts, and resource access metrics.",
-      toggleALabel: "System Verified Registry",
-      toggleBLabel: "Active In-Shelf Volumes",
-    },
-    {
-      title: "DATA INSIGHT / CIRCULATION LIVE",
-      metricName: "Available Inventory Copies",
-      value: data?.availableBooks || 0,
-      tagline:
-        "Live catalog verification streams cross-referencing systemic checkout requests against immediate structural volumes.",
-      toggleALabel: "Verified Reservable",
-      toggleBLabel: "Immediate Process Sync",
-    },
-    {
-      title: "DATA INSIGHT / MEMBER ANALYTICS",
-      metricName: "Active Members Base",
-      value: data?.activeMembers || 0,
-      tagline:
-        "Our digital ecosystem accurately tracks regular platform interactions, digital checkouts, and resource access metrics.",
-      toggleALabel: "System Verified Accounts",
-      toggleBLabel: "Active Checkout Activity",
-    },
-    {
-      title: "DATA INSIGHT / EXCEPTION METRICS",
-      metricName: "Books Overdue Queue",
-      value: data?.overdueCount || 0,
-      tagline:
-        "Algorithmic validation parameters capturing active operational return anomalies and immediate account penalty logs.",
-      toggleALabel: "Overdue Lock Triggered",
-      toggleBLabel: "Fines Pending Post",
-    },
-    {
-      title: "DATA INSIGHT / FINANCIAL LEDGER",
-      metricName: `₹${data?.totalOutstandingFines || 0}`,
-      value: "Outstanding Receivables", // Flips layout visually for fine currencies
-      tagline:
-        "Aggregated financial risk pipeline processing unreturned materials under strict administrative fee accumulation protocols.",
-      toggleALabel: "Audit Pipeline Clear",
-      toggleBLabel: "Accruing Base Logs",
-    },
-  ];
-
-  // Dynamic image fetching array to feed cleaner high-contrast backdrops
-  const bgImages = [
-    "https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=1600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=1600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=1600&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=1600&auto=format&fit=crop",
-  ];
-
-  const handleNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
-  }, [slides.length]);
-
-  const handlePrev = useCallback(() => {
-    setCurrentIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
-  }, [slides.length]);
-
-  useEffect(() => {
-    const autoSlideTimer = setInterval(() => {
-      handleNext();
-    }, 4000);
-    return () => clearInterval(autoSlideTimer);
-  }, [handleNext]);
-
-  const currentSlide = slides[currentIndex];
-
+  
   return (
-    <div className="w-full relative overflow-hidden bg-slate-950 border border-slate-900 font-sans aspect-16/7 min-h-105 sm:min-h-115 md:min-h-screen">
-      {/* Background Image Engine */}
-      {bgImages.map((url, idx) => (
-        <div
-          key={url}
-          className={`absolute inset-0 transition-all duration-1000 ease-in-out scale-[1.02] ${
-            idx === currentIndex
-              ? "opacity-100 z-10 scale-100"
-              : "opacity-0 z-0"
-          }`}
-          style={{
-            backgroundImage: `url('${url}')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center center",
-          }}
-        />
-      ))}
-
-      {/* Cinematic Vignette Overlay Matching image_95b3a6.jpg */}
-      <div className="absolute inset-0 bg-linear-to-b from-slate-950/40 via-slate-950/80 to-slate-950 z-15" />
-
-      {/* Main Structural Content Layer */}
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-6 sm:p-12 md:p-16 max-w-4xl mx-auto space-y-6 select-none">
-        {/* Category Label Section */}
-        <p className="text-[10px] sm:text-xs font-black tracking-[0.25em] uppercase text-slate-300 drop-shadow-md ">
-          {currentSlide.title}
+    <div className="w-full bg-white p-6 md:p-8 font-sans text-slate-800">
+      
+      {/* SECTION HEADER BLOCK */}
+      <div className="mb-8 border-b border-slate-200 pb-5">
+        <h2 className="text-2xl font-black text-[#1A365D] tracking-tight flex items-center gap-2">
+          <Activity className="w-6 h-6 text-blue-600 animate-pulse" />
+          Librarian Dashboard
+        </h2>
+        <p className="text-xs text-slate-400 font-semibold mt-1">
+          Live administrative dashboard displaying physical volume tracking variables, structural metrics, and fiscal pipelines.
         </p>
-
-        {/* Hero Scale Numbers Metric Block */}
-        <div className="flex flex-col items-center space-y-0.5">
-          <h1 className="text-6xl sm:text-7xl md:text-8xl font-black text-white tracking-tighter drop-shadow-lg leading-none">
-            {currentIndex === 4 ? currentSlide.metricName : currentSlide.value}
-          </h1>
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-100 tracking-tight">
-            {currentIndex === 4 ? currentSlide.value : currentSlide.metricName}
-          </h2>
-        </div>
-
-        {/* Descriptive Body Copy Block */}
-        <p className="text-xs sm:text-sm text-slate-300/90 font-medium leading-relaxed max-w-2xl mx-auto drop-shadow-sm">
-          {currentSlide.tagline}
-        </p>
-
-        {/* Modern Interactive Dashboard Filtering Toggles Row */}
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
-          {/* Toggle Choice A */}
-          <button
-            onClick={() => setActiveToggleA(!activeToggleA)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold  transition-all duration-200 cursor-pointer ${
-              activeToggleA
-                ? "bg-slate-100 text-slate-950 border-white shadow-xs"
-                : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
-            }`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${activeToggleA ? "bg-emerald-500" : "bg-slate-500"}`}
-            />
-            {currentSlide.toggleALabel}
-          </button>
-
-          {/* Toggle Choice B */}
-          <button
-            onClick={() => setActiveToggleB(!activeToggleB)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold  transition-all duration-200 cursor-pointer ${
-              activeToggleB
-                ? "bg-slate-100 text-slate-950 border-white shadow-xs"
-                : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10"
-            }`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${activeToggleB ? "bg-emerald-500" : "bg-slate-500"}`}
-            />
-            {currentSlide.toggleBLabel}
-          </button>
-        </div>
       </div>
 
-      {/* Navigation Controls System */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handlePrev();
-        }}
-        className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-transparent text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-30 shadow-xl cursor-pointer"
-        aria-label="Previous Metric"
-      >
-        <ChevronLeft size={20} className="stroke-3" />
-      </button>
-
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleNext();
-        }}
-        className="absolute right-6 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-transparent text-white flex items-center justify-center transition-all hover:scale-105 active:scale-95 z-30 shadow-xl cursor-pointer"
-        aria-label="Next Metric"
-      >
-        <ChevronRight size={20} className="stroke-3" />
-      </button>
-
-      {/* Clean Linear Dot Progress Matrix */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2 z-30">
-        {slides.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`h-1.5 transition-all duration-300 rounded-full cursor-pointer ${
-              index === currentIndex
-                ? "w-7 bg-white"
-                : "w-1.5 bg-white/30 hover:bg-white/50"
-            }`}
-            aria-label={`Jump to slide ${index + 1}`}
+      {/* METRIC CORE MATRIX GRID CONTAINER */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 w-full">
+        
+        {/* CARD 1: CATALOG INDEX */}
+        <div className="group relative flex flex-col justify-between bg-slate-900 rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-slate-800 transition-all duration-300 min-h-64">
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-100  group-hover:scale-125 transition-all duration-500 z-0" 
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=600&auto=format&fit=crop')" }}
           />
-        ))}
+          <div className="absolute inset-0 bg-linear-to-b from-slate-950/60 via-slate-900/90 to-slate-950 z-10" />
+          
+          <div className="relative z-20 p-5 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-blue-400 tracking-wider uppercase">Catalog Index</span>
+              <BookOpen className="w-4 h-4 text-slate-400" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-black text-white tracking-tight">{data?.totalBooks || 0}</h1>
+              <h3 className="text-xs font-bold text-slate-200 mt-0.5">Total Books Registered</h3>
+            </div>
+            <p className="text-[11px] leading-relaxed text-slate-400 font-medium">
+              Accurately tracks regular platform interactions, digital checkouts, and resource vectors.
+            </p>
+          </div>
+
+          {/* <div className="relative z-20 p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => handleToggle("catalog", "a")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                toggleStates.catalog.a ? "bg-white text-slate-950" : "bg-slate-800/60 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              <span className={`w-1 h-1 rounded-full ${toggleStates.catalog.a ? "bg-emerald-500" : "bg-slate-500"}`} />
+              System Verified
+            </button>
+            <button
+              onClick={() => handleToggle("catalog", "sideB")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                toggleStates.catalog.b ? "bg-white text-slate-950" : "bg-slate-800/60 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              <span className={`w-1 h-1 rounded-full ${toggleStates.catalog.b ? "bg-emerald-500" : "bg-slate-500"}`} />
+              In-Shelf
+            </button>
+          </div> */}
+        </div>
+
+        {/* CARD 2: CIRCULATION LIVE */}
+        <div className="group relative flex flex-col justify-between bg-slate-900 rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-slate-800 transition-all duration-300 min-h-64">
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-100  group-hover:scale-125 transition-all duration-500 z-0" 
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1521587760476-6c12a4b040da?q=80&w=600&auto=format&fit=crop')" }}
+          />
+          <div className="absolute inset-0 bg-linear-to-b from-slate-950/60 via-slate-900/90 to-slate-950 z-10" />
+          
+          <div className="relative z-20 p-5 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-emerald-400 tracking-wider uppercase">Circulation Live</span>
+              <Layers className="w-4 h-4 text-slate-400" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-black text-white tracking-tight">{data?.availableBooks || 0}</h1>
+              <h3 className="text-xs font-bold text-slate-200 mt-0.5">Available Inventory Copies</h3>
+            </div>
+            <p className="text-[11px] leading-relaxed text-slate-400 font-medium">
+              Live updates cross-referencing checkout requests against physical core assets.
+            </p>
+          </div>
+
+          {/* <div className="relative z-20 p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => handleToggle("circulation", "a")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                toggleStates.circulation.a ? "bg-white text-slate-950" : "bg-slate-800/60 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              <span className={`w-1 h-1 rounded-full ${toggleStates.circulation.a ? "bg-emerald-500" : "bg-slate-500"}`} />
+              Reservable
+            </button>
+            <button
+              onClick={() => handleToggle("circulation", "sideB")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                toggleStates.circulation.b ? "bg-white text-slate-950" : "bg-slate-800/60 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              <span className={`w-1 h-1 rounded-full ${toggleStates.circulation.b ? "bg-emerald-500" : "bg-slate-500"}`} />
+              Sync Process
+            </button>
+          </div> */}
+        </div>
+
+        {/* CARD 3: MEMBER ANALYTICS */}
+        <div className="group relative flex flex-col justify-between bg-slate-900 rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-slate-800 transition-all duration-300 min-h-64">
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-100  group-hover:scale-125 transition-all duration-500 z-0" 
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=600&auto=format&fit=crop')" }}
+          />
+          <div className="absolute inset-0 bg-linear-to-b from-slate-950/60 via-slate-900/90 to-slate-950 z-10" />
+          
+          <div className="relative z-20 p-5 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-indigo-400 tracking-wider uppercase">Member Analytics</span>
+              <Users className="w-4 h-4 text-slate-400" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-black text-white tracking-tight">{data?.activeMembers || 0}</h1>
+              <h3 className="text-xs font-bold text-slate-200 mt-0.5">Active Members Base</h3>
+            </div>
+            <p className="text-[11px] leading-relaxed text-slate-400 font-medium">
+              Maps structural platform engagement trends and historical profile validation entries.
+            </p>
+          </div>
+
+          {/* <div className="relative z-20 p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => handleToggle("members", "a")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                toggleStates.members.a ? "bg-white text-slate-950" : "bg-slate-800/60 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              <span className={`w-1 h-1 rounded-full ${toggleStates.members.a ? "bg-emerald-500" : "bg-slate-500"}`} />
+              Verified Users
+            </button>
+            <button
+              onClick={() => handleToggle("members", "sideB")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                toggleStates.members.b ? "bg-white text-slate-950" : "bg-slate-800/60 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              <span className={`w-1 h-1 rounded-full ${toggleStates.members.b ? "bg-emerald-500" : "bg-slate-500"}`} />
+              Active Checkouts
+            </button>
+          </div> */}
+        </div>
+
+        {/* CARD 4: EXCEPTION METRICS */}
+        <div className="group relative flex flex-col justify-between bg-slate-900 rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-slate-800 transition-all duration-300 min-h-64">
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-100 group-hover:scale-125 transition-all duration-500 z-0" 
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1516979187457-637abb4f9353?q=80&w=600&auto=format&fit=crop')" }}
+          />
+          <div className="absolute inset-0 bg-linear-to-b from-slate-950/60 via-slate-900/90 to-slate-950 z-10" />
+          
+          <div className="relative z-20 p-5 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-amber-500 tracking-wider uppercase">Exception Metrics</span>
+              <AlertCircle className="w-4 h-4 text-amber-500 animate-pulse" />
+            </div>
+            <div>
+              <h1 className="text-4xl font-black text-white tracking-tight">{data?.overdueCount || 0}</h1>
+              <h3 className="text-xs font-bold text-slate-200 mt-0.5">Books Overdue Queue</h3>
+            </div>
+            <p className="text-[11px] leading-relaxed text-slate-400 font-medium">
+              Algorithmic parameter locks catching operational return anomalies and late system logs.
+            </p>
+          </div>
+
+          {/* <div className="relative z-20 p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => handleToggle("exceptions", "a")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                toggleStates.exceptions.a ? "bg-white text-slate-950" : "bg-slate-800/60 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              <span className={`w-1 h-1 rounded-full ${toggleStates.exceptions.a ? "bg-amber-500" : "bg-slate-500"}`} />
+              Lock Triggered
+            </button>
+            <button
+              onClick={() => handleToggle("exceptions", "sideB")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                toggleStates.exceptions.b ? "bg-white text-slate-950" : "bg-slate-800/60 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              <span className={`w-1 h-1 rounded-full ${toggleStates.exceptions.b ? "bg-emerald-500" : "bg-slate-500"}`} />
+              Fines Pending
+            </button>
+          </div> */}
+        </div>
+
+        {/* CARD 5: FINANCIAL LEDGER */}
+        <div className="group relative flex flex-col justify-between bg-slate-900 rounded-2xl overflow-hidden shadow-md hover:shadow-xl border border-slate-800 transition-all duration-300 min-h-64">
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-100 group-hover:scale-125 transition-all duration-500 z-0" 
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=600&auto=format&fit=crop')" }}
+          />
+          <div className="absolute inset-0 bg-linear-to-b from-slate-950/60 via-slate-900/90 to-slate-950 z-10" />
+          
+          <div className="relative z-20 p-5 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-[10px] font-black text-rose-400 tracking-wider uppercase">Financial Ledger</span>
+              <DollarSign className="w-4 h-4 text-rose-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-white tracking-tight truncate">₹{data?.totalOutstandingFines || 0}</h1>
+              <h3 className="text-xs font-bold text-slate-200 mt-0.5">Outstanding Receivables</h3>
+            </div>
+            <p className="text-[11px] leading-relaxed text-slate-400 font-medium">
+              Aggregated economic pipeline tracking unreturned structural materials under fee protocols.
+            </p>
+          </div>
+
+          {/* <div className="relative z-20 p-4 bg-slate-950/80 border-t border-slate-800/60 flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => handleToggle("financial", "a")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                toggleStates.financial.a ? "bg-white text-slate-950" : "bg-slate-800/60 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              <span className={`w-1 h-1 rounded-full ${toggleStates.financial.a ? "bg-emerald-500" : "bg-slate-500"}`} />
+              Pipeline Clear
+            </button>
+            <button
+              onClick={() => handleToggle("financial", "sideB")}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
+                toggleStates.financial.b ? "bg-white text-slate-950" : "bg-slate-800/60 text-slate-400 hover:bg-slate-800"
+              }`}
+            >
+              <span className={`w-1 h-1 rounded-full ${toggleStates.financial.b ? "bg-rose-500" : "bg-slate-500"}`} />
+              Accruing Logs
+            </button>
+          </div> */}
+        </div>
+
       </div>
+
+      {/* DASHBOARD STATUS FOOTER ADORNMENT */}
+      <div className="mt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 rounded-xl p-4 text-[11px] font-bold tracking-wide text-slate-500 uppercase shadow-xs">
+        <div className="flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 text-emerald-600" />
+          All relational core indicators synced successfully
+        </div>
+        <div className="flex items-center gap-4 text-slate-400 font-semiboldNormal">
+          <span className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5 text-blue-500" /> Latency: 12ms</span>
+          <span className="flex items-center gap-1"><ShieldAlert className="w-3.5 h-3.5 text-indigo-500" /> Encryption: TLS 1.3</span>
+          <span className="flex items-center gap-1"><Book className="w-3.5 h-3.5 text-amber-500" /> Nodes: 3 Active</span>
+        </div>
+      </div>
+
     </div>
   );
 };

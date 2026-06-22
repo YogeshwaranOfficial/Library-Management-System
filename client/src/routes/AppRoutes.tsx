@@ -10,6 +10,7 @@ import { TransactionsPage } from "../features/issues/pages/TransactionsPage";
 import { FinePage } from "../features/fines/pages/FinesPage";
 import { ReturnedBooks } from "../features/returnedbooks/pages/ReturnedBooks";
 import { ManageCategories } from "../features/categories/pages/ManageCategories";
+import { ReportsPage } from "../features/reports/pages/Reports";
 
 // Admin Module Component Import Declarations
 import { AdminLayout } from "../features/admin/components/AdminLayout";
@@ -34,12 +35,13 @@ export const AppRoutes = () => {
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/members" element={<MembersPage />} />
-             <Route path="/plans" element={<ManagePlan />} />
+            <Route path="/plans" element={<ManagePlan />} />
             <Route path="/books" element={<BooksPage />} />
             <Route path="/categories" element={<ManageCategories />} />
             <Route path="/transactions" element={<TransactionsPage />} />
             <Route path="/fines" element={<FinePage />} />
             <Route path="/returnedbooks" element={<ReturnedBooks />} />
+            <Route path="/reports" element={<ReportsPage />} />
           </Route>
 
           {/* 2. Isolated High-Clearance Admin Subsystem Layout Group */}

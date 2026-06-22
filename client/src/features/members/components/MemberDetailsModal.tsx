@@ -45,6 +45,8 @@ export interface BackendMemberDetails {
     status: string;
     fine_paid: number;
     paid_status: boolean;
+    condition: string;
+    damage_description: string;
   }>;
 }
 
@@ -59,11 +61,12 @@ export const MemberDetailsPage: React.FC<MemberDetailsPageProps> = ({ member, on
   if (!member) return null;
 
   const targetLogs = member.borrowing_logs || [];
+  console.log("tagretLogs",targetLogs)
   const targetHistory = member.plan_history || [];
 
   // ✅ FIXED: Corrected fallback accumulator fallback statement to avoid NaN conditions
   const totalFinesPaid = targetLogs.reduce((acc, curr) => acc + (Number(curr.fine_paid) || 0), 0);
-  const totalDamagedBooks = targetLogs.filter(b => b.status === "DAMAGED").length;
+  const totalDamagedBooks = targetLogs.filter(b => b.condition === "DAMAGED").length;
   const totalLifetimeLent = targetHistory.reduce((acc, curr) => acc + (Number(curr.books_borrowed_count) || 0), 0);
 
   const generateStructuredPDF = () => {
@@ -241,24 +244,7 @@ export const MemberDetailsPage: React.FC<MemberDetailsPageProps> = ({ member, on
               </div>
             </div>
 
-            {/* LIVE KPI AGGREGATION WIDGETS */}
-            <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-3xs grid grid-cols-2 gap-4">
-              <div className="p-3 bg-slate-50/70 border border-gray-100 rounded-xl">
-                <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider block">Total Borrowed</span>
-                <span className="text-base font-bold text-[#1A365D] mt-1 block">{totalLifetimeLent} Books</span>
-              </div>
-              <div className="p-3 bg-slate-50/70 border border-gray-100 rounded-xl">
-                <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider block">Total Fines</span>
-                <span className="text-base font-bold text-amber-600 mt-1 block">₹{totalFinesPaid}</span>
-              </div>
-              <div className="p-3 bg-rose-50/40 border border-rose-100 rounded-xl col-span-2 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider block">Damaged Returns</span>
-                  <span className="text-xs font-bold text-rose-900 mt-0.5 block">{totalDamagedBooks} Incident Record(s)</span>
-                </div>
-                <AlertTriangle size={15} className="text-rose-500 mr-1" />
-              </div>
-            </div>
+           
           </div>
 
           {/* RIGHT COLUMN AREA PANEL DESK */}
@@ -312,8 +298,26 @@ export const MemberDetailsPage: React.FC<MemberDetailsPageProps> = ({ member, on
                       </div>
                     </div>
                   </div>
+                   {/* LIVE KPI AGGREGATION WIDGETS */}
+            <div className="bg-white rounded-2xl grid grid-cols-2 gap-4">
+              <div className="p-3 bg-slate-50/70 border border-gray-100 rounded-xl">
+                <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider block">Total Borrowed</span>
+                <span className="text-base font-bold text-[#1A365D] mt-1 block">{totalLifetimeLent} Books</span>
+              </div>
+              <div className="p-3 bg-slate-50/70 border border-gray-100 rounded-xl">
+                <span className="text-[10px] font-bold text-[#718096] uppercase tracking-wider block">Total Fines</span>
+                <span className="text-base font-bold text-amber-600 mt-1 block">₹{totalFinesPaid}</span>
+              </div>
+              <div className="p-3 bg-rose-50/40 border border-rose-100 rounded-xl col-span-2 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider block">Damaged Returns</span>
+                  <span className="text-xs font-bold text-rose-900 mt-0.5 block">{totalDamagedBooks} Incident Record(s)</span>
+                </div>
+                <AlertTriangle size={15} className="text-rose-500 mr-1" />
+              </div>
+            </div>
 
-                  <div>
+                  {/* <div>
                     <h4 className="text-xs font-bold text-[#1A365D] uppercase tracking-wider border-b border-gray-100 pb-2">
                       Account Standing Rules Policy
                     </h4>
@@ -325,7 +329,7 @@ export const MemberDetailsPage: React.FC<MemberDetailsPageProps> = ({ member, on
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               )}
 
@@ -381,10 +385,12 @@ export const MemberDetailsPage: React.FC<MemberDetailsPageProps> = ({ member, on
                   <table className="w-full text-left border-collapse text-xs min-w-162.5">
                     <thead>
                       <tr className="bg-slate-50 text-gray-500 font-bold uppercase tracking-wider border-b border-gray-200">
-                        <th className="p-3 w-[30%]">Book Name</th>
+                        <th className="p-3">Book Name</th>
                         <th className="p-3">Borrowed Date</th>
                         <th className="p-3">Due Date</th>
                         <th className="p-3">Issue Status</th>
+                        <th className="p-3">Book Condition</th>
+                        <th className="p-3">Damage Description</th>
                         <th className="p-3 text-right">Fine</th>
                       </tr>
                     </thead>
@@ -415,6 +421,8 @@ export const MemberDetailsPage: React.FC<MemberDetailsPageProps> = ({ member, on
                                 {log.status}
                               </span>
                             </td>
+                            <td className="p-3 text-gray-500 font-medium">{log.condition}</td>
+                            <td className="p-3 text-gray-500 font-medium">{log.damage_description || "No damage"}</td>
                             <td className={`p-3 text-right font-bold ${log.paid_status === true ? "text-emerald-600" : "text-rose-600"}`}>
                               {log.fine_paid > 0 ? `₹${log.fine_paid}` : "—"}
                             </td>

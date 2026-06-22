@@ -186,7 +186,6 @@ export const MembersPage = () => {
   const users = Array.isArray(rawUsers) ? rawUsers : [];
 
   const memberList = membersPayload?.data || [];
-  // ✅ Included sorting state inside tracker flags 
   const hasActiveFilters = Boolean(searchTerm || tierFilter || statusFilter || sortField || sortOrder);
   const displayTotal = membersPayload?.total ?? 0;
 
@@ -657,7 +656,7 @@ export const MembersPage = () => {
                                     setEditingMember(member);
                                     setIsFormOpen(true);
                                   }}
-                                  className="p-1 text-blue-600 hover:bg-blue-50 transition-colors rounded-md hover:bg-slate-100 table-cell"
+                                  className="p-1 text-blue-600 hover:bg-blue-50 transition-colors rounded-md table-cell"
                                   title="Edit Row"
                                 >
                                   <Edit3 size={13} />
@@ -669,7 +668,7 @@ export const MembersPage = () => {
                                     setSingleDeleteId(member.id);
                                     setIsDeleteModalOpen(true);
                                   }}
-                                  className="p-1 text-rose-600 hover:bg-rose-50 transition-colors rounded-md hover:bg-rose-50 table-cell"
+                                  className="p-1 text-rose-600 hover:bg-rose-50 transition-colors rounded-md table-cell"
                                   title="Delete Member"
                                 >
                                   <Trash2 size={13} />

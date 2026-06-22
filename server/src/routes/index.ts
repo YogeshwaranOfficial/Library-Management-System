@@ -9,6 +9,7 @@ import dashboardRoutes from "../modules/dashboard/dashboard.routes.js";
 import azureRoutes from "../modules/azureAI/aiScanner.routes.js";
 import adminRoutes from "../modules/admin/admin.routes.js";
 import planRoutes from "../modules/plans/plans.routes.js"
+import reportRoutes from "../modules/reports/report.routes.js"
 
 const router = Router();
 
@@ -22,5 +23,7 @@ router.use("/dashboard", dashboardRoutes);
 router.use("/ai",azureRoutes);
 router.use("/admin",adminRoutes)
 router.use("/plan",planRoutes)
+router.use("/reports",reportRoutes)
+
 
 export default router;

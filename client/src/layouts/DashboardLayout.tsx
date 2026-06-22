@@ -15,12 +15,11 @@ import {
   Receipt, 
   LogOut, 
   Library,
-  User,
-  ChevronUp
+  ChevronUp,
 } from "lucide-react";
 
 export const DashboardLayout = () => {
-  const { user, logout } = useAuthStore();
+  const { logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -32,9 +31,6 @@ export const DashboardLayout = () => {
   
   const mainScrollContainerRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<number | null>(null);
-
-  // Check if current page is the explicit main operational dashboard view
-  const isDashboardPage = location.pathname === "/dashboard";
 
   // Pure scroll engine tracking baseline depth coordinates
   const handleContainerScroll = useCallback(() => {
@@ -88,16 +84,8 @@ export const DashboardLayout = () => {
   // Handler triggered when mouse leaves the sidebar area
   const handleMouseLeaveSidebar = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    
-    if (isDashboardPage) {
-      // Dashboard maintains the special 5-second slide-away delay
-      timeoutRef.current = window.setTimeout(() => {
-        setSidebarExpanded(false);
-      }, 100);
-    } else {
-      // Other pages collapse immediately back to icon view when the mouse leaves
-      setSidebarExpanded(false);
-    }
+    // All pages now collapse instantly back to base icon view uniformly
+    setSidebarExpanded(false);
   };
 
   const handleSignOut = () => {
@@ -115,44 +103,29 @@ export const DashboardLayout = () => {
     { name: "Borrow & Return Desk", path: "/transactions", icon: RefreshCw },
     { name: "Returned Books", path: "/returnedbooks", icon: BookCheck },
     { name: "Fines & Payments", path: "/fines", icon: Receipt },
+    { name: "Reports", path: "/reports", icon: Receipt },
   ];
 
-  // Dynamic width calculations based on context rules
+  // Global uniform sidebar layout measurements across all functional views
   const getSidebarWidth = () => {
-    if (sidebarExpanded) return 288;
-    return isDashboardPage ? 0 : 80;
-  };
-
-  const getSidebarPadding = () => {
-    if (sidebarExpanded) return 16;
-    return isDashboardPage ? 0 : 16;
+    return sidebarExpanded ? 288 : 80;
   };
 
   return (
     <div className="w-screen h-screen overflow-hidden flex flex-col bg-white font-sans text-[#2D3748] antialiased selection:bg-[#2B6CB0]/10 select-none">
       
-      {/* Invisible Left Edge Trigger Strip - Only active on the dashboard view */}
-      {isDashboardPage && (
-        <div 
-          className="fixed left-0 top-0 h-full w-3 z-50 bg-transparent"
-          onMouseEnter={handleMouseEnterSidebar}
-        />
-      )}
-
       {/* Main Structural Layout Split Shell Container */}
       <div className="flex flex-1 w-full h-full overflow-hidden relative">
         
-        {/* Dynamic Contextual Left Sidebar Menu */}
+        {/* Dynamic Contextual Left Sidebar Menu - Consistent across all routes */}
         <motion.aside
           animate={{ 
             width: getSidebarWidth(),
-            padding: getSidebarPadding(),
-            opacity: !isDashboardPage || sidebarExpanded ? 1 : 0
           }}
           transition={{ type: "spring", damping: 30, stiffness: 250 }}
           onMouseEnter={handleMouseEnterSidebar}
           onMouseLeave={handleMouseLeaveSidebar}
-          className="h-full bg-[#4b6993] border-r border-white/10 shadow-2xl flex flex-col justify-between text-white shrink-0 z-40 overflow-hidden"
+          className="h-full bg-[#4b6993] border-r border-white/10 shadow-2xl flex flex-col justify-between text-white shrink-0 z-40 overflow-hidden p-4"
         >
           <div className="flex flex-col h-full overflow-hidden">
             
@@ -173,7 +146,19 @@ export const DashboardLayout = () => {
             </div>
 
             {/* Sidebar Main Nav Options */}
-            <nav className="space-y-1.5 flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
+            <nav 
+              className="space-y-1.5 flex-1 overflow-y-auto overflow-x-hidden"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}
+            >
+              <style>{`
+                nav::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
+
               {navItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
@@ -233,12 +218,12 @@ export const DashboardLayout = () => {
           ref={mainScrollContainerRef}
           className="flex-1 overflow-y-auto bg-transparent relative"
         >
-          {/* Top Navbar — Shifts dynamically alongside our dual-state layout models */}
-          <motion.header 
+          {/* Top Navbar — Standard uniform clean alignment across all layouts */}
+          {/* <motion.header 
             animate={{ 
               opacity: isAtAbsoluteTop ? 1 : 0,
               pointerEvents: isAtAbsoluteTop ? "auto" : "none",
-              paddingLeft: sidebarExpanded ? 288 + 24 : (isDashboardPage ? 24 : 80 + 24)
+              paddingLeft: sidebarExpanded ? 288 + 24 : 80 + 24
             }}
             transition={{ 
               type: "spring", 
@@ -246,52 +231,40 @@ export const DashboardLayout = () => {
               stiffness: 250,
               opacity: { duration: 0.2, ease: "linear" }
             }}
-            className={`fixed top-0 left-0 right-0 h-20 flex items-center justify-between pr-6 z-30 select-none
-              ${isDashboardPage 
-                ? "bg-transparent border-transparent text-white drop-shadow-xs" 
-                : "bg-white/95 border-b border-slate-200/80 shadow-xs text-slate-900 backdrop-blur-md"
-              }`}
-          >
+            className="fixed top-0 left-0 right-0 h-20 flex items-center justify-between pr-6 z-30 select-none bg-white/95 border-b border-slate-200/80 shadow-xs text-slate-900 backdrop-blur-md"
+          > */}
             {/* Pure Informational Brand Block */}
-            <div className="flex items-center gap-3.5">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center border transition-all duration-200 ${
-                isDashboardPage 
-                  ? "bg-white/10 border-white/10" 
-                  : "bg-slate-100 border-slate-200"
-              }`}>
-                <Library size={18} className={`stroke-[2.2] ${isDashboardPage ? "text-white" : "text-slate-700"}`} />
+            {/* <div className="flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center border border-slate-200 bg-slate-100">
+                <Library size={18} className="stroke-[2.2] text-slate-700" />
               </div>
 
               <div className="flex flex-col text-left">
-                <span className={`font-black text-base tracking-tight leading-tight transition-colors ${isDashboardPage ? "text-white" : "text-slate-900"}`}>
+                <span className="font-black text-base tracking-tight leading-tight text-slate-900">
                   LMS
                 </span>
-                <span className={`text-[10px] font-extrabold uppercase tracking-widest transition-colors ${isDashboardPage ? "text-white/60" : "text-slate-400"}`}>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
                   Central Intelligence Matrix
                 </span>
               </div>
-            </div>
+            </div> */}
 
             {/* User Identity Matrix */}
-            <div className="flex items-center gap-5">
+            {/* <div className="flex items-center gap-5">
               <div className="text-right hidden sm:block">
-                <p className={`text-[10px] font-extrabold tracking-widest uppercase transition-colors ${isDashboardPage ? "text-slate-300" : "text-slate-500"}`}>
-                  ROLE: <span className={`font-black ${isDashboardPage ? "text-white" : "text-slate-900"}`}>{user?.role || "LIBRARIAN"}</span>
+                <p className="text-[10px] font-extrabold tracking-widest uppercase text-slate-500">
+                  ROLE: <span className="font-black text-slate-900">{user?.role || "LIBRARIAN"}</span>
                 </p>
               </div>
 
-              <div className={`w-10 h-10 border rounded-lg flex items-center justify-center shadow-3xs transition-all ${
-                isDashboardPage 
-                  ? "border-white/10 bg-white/10 text-white" 
-                  : "border-slate-200 bg-slate-50 text-slate-700"
-              }`}>
+              <div className="w-10 h-10 border border-slate-200 bg-slate-50 text-slate-700 rounded-lg flex items-center justify-center shadow-3xs">
                 <User size={16} className="stroke-[2.5]" />
               </div>
-            </div>
-          </motion.header>
+            </div> */}
+          {/* </motion.header> */}
 
-          {/* Page content wrapper */}
-          <div className={`w-full ${isDashboardPage ? "pt-0" : "pt-20"}`}>
+          {/* Regular page offset spacer container applied consistently */}
+          <div className="w-full">
             <Outlet />
           </div>
 

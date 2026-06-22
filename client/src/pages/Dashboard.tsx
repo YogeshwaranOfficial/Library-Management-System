@@ -77,7 +77,7 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in bg-[#F8FAFC] min-h-screen pb-16 font-sans text-[#0F172A] selection:bg-[#5E6AD2]/10">
+    <div className="space-y-8 animate-fade-in bg-[#ffffff] min-h-screen pb-16 font-sans text-[#0F172A] selection:bg-[#5E6AD2]/10">
       {/* Level 1: Core System KPI Indicators */}
       <div className="relative transition-all duration-300">
         <MetricsGrid data={gridMetrics} />

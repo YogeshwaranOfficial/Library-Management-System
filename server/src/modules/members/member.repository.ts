@@ -89,7 +89,6 @@ export const getAllMembersRepository = async (
     limit,
     offset,
     include: [userInclude, planInclude],
-    // !!! INJECT DETECTED ORDERING CLAUSE HERE !!!
     order: activeOrderClause,
     distinct: true,
   });
@@ -173,7 +172,7 @@ export const getMemberByIdRepository = async (memberId: string) => {
         include: [
           {
             model: MembershipPlan,
-            as: "membership_plan", // ✅ FIX: Added the missing alias here
+            as: "membership_plan",
             attributes: ["plan_name"]
           }
         ]
@@ -181,7 +180,8 @@ export const getMemberByIdRepository = async (memberId: string) => {
       {
         model: Issue,
         as: "issues",
-        attributes: ["issue_id", "borrowed_date", "returned_date", "issue_status"],
+        // 🟢 FIXED: Added condition AND damage_description to model fetch attributes
+        attributes: ["issue_id", "borrowed_date", "returned_date", "issue_status", "condition", "damage_description"],
         include: [
           {
             model: Book,
@@ -204,16 +204,13 @@ export const getMemberByIdRepository = async (memberId: string) => {
   const activeIssues = raw.issues || [];
   const dbHistories = raw.plan_histories || [];
 
-  // Map database histories to the structure expected by your UI
   const structuralHistory = dbHistories.map((hist: any) => ({
-    // ✅ FIX: Access via alias property 'membership_plan' instead of capitalized model name
     name: hist.membership_plan?.plan_name || "Unknown Tier",
     start_date: hist.start_date,
     end_date: hist.expiry_date,
     books_borrowed_count: Number(hist.lending_count)
   }));
 
-  // Append the current active plan on top of the list so historical sequences stay clear
   structuralHistory.unshift({
     name: raw.membership_plan?.plan_name || "Primary Tier",
     start_date: raw.start_date,
@@ -249,7 +246,9 @@ export const getMemberByIdRepository = async (memberId: string) => {
         return_date: issue.returned_date || "Not Returned Yet",
         status: issue.issue_status || "GOOD",
         fine_paid: fineAmount,
-        paid_status: paidStatus
+        paid_status: paidStatus,
+        condition: issue.condition || "GOOD", 
+        damage_description: issue.damage_description || null
       };
     })
   };
