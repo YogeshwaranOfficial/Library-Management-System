@@ -1,1 +1,55 @@
+/* 🔤 Google Fonts Integration: Inter & Roboto */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap');
+
 @import "tailwindcss";
+
+@theme {
+  /* 🎨 1. Core Sage & Slate Functional Colors (Brand Tokens) */
+  --color-sage-primary: #27AE60;      /* 10% Accent Call-to-Actions */
+  --color-sage-hover: #219653;        /* Darker Sage for hover interactions */
+  --color-slate-secondary: #2C3E50;   /* 30% Secondary Text / Structural Sidebars */
+  --color-slate-light: #34495E;       /* Muted variant for subtitles/borders */
+  --color-canvas-dominant: #F9FBFB;   /* 60% Dominant Background / Card spaces */
+  --color-utility-crimson: #C0392B;   /* Critical validation / blocks / alerts */
+  
+  /* 📐 2. Font Pair Configurations */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-data: "Inter", system-ui, sans-serif;       
+
+  /* 🌗 3. Dynamic Dark-Mode Semantic Mapping Tokens */
+  --color-page-bg: var(--page-bg);
+  --color-card-bg: var(--card-bg);
+  --color-border-main: var(--border-main);
+  --color-text-main: var(--text-main);
+}
+
+/* ☀️ Global Light Variable Assignments */
+:root {
+  --page-bg: #f8fafc;     /* slate-50 */
+  --card-bg: #ffffff;     /* Pure white for light mode cards */
+  --border-main: #e2e8f0; /* slate-200 */
+  --text-main: #334155;   /* slate-700 */
+}
+
+/* 🌙 Global Dark Variable Assignments */
+.dark {
+  --page-bg: #090d16;     /* Premium deep rich black background */
+  
+  /* 🌟 THE FIX: Instead of white, cards now turn into a clean dark-slate container */
+  --card-bg: #1e293b;     /* Tailwind slate-800: beautiful contrast over black */
+  
+  /* 🌟 THE FIX: Automatic light borders and readable white text inside the cards */
+  --border-main: #334155; /* slate-700 line breaks */
+  --text-main: #f8fafc;   /* slate-50: Crisp white text that reads perfectly on dark cards */
+}
+
+/* 🏢 Base Global Application Setup & Overrides */
+body {
+  /* FIXED: Pointed these directly to our dynamic switching tokens so background flips automatically */
+  background-color: var(--page-bg);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
