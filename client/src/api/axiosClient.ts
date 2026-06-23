@@ -16,7 +16,7 @@ axiosClient.interceptors.request.use(
     const token = useAuthStore.getState().token;
     
     // 🔍 Add this line to see exactly WHAT token your frontend is shipping out!
-    console.log("Axios sending token to server:", token ? `${token.substring(0, 15)}...` : "NONE");
+    console.log("Axios sending token to server:", token ? `${token.substring(0, 15)}...` : "NONE"); 
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
