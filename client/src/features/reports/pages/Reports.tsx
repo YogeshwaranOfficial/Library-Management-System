@@ -408,8 +408,8 @@ export const ReportsPage: React.FC = () => {
                 className="w-full bg-white border border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 rounded-xl p-3.5 text-sm font-bold text-slate-700 focus:outline-none focus:border-blue-400 transition-all shadow-xs"
               >
                 <option value="ALL">Compelete Statements</option>
-                <option value="WEEKLY">Weekly Statements</option>
-                <option value="MONTHLY">Monthly Statements</option>
+                <option value="WEEKLY">Last Week Statements</option>
+                <option value="MONTHLY">Last Month Statements</option>
                 <option value="YEARLY">Annual Statements</option>
               </select>
             </div>
