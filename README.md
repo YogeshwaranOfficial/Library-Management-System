@@ -1,489 +1,217 @@
 # 📚 Library Management System
 
-A modern, full-stack Library Management System built with **Node.js, Express.js, TypeScript, PostgreSQL, Sequelize, React, Vite, Tailwind CSS, Zustand, React Query, and Azure AI Integration**.
+A enterprise-grade, modern, full-stack Library Management System built with **Node.js, Express.js, TypeScript, PostgreSQL, Sequelize ORM, React 19, Vite, Tailwind CSS, Zustand, React Query, and Multi-LLM Cloud AI Integration (Azure & Gemini)**.
 
-Designed for educational institutions, public libraries, and digital library management workflows, this platform provides complete book lifecycle management, membership administration, borrowing workflows, fine tracking, AI-powered book scanning, and role-based access control.
-
----
-
-# 🚀 Live Demo
-
-### Frontend Application
-
-**Deploy Link:** Coming Soon
-
-### Backend API
-
-**Deploy Link:** Coming Soon
-
-### API Documentation
-
-**Swagger Documentation:** Coming Soon
+Designed for educational institutions, public libraries, and digital library management workflows, this platform provides complete book lifecycle management, membership administration, automated borrowing workflows, granular fine tracking, AI-powered book scanner engines, and deep role-based access control (RBAC).
 
 ---
 
-# 📖 Overview
+# 🚀 Live Deployments & Portals
 
-The Library Management System automates library operations including:
+### 💻 Production Frontend Application
+* **Deploy URL:** [https://library-management-system-by-yogeshwaran.vercel.app](https://library-management-system-by-yogeshwaran.vercel.app)
+* **Hosting Platform:** Vercel
 
-* User Authentication & Authorization
-* Role-Based Access Control (RBAC)
-* Member Management
-* Membership Plan Management
-* Book Catalog Management
-* Book Borrow & Return Operations
-* Fine Calculation & Tracking
-* Dashboard Analytics
-* AI-Powered Book Cover Scanner
-* API Documentation
-* CI/CD Automation
+### ⚙️ Production Backend API Service
+* **API Base URL:** [https://library-management-system-g9dg.onrender.com](https://library-management-system-g9dg.onrender.com)
+* **Hosting Platform:** Render (Linux Node.js Container Environment)
+
+### 📄 Live Interactive API Documentation
+* **Swagger Portal:** [https://library-management-system-g9dg.onrender.com/api-docs](https://library-management-system-g9dg.onrender.com/api-docs)
 
 ---
 
-# ✨ Key Features
+# 🔑 QA & Verification Testing Credentials
 
-## 🔐 Authentication & Authorization
+The live system enforces strict **Role-Based Access Control (RBAC)**. Use the authorized credentials below to verify corresponding dashboards, permissions, and entity data tables:
 
-* JWT Authentication
-* Secure Login System
-* Refresh Token Support
-* Password Encryption using Bcrypt
-* Role-Based Access Control
-* Protected API Routes
-
-### Supported Roles
-
-* Admin
-* Member
+| Portal Access Level | Authorized Email Address | Protected Password | System Permissions & Access Scope |
+| :--- | :--- | :--- | :--- |
+| 🛡️ **System Administrator** | `admin@library.com` | `Password@123` | Complete read/write/delete permissions across members, books, global configurations, plans, and metrics. |
+| 📚 **Librarian / Staff** | `lib@gmail.com` | `Password@123` | Operational access to issue/return tracking, books catalog search, fine accruals, and manual checkouts. |
 
 ---
 
-## 👨‍💼 Admin Management
+# 🏗️ Enterprise System Architecture
 
-Administrators can:
+The application implements a decoupled client-server architecture built around a **Modular Monolith** pattern on the backend, ensuring a separation of concerns across logic, access controls, data persistence, and remote cloud cognitive processors.
 
-* Manage Users
-* Manage Members
-* Manage Books
-* Manage Categories
-* Manage Membership Plans
-* Track Fines
-* Monitor Borrowing Activity
-* Access Dashboard Analytics
+![System Architecture Overview](Architecture%20Diagram.png)
 
----
+### 🖥️ Client Application Tier (Frontend)
+* **Core Engine:** React 19 + Vite (Fast Refresh Development Compilation Engine)
+* **Language Layer:** TypeScript (Strict Compilation Matrix)
+* **State Management Layout:** * **Zustand:** Synchronous client state, persistent sessions, token lifecycles, and UI settings.
+  * **React Query (TanStack):** Asynchronous network cache, optimistic queries, invalidation loops, and retry management.
+* **Network & Validation:** Axios HTTP Engine + Zod Request Validation Data Mappings.
+* **UI Components & Motion:** Tailwind CSS + Framer Motion (Fluid Layout Interpolations) + Sonner (Real-time Contextual Toasts).
 
-## 👥 Member Management
+### ⚙️ Server Application Tier (Backend Engine)
+* **Runtime Platform:** Node.js Environment (ES Modules / ESM Layout - `"type": "module"`)
+* **Framework:** Express.js utilizing strict middleware pipelines.
+* **Database Driver / Data Layer:** Sequelize ORM mapping strict schemas natively to PostgreSQL instances.
+* **Middlewares Engine Stack:**
+  * **CORS Middleware:** Strict Origin Parsing (Enforced prior to body processing to permit Vercel Handshakes).
+  * **Helmet / Rate Limiting:** HTTP Header Hardening + Pre-emptive DDOS Request Throttling.
+  * **Zod Layer:** Server-side request schema interception before hitting controller scopes.
+  * **Winston Logs:** Log rotations logging production events and failures to disk and container outputs.
 
-Features include:
-
-* Member Registration
-* Membership Assignment
-* Membership Renewal
-* Membership Status Tracking
-* Borrowing Eligibility Validation
-
----
-
-## 📚 Book Management
-
-* Add Books
-* Update Books
-* Delete Books
-* Search Books
-* Category Assignment
-* Availability Tracking
-* Inventory Management
+### 💾 Persistence & Storage Tier (Database)
+* **Engine:** PostgreSQL hosted Serverless via Neon DB Architecture.
+* **Live Connection Topology:** Enforced SSL Handshake Engine Pooling (`sslmode=require`).
+* **Connection Pooling Endpoint:** `postgresql://neondb_owner:***@ep-late-silence-ao6ovftj-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require`
 
 ---
 
-## 🏷️ Category Management
+# ✨ Key Functional Modules
 
-* Create Categories
-* Update Categories
-* Delete Categories
-* Organize Library Inventory
+## 🔐 Authentication, Session & Access Safety
+* **JSON Web Tokens (JWT):** Short-lived identity access keys paired with safe HTTP-Only cookie strategies.
+* **Password Hashing:** High-entropy encryption powered by `bcrypt`.
+* **Route Isolation:** Express router-level middleware blocks unauthorized cross-role traversal.
 
----
+## 🤖 Multi-Cloud AI Book Scanner Pipeline
+The system automates asset registration using a sequential multi-cloud AI ingestion chain:
+1. **Azure Cognitive Vision (OCR):** Extracts text from raw image captures of physical book covers uploaded via `Multer`.
+2. **Azure AI Translator:** Normalizes, parses, and translates foreign language cover elements cleanly into English string sets.
+3. **Google Gemini AI Engine:** Processes the structured text array, executing semantic parsing to extract the exact **Book Title** and **Author Name**, completely eliminating manual typewriter operations for library inventory registry.
 
-## 🔄 Borrow & Return Workflow
-
-* Issue Books
-* Return Books
-* Due Date Management
-* Borrow History Tracking
-* Availability Validation
-
----
-
-## 💰 Fine Management
-
-* Fine Calculation
-* Fine Tracking
-* Payment Status Monitoring
-* Fine History Reports
+## 🔄 Automated Core Borrow & Fine Workflows
+* **Lifecycle State Machine:** Handles `Available` ➔ `Issued` ➔ `Overdue` ➔ `Returned` transitions.
+* **Cron Sync Engine:** Background jobs running node-cron check the Neon DB cluster nightly to automatically calculate and append overdue financial fine metrics to defaulting member accounts.
 
 ---
 
-## 📋 Membership Plans
-
-* Create Plans
-* Update Plans
-* Delete Plans
-* Duration Management
-* Borrowing Limits
-* Pricing Configuration
-
----
-
-## 🤖 AI Book Scanner
-
-AI-powered book cover analysis using:
-
-### Azure Vision OCR
-
-Extracts text from book covers.
-
-### Azure Translator
-
-Converts extracted text into English.
-
-### Google Gemini AI
-
-Analyzes OCR content and identifies:
-
-* Book Title
-* Author Name
-
-This dramatically reduces manual book entry operations.
-
----
-
-## 📊 Dashboard Analytics
-
-Provides:
-
-* Total Books
-* Active Members
-* Borrow Statistics
-* Fine Reports
-* Membership Statistics
-* Library Overview
-
----
-
-# 🏗️ System Architecture
-
-## Frontend
+# 🗂 Backend Modular Directory Breakdown
 
 ```text
-React 19
-│
-├── TypeScript
-├── Vite
-├── Tailwind CSS
-├── React Router
-├── React Query
-├── Zustand
-├── Axios
-├── React Hook Form
-├── Zod
-├── Sonner
-└── Framer Motion
-```
+server/src/
+├── config/                  # Server Portals, Helmet Settings, CORS Origin Matrices, Rate Limiters
+├── controllers/             # Express Layer Request Interceptors & JSON Response Generators
+├── database/                # Sequelize Model Declarations, Static Seeders, Migration Sequences
+│   ├── associations/        # Primary-Foreign Key Structural Relationship Mapping Definitions
+│   ├── migrations/          # Version-Controlled Database Schema Scripts
+│   └── models/              # Sequelize Class Table Schema Implementations
+├── docs/                    # OpenAPI / Swagger Specification Architectures
+├── middlewares/             # Global JWT Hooks, RBAC Policies, Error Boundaries, Cors Interceptors
+├── modules/                 # Cohesive Domain Entities (Isolating Controller, Service, and Route Specs)
+│   ├── admin/               # Administrative Control Matrices
+│   ├── auth/                # Authenticated Session Lifecycles & Sign-in Handlers
+│   ├── azureAI/             # Azure Vision OCR & Gemini AI Processor Chains
+│   ├── books/               # Catalog, Inventory, and Asset Filtering Controls
+│   ├── categories/          # Structural Metadata & Genre Mapping Definitions
+│   ├── dashboard/           # Computational Aggregations & Analytical Telemetry Generators
+│   ├── fines/               # Financial Accrual Processors & Payment Monitors
+│   ├── issues/              # Physical Checkout & Return Ledger Transactions
+│   ├── members/             # Subscription Matrices & Consumer Metadata
+│   ├── plans/               # Tiered Library Access Pricing, Caps, & Durations
+│   └── reports/             # PDF Manifest Generators (via jsPDF Modules)
+├── routes/                  # Core Endpoint Registry (/api/v1 Global Mount Base Router)
+├── utils/                   # Shared Injections (Winston Log Logger Engines, Formatters)
+├── validators/              # Common Reusable Domain Input Validation Schemes
+└── server.ts                # Application Cluster Bootstrap Entrypoint
 
-## Backend
-
-```text
-Node.js
-│
-├── Express.js
-├── TypeScript
-├── Sequelize ORM
-├── PostgreSQL
-├── JWT Authentication
-├── Bcrypt
-├── Zod Validation
-├── Swagger
-├── Winston Logger
-├── Multer
-├── Azure AI
-├── Gemini AI
-└── Jest Testing
 ```
 
 ---
 
-# 🗂 Backend Project Structure
+# 🧪 Quality Assurance & Test Coverage Matrices
 
-```text
-src
-│
-├── config
-├── controllers
-├── middlewares
-├── routes
-├── database
-│   ├── models
-│   ├── migrations
-│   └── seeders
-│
-├── modules
-│   ├── admin
-│   ├── auth
-│   ├── azureAI
-│   ├── books
-│   ├── categories
-│   ├── dashboard
-│   ├── fines
-│   ├── issues
-│   ├── members
-│   └── plans
-│
-├── utils
-├── validators
-└── server.ts
-```
+The repository enforces software engineering practices with a deep unit and integration testing suite utilizing **Jest** and **Supertest**:
+
+* **🧪 133+ System Unit Tests:** Validates mock service layers, mock relational models, isolated business logic patterns, error thresholds, and Azure/Gemini AI API edge cases without querying production clusters.
+* **🧪 102+ API Integration Tests:** Spawns live sandbox routing lifecycles to trace network headers, verify Zod schema rejections, test database writes, and evaluate RBAC multi-role access controls across `/api/v1/*` endpoints.
 
 ---
 
-# 🛠 Tech Stack
+# 🔄 CI/CD Automation Workflow
 
-## Frontend
+Every code mutation pushed to GitHub undergoes rigorous validation via a centralized **GitHub Actions Pipeline**:
 
-* React 19
-* TypeScript
-* Vite
-* Tailwind CSS
-* React Router DOM
-* React Query
-* Zustand
-* Axios
-* React Hook Form
-* Zod
-* Sonner
-* Framer Motion
+```text
+[ Git Push / PR ] ➔ 📦 Install Packages ➔ ⚙️ Type-Check Validation (tsc) ➔ 🧪 Run Unit Suite ➔ 🧪 Run Integration Suite ➔ 🎉 Deploy Approval
 
-## Backend
+```
 
-* Node.js
-* Express.js
-* TypeScript
-* PostgreSQL
-* Sequelize ORM
-* JWT
-* Bcrypt
-* Zod
-* Multer
-* Swagger
-* Winston
-
-## AI Services
-
-* Azure Vision OCR
-* Azure Translator
-* Google Gemini AI
-
-## Testing
-
-* Jest
-* Supertest
-
-## CI/CD
-
-* GitHub Actions
+This ensures no build-breaking code mutations or type mismatches are ever merged into `develop` or `main`.
 
 ---
 
-# 🧪 Testing
+# ⚙️ Production Environment Variables Reference
 
-### Unit Tests
-
-```text
-133+ Unit Tests
-```
-
-Coverage includes:
-
-* Admin Service
-* Auth Service
-* Member Service
-* Membership Plan Service
-* Azure AI Scanner Service
-* Validation Layer
-* Repository Mocking
-
-### Integration Tests
-
-```text
-102+ Integration Tests
-```
-
-Coverage includes:
-
-* Authentication APIs
-* Admin APIs
-* Members APIs
-* Books APIs
-* Categories APIs
-* Fine APIs
-* Membership APIs
-* Dashboard APIs
-
----
-
-# 🔄 CI/CD Pipeline
-
-GitHub Actions automatically performs:
-
-```text
-✓ Install Dependencies
-✓ TypeScript Build Validation
-✓ Unit Tests Execution
-✓ Integration Tests Execution
-✓ Pull Request Validation
-```
-
----
-
-# ⚙️ Environment Variables
-
-Create a `.env` file inside the server directory.
+To initialize local nodes or modify cloud environment targets, construct an active `.env` file mapping these parameters:
 
 ```env
-NODE_ENV=development
-
+# Runtime Environment Setup
+NODE_ENV=production
 PORT=5000
 
-DATABASE_URL=postgresql://username:password@localhost:5432/library_db
+# PostgreSQL Neon Serverless Connection Matrix
+DATABASE_URL=postgresql://neondb_owner:npg_ZtgV3bqocW0H@ep-late-silence-ao6ovftj-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
 
-JWT_SECRET=your_jwt_secret
+# Encryption Cryptographical Primitives
+JWT_SECRET=your_jwt_secret_hasher_key
 
-AZURE_AI_KEY=your_azure_key
-AZURE_AI_ENDPOINT=your_azure_endpoint
+# Azure AI Cognitive Cloud Configurations
+AZURE_AI_KEY=your_azure_ai_cognitive_services_key
+AZURE_AI_ENDPOINT=[https://your-endpoint.cognitiveservices.azure.com/](https://your-endpoint.cognitiveservices.azure.com/)
 AZURE_AI_REGION=centralindia
 
-GEMINI_API_KEY=your_gemini_api_key
+# Google Gemini Large Language Model Key
+GEMINI_API_KEY=your_google_gemini_api_key_string
+
 ```
 
 ---
 
-# 🚀 Local Development Setup
+# 🚀 Local Development Quickstart
 
-## Clone Repository
+Ensure you have **Node.js v24+** and **PostgreSQL** or a Neon DB sandbox link configured before launching.
+
+### 1. Repository Core Ingestion
 
 ```bash
-git clone https://github.com/your-username/library-management-system.git
+git clone [https://github.com/YogeshwaranOfficial/Library-Management-System.git](https://github.com/YogeshwaranOfficial/Library-Management-System.git)
+cd Library-Management-System
 
-cd library-management-system
 ```
 
----
-
-## Backend Setup
+### 2. Backend Server Assembly
 
 ```bash
 cd server
-
 npm install
-
+# Execute development watcher using tsx compilation layers
 npm run dev
+
 ```
 
-Backend runs on:
+* API Entrypoint: `http://localhost:5000`
+* Local API Docs: `http://localhost:5000/api-docs`
 
-```text
-http://localhost:5000
-```
-
----
-
-## Frontend Setup
+### 3. Frontend Client Assembly
 
 ```bash
-cd client
-
+cd ../client
 npm install
-
 npm run dev
+
 ```
 
-Frontend runs on:
-
-```text
-http://localhost:5173
-```
+* Dev Server Entrypoint: `http://localhost:5173`
 
 ---
 
-# 📚 API Documentation
-
-Swagger documentation will be available at:
-
-```text
-Deploy Link Coming Soon
-```
-
-Local:
-
-```text
-http://localhost:5000/api-docs
-```
-
----
-
-# 🔒 Security Features
-
-* JWT Authentication
-* Password Hashing (Bcrypt)
-* Role-Based Authorization
-* Zod Request Validation
-* Rate Limiting
-* Helmet Security Headers
-* CORS Protection
-* Environment Variable Validation
-
----
-
-# 🎯 Future Enhancements
-
-* Email Notifications
-* Mobile Application
-* Reservation System
-* Barcode Scanner Support
-* QR Code Integration
-* Advanced Analytics
-* Multi-Library Support
-* Cloud Storage Integration
-* Payment Gateway Integration
-
----
-
-# 👨‍💻 Author
+# 👨‍💻 Developer & Maintenance Profile
 
 **Yogeshwaran S**
 
-GitHub: https://github.com/YogeshwaranOfficial
-
-LinkedIn: Add Your LinkedIn Profile
-
-Portfolio: Coming Soon
+* **GitHub Repository:** [https://github.com/YogeshwaranOfficial](https://github.com/YogeshwaranOfficial)
+* **Project Tracking Link:** [Library Management System Git Repo](https://github.com/YogeshwaranOfficial/Library-Management-System)
 
 ---
 
 # 📄 License
 
-This project is licensed under the MIT License.
+This architecture framework and its source distribution matrices are open-source software licensed standardly under the terms of the **MIT License**.
 
----
-
-## ⭐ Support
-
-If you found this project useful, consider giving it a star on GitHub.
-
-```text
-⭐ Star the Repository
-🍴 Fork the Project
-🐛 Report Issues
-🚀 Contribute
-```
